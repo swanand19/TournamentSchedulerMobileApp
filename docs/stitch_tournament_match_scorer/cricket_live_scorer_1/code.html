@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary": "#d5d3ce", "tertiary-fixed": "#e4e2dd", "background": "#131313", "surface": "#131313", "on-background": "#e5e2e1", "error-container": "#93000a", "primary": "#ffca85", "on-primary-fixed-variant": "#633f00", "on-surface": "#e5e2e1", "primary-fixed": "#ffddb5", "secondary-fixed": "#c1ecd4", "on-tertiary-fixed": "#1b1c18", "on-tertiary-fixed-variant": "#474743", "surface-container-highest": "#353535", "inverse-surface": "#e5e2e1", "surface-variant": "#353535", "secondary-container": "#29513f", "primary-fixed-dim": "#ffb956", "surface-dim": "#131313", "surface-tint": "#ffb956", "tertiary-container": "#b9b8b3", "inverse-primary": "#835400", "surface-container": "#20201f", "on-error-container": "#ffdad6", "surface-container-low": "#1b1b1b", "error": "#ffb4ab", "on-tertiary": "#30312d", "surface-bright": "#393939", "on-surface-variant": "#d6c3af", "tertiary-fixed-dim": "#c8c6c1", "secondary": "#a5d0b9", "secondary-fixed-dim": "#a5d0b9", "on-secondary-fixed": "#002114", "primary-container": "#f2a93b", "on-primary-fixed": "#2a1800", "on-primary-container": "#664000", "on-secondary-fixed-variant": "#274e3d", "on-error": "#690005", "surface-container-high": "#2a2a2a", "on-primary": "#452b00", "outline": "#9e8e7c", "surface-container-lowest": "#0e0e0e", "on-secondary": "#0e3727", "outline-variant": "#514535", "inverse-on-surface": "#313030", "on-secondary-container": "#97c2ab", "on-tertiary-container": "#494945" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter-tablet": "1rem", "space-md": "0.75rem", "space-xs": "0.25rem", "space-xl": "2rem", "space-lg": "1.25rem", "margin-tablet": "1.5rem", "margin": "1rem", "space-sm": "0.5rem", "gutter": "0.75rem" }, "fontFamily": { "scoreboard-num-mobile": ["Anton"], "headline-lg-mobile": ["Anton"], "body-md": ["Inter"], "eyebrow-accent": ["Anton"], "label-meta": ["Inter"], "headline-md": ["Anton"], "body-lg": ["Inter"], "headline-xl": ["Anton"], "label-action": ["Inter"], "headline-lg": ["Anton"], "scoreboard-num": ["Anton"], "body-sm": ["Inter"], "headline-xl-mobile": ["Anton"] }, "fontSize": { "scoreboard-num-mobile": ["56px", { "lineHeight": "56px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-lg-mobile": ["30px", { "lineHeight": "34px", "letterSpacing": "0.02em", "fontWeight": "400" }], "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "500" }], "eyebrow-accent": ["14px", { "lineHeight": "18px", "letterSpacing": "0.14em", "fontWeight": "400" }], "label-meta": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }], "headline-md": ["24px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "400" }], "body-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-xl": ["56px", { "lineHeight": "60px", "letterSpacing": "0.04em", "fontWeight": "400" }], "label-action": ["16px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700" }], "headline-lg": ["36px", { "lineHeight": "40px", "letterSpacing": "0.03em", "fontWeight": "400" }], "scoreboard-num": ["72px", { "lineHeight": "72px", "letterSpacing": "0.02em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-xl-mobile": ["44px", { "lineHeight": "48px", "letterSpacing": "0.03em", "fontWeight": "400" }] } } } };</script><style>@layer base{html,body{width:100vw;min-height:100vh;margin:0;padding:0;}body{overscroll-behavior:none;background-color:#131313;background-image:repeating-linear-gradient(to bottom,#1B4332 0px,#1B4332 80px,#17402E 80px,#17402E 160px);background-attachment:fixed;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="text-on-surface font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl pt-safe shadow-[0_4px_20px_rgba(0,0,0,0.5)]"><div class="h-20 px-margin flex items-center justify-between gap-space-sm"><div class="flex flex-col justify-center min-w-0 flex-1"><div class="flex items-center gap-space-xs"><span class="font-eyebrow-accent text-eyebrow-accent text-primary-container tracking-wider uppercase truncate">METRO SUNDAY PREMIER CUP</span><span class="w-1.5 h-1.5 rounded-full bg-secondary shrink-0"></span><span class="font-label-meta text-label-meta text-secondary shrink-0">PITCH 2 · FLOODLIT</span></div><h1 class="font-headline-md text-headline-md text-on-surface uppercase tracking-wide truncate mt-0.5">Live Score</h1></div><div class="flex items-center gap-space-xs shrink-0"><div class="flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container-high/90 text-secondary"><span class="material-symbols-outlined text-[14px]">sync</span><span class="font-label-meta text-label-meta">LIVE</span></div><button class="w-11 h-11 rounded-lg flex items-center justify-center text-primary-container hover:bg-surface-container-high transition-colors active:scale-95"><span class="material-symbols-outlined text-[24px]">sports</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full px-margin pt-20 pb-28"><div class="flex flex-col w-full pb-6 space-y-4">
+<!-- Eyebrow & Status Context Bar -->
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary uppercase tracking-widest">MATCHDAY 3 · GROUP B · OVAL 1</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high shadow-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-meta text-label-meta text-on-surface uppercase tracking-wider">LIVE 1ST INNINGS</span>
+</div>
+</div>
+<!-- Main Floodlit Scoreboard Pod (Deck Elevated Level 2) -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-4 shadow-xl">
+<div class="absolute -right-10 -top-10 w-32 h-32 rounded-full bg-primary/10 blur-2xl pointer-events-none"></div>
+<!-- Team Matchup Header -->
+<div class="flex items-baseline justify-between mb-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container shrink-0"></span>
+<h2 class="font-headline-md text-headline-md text-on-surface uppercase tracking-wide truncate">ROYAL STRIKERS</h2>
+</div>
+<div class="text-right shrink-0">
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">VS COASTAL KINGS</span>
+</div>
+</div>
+<!-- Massive Scoreboard Live Display -->
+<div class="flex items-center justify-between py-1">
+<div class="flex items-baseline gap-2">
+<span class="font-scoreboard-num-mobile text-scoreboard-num-mobile text-primary tracking-normal leading-none" id="score-runs">148</span>
+<span class="font-scoreboard-num-mobile text-scoreboard-num-mobile text-primary-container leading-none">/</span>
+<span class="font-scoreboard-num-mobile text-scoreboard-num-mobile text-on-surface leading-none" id="score-wickets">4</span>
+</div>
+<!-- Overs & Target Pill Stack -->
+<div class="flex flex-col items-end justify-center gap-1.5">
+<div class="px-3 py-1.5 rounded-lg bg-surface-container-high flex items-baseline gap-1.5 shadow-inner">
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">OVERS</span>
+<span class="font-headline-md text-headline-md text-primary leading-none" id="score-overs">16.4</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">/ 20</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-meta text-label-meta text-secondary">CRR: <strong class="font-semibold text-on-surface">8.88</strong></span>
+<span class="text-outline-variant text-[10px]">●</span>
+<span class="font-label-meta text-label-meta text-primary-fixed">REQ: <strong class="font-semibold text-primary">11.1</strong></span>
+</div>
+</div>
+</div>
+<!-- Target Indicator Sub-bar -->
+<div class="mt-2.5 pt-2 flex items-center justify-between bg-surface-container-low px-3 py-1.5 rounded-lg">
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">TARGET: <strong class="text-on-surface">185</strong> (Needs 37 runs in 20 balls)</span>
+<span class="font-label-meta text-label-meta text-primary font-bold">PROJ: 178</span>
+</div>
+</div>
+<!-- Batsmen & Bowler Tactical Match Card (Tactile Cream Card Level 1) -->
+<div class="rounded-xl bg-tertiary-fixed text-on-tertiary-fixed p-3.5 shadow-md space-y-3">
+<!-- Batsmen On Pitch -->
+<div class="space-y-2">
+<!-- Striker -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-tertiary-fixed-dim/40">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-on-primary-container text-[18px] shrink-0" style="font-variation-settings: 'FILL' 1;">sports_cricket</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md font-bold tracking-tight text-on-tertiary-fixed flex items-center gap-1 truncate">
+              V. SHARMA <span class="text-on-primary-container font-black">*</span>
+</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant">32b · 6×4 · 2×6</span>
+</div>
+</div>
+<div class="text-right shrink-0">
+<span class="font-headline-md text-headline-md text-on-tertiary-fixed leading-none">54</span>
+<span class="block font-label-meta text-label-meta text-on-tertiary-fixed-variant mt-0.5">SR 168.7</span>
+</div>
+</div>
+<!-- Non-Striker -->
+<div class="flex items-center justify-between px-2 py-1.5 rounded-lg">
+<div class="flex items-center gap-2 min-w-0">
+<span class="w-4 h-4 rounded-full bg-tertiary flex items-center justify-center shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-fixed-variant"></span>
+</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md font-medium tracking-tight text-on-tertiary-fixed truncate">R. PATEL</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant">14b · 2×4 · 0×6</span>
+</div>
+</div>
+<div class="text-right shrink-0">
+<span class="font-headline-md text-headline-md text-on-tertiary-fixed leading-none">22</span>
+<span class="block font-label-meta text-label-meta text-on-tertiary-fixed-variant mt-0.5">SR 157.1</span>
+</div>
+</div>
+</div>
+<!-- Active Bowler Stripe Divider -->
+<div class="flex items-center justify-between pt-2.5 px-1 bg-tertiary-fixed-dim/30 rounded-lg p-2">
+<div class="flex items-center gap-2 min-w-0">
+<span class="material-symbols-outlined text-secondary-container text-[18px] shrink-0">sports_handball</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-md text-body-md font-bold text-on-tertiary-fixed truncate">M. TARIQ</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant">Fast Medium · Over 17</span>
+</div>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<div class="text-right">
+<span class="font-body-md text-body-md font-bold text-on-tertiary-fixed">3.4 - 0 - 28 - 2</span>
+<span class="block font-label-meta text-label-meta text-on-tertiary-fixed-variant">Econ 7.63</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Over Ticker: Ball-By-Ball Tactile Carousel -->
+<div class="rounded-xl bg-surface-container-high p-3 shadow-sm space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary-fixed uppercase tracking-wider">THIS OVER (17)</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">12 RUNS SO FAR</span>
+</div>
+<div class="flex items-center justify-between gap-1.5 overflow-x-auto py-1">
+<!-- Ball 1: 1 run -->
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center shadow-md shrink-0">
+<span class="font-headline-md text-headline-md text-on-surface leading-none text-base">1</span>
+</div>
+<!-- Ball 2: 4 boundary -->
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center shadow-md shrink-0 ring-2 ring-secondary/50">
+<span class="font-headline-md text-headline-md text-on-secondary-container leading-none text-base">4</span>
+</div>
+<!-- Ball 3: Dot (0) -->
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center shadow-md shrink-0">
+<span class="font-headline-md text-headline-md text-on-surface-variant leading-none text-base">0</span>
+</div>
+<!-- Ball 4: Wide (+1) -->
+<div class="w-10 h-10 rounded-full bg-surface-container flex flex-col items-center justify-center shadow-md shrink-0">
+<span class="font-headline-md text-headline-md text-primary leading-none text-xs">1wb</span>
+</div>
+<!-- Ball 5: 6 Maximum -->
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center shadow-md shrink-0 ring-2 ring-primary/80">
+<span class="font-headline-md text-headline-md text-on-primary-container leading-none text-base">6</span>
+</div>
+<!-- Ball 6: Wicket -->
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center shadow-md shrink-0 ring-2 ring-error">
+<span class="font-headline-md text-headline-md text-on-error-container leading-none text-base">W</span>
+</div>
+<!-- Upcoming Ball Placeholder -->
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center opacity-40 shrink-0">
+<span class="w-2 h-2 rounded-full bg-on-surface-variant"></span>
+</div>
+</div>
+</div>
+<!-- Touchline One-Handed Scoring Keypad (Bottom Thumb Command Zone) -->
+<div class="rounded-xl bg-surface-container-lowest p-3 shadow-2xl space-y-2.5">
+<div class="flex items-center justify-between px-1">
+<span class="font-eyebrow-accent text-eyebrow-accent text-on-surface-variant tracking-wider">SCORING KEYPAD (64DP TOUCHLINE)</span>
+<span class="font-label-meta text-label-meta text-secondary font-semibold">TAP TO LOG</span>
+</div>
+<!-- Main Primary Numerical Runs Grid (64px Min Touch Height) -->
+<div class="grid grid-cols-3 gap-2">
+<!-- 0 / Dot Ball -->
+<button class="h-16 rounded-xl bg-surface-container-high hover:bg-surface-bright active:scale-95 transition-transform flex flex-col items-center justify-center shadow-md" id="btn-dot">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface leading-none">0</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase mt-0.5">DOT</span>
+</button>
+<!-- 1 Run -->
+<button class="h-16 rounded-xl bg-surface-container-high hover:bg-surface-bright active:scale-95 transition-transform flex flex-col items-center justify-center shadow-md" id="btn-1">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed leading-none">1</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase mt-0.5">SINGLE</span>
+</button>
+<!-- 2 Runs -->
+<button class="h-16 rounded-xl bg-surface-container-high hover:bg-surface-bright active:scale-95 transition-transform flex flex-col items-center justify-center shadow-md" id="btn-2">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed leading-none">2</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase mt-0.5">DOUBLE</span>
+</button>
+<!-- 3 Runs -->
+<button class="h-16 rounded-xl bg-surface-container-high hover:bg-surface-bright active:scale-95 transition-transform flex flex-col items-center justify-center shadow-md" id="btn-3">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed leading-none">3</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase mt-0.5">TRIPLE</span>
+</button>
+<!-- 4 BOUNDARY (Success Green Tone) -->
+<button class="h-16 rounded-xl bg-secondary-container hover:bg-secondary active:scale-95 transition-transform flex flex-col items-center justify-center shadow-lg group" id="btn-4">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-on-secondary-container group-hover:text-on-secondary leading-none">4</span>
+<span class="font-label-action text-label-action text-on-secondary-container group-hover:text-on-secondary uppercase mt-0.5">FOUR</span>
+</button>
+<!-- 6 MAXIMUM (Accent Gold High Lumen) -->
+<button class="h-16 rounded-xl bg-primary-container hover:bg-primary active:scale-95 transition-transform flex flex-col items-center justify-center shadow-lg group" id="btn-6">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-on-primary-container group-hover:text-on-primary leading-none">6</span>
+<span class="font-label-action text-label-action text-on-primary-container group-hover:text-on-primary uppercase mt-0.5">SIXER</span>
+</button>
+</div>
+<!-- Quick Event & Extra Modifiers Row -->
+<div class="grid grid-cols-4 gap-2">
+<!-- WICKET / OUT (Danger Red) -->
+<button class="h-14 col-span-1 rounded-xl bg-error-container hover:bg-error active:scale-95 transition-transform flex flex-col items-center justify-center shadow-md group" id="btn-wicket">
+<span class="font-headline-md text-headline-md text-on-error-container group-hover:text-on-error leading-none">OUT</span>
+<span class="font-label-meta text-label-meta text-on-error-container group-hover:text-on-error uppercase">WICKET</span>
+</button>
+<!-- WIDE (+1) -->
+<button class="h-14 rounded-xl bg-surface-container hover:bg-surface-bright active:scale-95 transition-transform flex flex-col items-center justify-center shadow-sm" id="btn-wide">
+<span class="font-headline-md text-headline-md text-primary leading-none">+1</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">WIDE</span>
+</button>
+<!-- NO BALL (+1) -->
+<button class="h-14 rounded-xl bg-surface-container hover:bg-surface-bright active:scale-95 transition-transform flex flex-col items-center justify-center shadow-sm" id="btn-noball">
+<span class="font-headline-md text-headline-md text-primary leading-none">+1</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">NO BALL</span>
+</button>
+<!-- BYE / LEG BYE -->
+<button class="h-14 rounded-xl bg-surface-container hover:bg-surface-bright active:scale-95 transition-transform flex flex-col items-center justify-center shadow-sm" id="btn-bye">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">swap_horiz</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">BYE/LB</span>
+</button>
+</div>
+<!-- Tactical Touchline Utility Safety Controls -->
+<div class="grid grid-cols-3 gap-2 pt-1">
+<!-- Undo Last Action -->
+<button class="h-12 rounded-xl bg-surface-container-high hover:bg-surface-bright active:scale-95 transition-transform flex items-center justify-center gap-1.5 px-2" id="btn-undo">
+<span class="material-symbols-outlined text-[18px] text-error">undo</span>
+<span class="font-label-action text-label-action text-on-surface uppercase text-xs">UNDO</span>
+</button>
+<!-- Swap Batsman Strike -->
+<button class="h-12 rounded-xl bg-surface-container-high hover:bg-surface-bright active:scale-95 transition-transform flex items-center justify-center gap-1.5 px-2" id="btn-swap">
+<span class="material-symbols-outlined text-[18px] text-primary">sync_alt</span>
+<span class="font-label-action text-label-action text-on-surface uppercase text-xs">SWAP</span>
+</button>
+<!-- Bowler & Field Options Drawer Toggle -->
+<button class="h-12 rounded-xl bg-surface-container-high hover:bg-surface-bright active:scale-95 transition-transform flex items-center justify-center gap-1.5 px-2" id="btn-bowler">
+<span class="material-symbols-outlined text-[18px] text-secondary">manage_accounts</span>
+<span class="font-label-action text-label-action text-on-surface uppercase text-xs">BOWLER</span>
+</button>
+</div>
+</div>
+<!-- End of Innings Quick Confirmation Bar -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">sports_cricket</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">INNINGS 1: 3.2 OVERS REMAINING</span>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-bright active:scale-95 transition-transform font-label-action text-label-action text-primary uppercase text-xs">
+      END INNINGS
+    </button>
+</div>
+</div>
+<script>
+  (function initCricketScorer() {
+    let runs = 148;
+    let wickets = 4;
+    const runsEl = document.getElementById('score-runs');
+    const wicketsEl = document.getElementById('score-wickets');
+
+    function updateScore(addRuns, isWicket = false) {
+      if (isWicket) {
+        if (wickets < 10) wickets++;
+        if (wicketsEl) {
+          wicketsEl.textContent = wickets;
+          wicketsEl.classList.add('scale-125', 'text-error');
+          setTimeout(() => wicketsEl.classList.remove('scale-125', 'text-error'), 250);
+        }
+      } else {
+        runs += addRuns;
+        if (runsEl) {
+          runsEl.textContent = runs;
+          runsEl.classList.add('scale-110');
+          setTimeout(() => runsEl.classList.remove('scale-110'), 200);
+        }
+      }
+    }
+
+    const bind = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', fn);
+    };
+
+    bind('btn-dot', () => updateScore(0));
+    bind('btn-1', () => updateScore(1));
+    bind('btn-2', () => updateScore(2));
+    bind('btn-3', () => updateScore(3));
+    bind('btn-4', () => updateScore(4));
+    bind('btn-6', () => updateScore(6));
+    bind('btn-wide', () => updateScore(1));
+    bind('btn-noball', () => updateScore(1));
+    bind('btn-wicket', () => updateScore(0, true));
+    bind('btn-undo', () => {
+      if (runs > 0) runs--;
+      if (runsEl) runsEl.textContent = runs;
+    });
+  })();
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-container-lowest/95 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container bg-surface-container/60"><div class="flex justify-around items-center h-20 px-space-xs"><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="live-score" href="#"><span class="material-symbols-outlined text-[26px]">sports_soccer</span><span class="font-label-meta text-label-meta">Score</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="fixtures-schedule" href="#"><span class="material-symbols-outlined text-[26px]">calendar_today</span><span class="font-label-meta text-label-meta">Fixtures</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="tournament-standings" href="#"><span class="material-symbols-outlined text-[26px]">leaderboard</span><span class="font-label-meta text-label-meta">Standings</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="match-sheet" href="#"><span class="material-symbols-outlined text-[26px]">assignment</span><span class="font-label-meta text-label-meta">Sheet</span></a></div></nav></body></html>

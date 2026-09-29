@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-secondary-fixed": "#002114", "primary-container": "#f2a93b", "on-tertiary-container": "#494945", "surface-container": "#20201f", "surface-container-high": "#2a2a2a", "secondary-fixed": "#c1ecd4", "error-container": "#93000a", "on-surface-variant": "#d6c3af", "inverse-on-surface": "#313030", "on-secondary-container": "#97c2ab", "on-tertiary-fixed-variant": "#474743", "on-tertiary-fixed": "#1b1c18", "on-error-container": "#ffdad6", "secondary-container": "#29513f", "surface": "#131313", "surface-container-low": "#1b1b1b", "on-error": "#690005", "secondary-fixed-dim": "#a5d0b9", "outline-variant": "#514535", "primary": "#ffca85", "on-secondary": "#0e3727", "surface-container-lowest": "#0e0e0e", "surface-bright": "#393939", "inverse-primary": "#835400", "tertiary-container": "#b9b8b3", "secondary": "#a5d0b9", "tertiary-fixed": "#e4e2dd", "on-primary-fixed": "#2a1800", "error": "#ffb4ab", "surface-variant": "#353535", "tertiary": "#d5d3ce", "on-surface": "#e5e2e1", "inverse-surface": "#e5e2e1", "tertiary-fixed-dim": "#c8c6c1", "on-background": "#e5e2e1", "on-primary": "#452b00", "primary-fixed-dim": "#ffb956", "background": "#131313", "surface-container-highest": "#353535", "on-secondary-fixed-variant": "#274e3d", "primary-fixed": "#ffddb5", "outline": "#9e8e7c", "on-tertiary": "#30312d", "on-primary-fixed-variant": "#633f00", "surface-tint": "#ffb956", "on-primary-container": "#664000", "surface-dim": "#131313" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "margin-tablet": "1.5rem", "space-xl": "2rem", "gutter-tablet": "1rem", "space-xs": "0.25rem", "gutter": "0.75rem", "space-sm": "0.5rem", "space-lg": "1.25rem", "margin": "1rem", "space-md": "0.75rem" }, fontFamily: { "scoreboard-num-mobile": ["Anton"], "body-md": ["Inter"], "headline-md": ["Anton"], "label-action": ["Inter"], "headline-lg": ["Anton"], "body-lg": ["Inter"], "headline-xl-mobile": ["Anton"], "headline-lg-mobile": ["Anton"], "scoreboard-num": ["Anton"], "body-sm": ["Inter"], "headline-xl": ["Anton"], "label-meta": ["Inter"], "eyebrow-accent": ["Anton"] }, fontSize: { "scoreboard-num-mobile": ["56px", { lineHeight: "56px", letterSpacing: "0.02em", fontWeight: "400" }], "body-md": ["15px", { lineHeight: "22px", fontWeight: "500" }], "headline-md": ["24px", { lineHeight: "28px", letterSpacing: "0.02em", fontWeight: "400" }], "label-action": ["16px", { lineHeight: "20px", letterSpacing: "0.02em", fontWeight: "700" }], "headline-lg": ["36px", { lineHeight: "40px", letterSpacing: "0.03em", fontWeight: "400" }], "body-lg": ["18px", { lineHeight: "24px", fontWeight: "600" }], "headline-xl-mobile": ["44px", { lineHeight: "48px", letterSpacing: "0.03em", fontWeight: "400" }], "headline-lg-mobile": ["30px", { lineHeight: "34px", letterSpacing: "0.02em", fontWeight: "400" }], "scoreboard-num": ["72px", { lineHeight: "72px", letterSpacing: "0.02em", fontWeight: "400" }], "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }], "headline-xl": ["56px", { lineHeight: "60px", letterSpacing: "0.04em", fontWeight: "400" }], "label-meta": ["12px", { lineHeight: "16px", letterSpacing: "0.06em", fontWeight: "600" }], "eyebrow-accent": ["14px", { lineHeight: "18px", letterSpacing: "0.14em", fontWeight: "400" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen antialiased"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest/85 backdrop-blur-xl pt-safe shadow-[0_4px_16px_rgba(0,0,0,0.45)]"><div class="h-16 px-space-sm flex items-center justify-between"><div class="flex items-center gap-space-xs min-w-0"><button aria-label="Go back" class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-on-surface hover:text-primary transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><div class="flex flex-col justify-center min-w-0 pr-space-xs"><span class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-[0.14em] text-primary truncate leading-none mb-1">MATCH SETUP · GROUP A</span><h1 class="font-headline-md text-headline-md uppercase tracking-[0.02em] text-on-surface truncate leading-tight">ROVERS VS UNITED</h1></div></div><div class="flex items-center gap-space-xs shrink-0"><button aria-label="Match Information" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[22px]">info</span></button><button aria-label="Close" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[22px]">close</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-1"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full relative">
+<!-- BACKGROUND LIVE SCORING CONSOLE (DIMMED/SCRIMMED) -->
+<div class="w-full px-margin pb-space-xl flex flex-col gap-space-md opacity-35 pointer-events-none select-none">
+<!-- Stadium Striped Rhythm Container -->
+<div class="w-full bg-secondary-container rounded-xl p-space-md shadow-md text-on-secondary-container">
+<!-- Live Match Deck Status -->
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-wider text-primary">LIVE · PITCH 1</span>
+</div>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase tracking-wider">GROUP STAGE · MD 3</span>
+</div>
+<!-- Live Scoreboard Pod -->
+<div class="bg-surface-container-lowest rounded-lg p-space-md flex items-center justify-around shadow-inner text-center">
+<div class="flex flex-col items-center flex-1 min-w-0">
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary-fixed truncate">ROVERS FC</span>
+<span class="font-scoreboard-num-mobile text-scoreboard-num-mobile text-primary leading-none">2</span>
+<span class="font-label-meta text-label-meta text-secondary mt-1">HOME</span>
+</div>
+<div class="flex flex-col items-center px-space-sm shrink-0">
+<span class="font-headline-md text-headline-md text-primary-container">:</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">68'</span>
+</div>
+<div class="flex flex-col items-center flex-1 min-w-0">
+<span class="font-eyebrow-accent text-eyebrow-accent text-tertiary truncate">UNITED SC</span>
+<span class="font-scoreboard-num-mobile text-scoreboard-num-mobile text-tertiary-fixed leading-none">1</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant mt-1">AWAY</span>
+</div>
+</div>
+</div>
+<!-- Background Turf Section Cards (Atmosphere) -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="bg-surface-container p-space-md rounded-xl flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[28px]">sports_soccer</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-meta text-label-meta text-on-surface-variant">LAST GOAL</span>
+<span class="font-body-md text-body-md text-on-surface truncate">M. Silva 54'</span>
+</div>
+</div>
+<div class="bg-surface-container p-space-md rounded-xl flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary-container text-[28px]">warning</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-meta text-label-meta text-on-surface-variant">CARDS</span>
+<span class="font-body-md text-body-md text-on-surface truncate">1 Yellow (Rovers)</span>
+</div>
+</div>
+</div>
+<!-- Match Feed List (Muted Background Context) -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-space-xs">
+<span class="font-label-meta text-label-meta text-primary uppercase">Touchline Log</span>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant py-1">
+<span>61' Substitution (United SC)</span>
+<span class="font-label-meta text-label-meta">#7 OFF / #19 ON</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant py-1">
+<span>54' GOAL - Rovers FC (#10 M. Silva)</span>
+<span class="text-primary font-headline-md text-[14px]">2-1</span>
+</div>
+</div>
+</div>
+<!-- DARKENED SCRIM OVERLAY -->
+<div class="fixed inset-0 bg-surface-container-lowest/80 backdrop-blur-sm z-40 transition-opacity"></div>
+<!-- GOAL RECORDING BOTTOM SHEET (TACTILE CREAM CARD) -->
+<div class="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[92vh] bg-tertiary-fixed text-on-tertiary-fixed rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.65)] overflow-hidden">
+<!-- Tactile Drag Lip & Sheet Header -->
+<div class="w-full flex flex-col items-center pt-space-xs pb-space-sm px-margin bg-tertiary-fixed shrink-0">
+<div class="w-12 h-1.5 rounded-full bg-on-tertiary-fixed/25 mb-space-xs"></div>
+<div class="w-full flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs min-w-0">
+<span aria-label="football" class="text-[24px] leading-none shrink-0" role="img">⚽</span>
+<div class="flex flex-col min-w-0">
+<span class="font-eyebrow-accent text-eyebrow-accent text-on-tertiary-fixed-variant leading-none uppercase tracking-wider">MATCH OFFICIAL DECK</span>
+<h2 class="font-headline-md text-headline-md uppercase text-on-tertiary-fixed truncate tracking-wide">RECORD GOAL — ROVERS FC</h2>
+</div>
+</div>
+<!-- Minute Adjuster Capsule -->
+<div class="flex items-center bg-tertiary rounded-full px-space-xs py-0.5 shrink-0 shadow-sm">
+<button aria-label="Decrease minute" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-on-tertiary-fixed/15 text-on-tertiary-fixed transition-colors" id="min-decrement" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-headline-md text-[16px] text-on-tertiary-fixed px-1.5 min-w-[36px] text-center" id="minute-display">68'</span>
+<button aria-label="Increase minute" class="w-8 h-8 flex items-center justify-center rounded-full active:bg-on-tertiary-fixed/15 text-on-tertiary-fixed transition-colors" id="min-increment" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<!-- Time Subtitle Meta -->
+<div class="w-full flex items-center justify-between mt-1">
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant uppercase">Second Half · Regular Time</span>
+<span class="font-label-meta text-label-meta text-secondary-container uppercase bg-secondary-fixed px-2 py-0.5 rounded-full">Pitchside Confirmed</span>
+</div>
+</div>
+<!-- Scrollable Form Area -->
+<div class="flex-1 overflow-y-auto px-margin py-space-sm flex flex-col gap-space-md">
+<!-- 1. SCORER SELECTION -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-wider text-on-tertiary-fixed">
+            SELECT GOALSCORER <span class="text-error font-body-lg text-[16px]">*</span>
+</label>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant">8 Active Outfield</span>
+</div>
+<!-- Roster Grid -->
+<div aria-label="Select Goalscorer" class="grid grid-cols-2 gap-space-xs" id="scorer-grid" role="radiogroup">
+<!-- Player Tile 10 (Selected State Default) -->
+<button aria-checked="true" class="player-tile text-left p-space-sm rounded-xl bg-primary-container text-on-primary-container shadow-md flex items-center justify-between transition-all scale-[0.99]" data-player="10" role="radio" type="button">
+<div class="flex flex-col min-w-0 pr-1">
+<span class="font-headline-md text-headline-md leading-tight truncate">#10 M. Silva</span>
+<span class="font-label-meta text-label-meta font-bold uppercase tracking-wider opacity-90">FWD · 1 GOAL TODAY</span>
+</div>
+<span class="material-symbols-outlined text-[24px] text-on-primary-container shrink-0">check_circle</span>
+</button>
+<!-- Player Tile 11 -->
+<button aria-checked="false" class="player-tile text-left p-space-sm rounded-xl bg-tertiary text-on-tertiary-fixed shadow-sm active:bg-primary-container/40 flex items-center justify-between transition-all" data-player="11" role="radio" type="button">
+<div class="flex flex-col min-w-0 pr-1">
+<span class="font-headline-md text-headline-md leading-tight truncate">#11 D. Cole</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant uppercase">FWD</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-on-tertiary-fixed-variant/50 shrink-0">radio_button_unchecked</span>
+</button>
+<!-- Player Tile 21 -->
+<button aria-checked="false" class="player-tile text-left p-space-sm rounded-xl bg-tertiary text-on-tertiary-fixed shadow-sm active:bg-primary-container/40 flex items-center justify-between transition-all" data-player="21" role="radio" type="button">
+<div class="flex flex-col min-w-0 pr-1">
+<span class="font-headline-md text-headline-md leading-tight truncate">#21 H. Kane</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant uppercase">FWD</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-on-tertiary-fixed-variant/50 shrink-0">radio_button_unchecked</span>
+</button>
+<!-- Player Tile 8 -->
+<button aria-checked="false" class="player-tile text-left p-space-sm rounded-xl bg-tertiary text-on-tertiary-fixed shadow-sm active:bg-primary-container/40 flex items-center justify-between transition-all" data-player="8" role="radio" type="button">
+<div class="flex flex-col min-w-0 pr-1">
+<span class="font-headline-md text-headline-md leading-tight truncate">#8 O. Barnes</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant uppercase">MID</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-on-tertiary-fixed-variant/50 shrink-0">radio_button_unchecked</span>
+</button>
+<!-- Player Tile 17 -->
+<button aria-checked="false" class="player-tile text-left p-space-sm rounded-xl bg-tertiary text-on-tertiary-fixed shadow-sm active:bg-primary-container/40 flex items-center justify-between transition-all" data-player="17" role="radio" type="button">
+<div class="flex flex-col min-w-0 pr-1">
+<span class="font-headline-md text-headline-md leading-tight truncate">#17 A. Gerrard</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant uppercase">MID</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-on-tertiary-fixed-variant/50 shrink-0">radio_button_unchecked</span>
+</button>
+<!-- Player Tile 23 -->
+<button aria-checked="false" class="player-tile text-left p-space-sm rounded-xl bg-tertiary text-on-tertiary-fixed shadow-sm active:bg-primary-container/40 flex items-center justify-between transition-all" data-player="23" role="radio" type="button">
+<div class="flex flex-col min-w-0 pr-1">
+<span class="font-headline-md text-headline-md leading-tight truncate">#23 S. Ndidi</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant uppercase">MID</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-on-tertiary-fixed-variant/50 shrink-0">radio_button_unchecked</span>
+</button>
+<!-- Player Tile 4 -->
+<button aria-checked="false" class="player-tile text-left p-space-sm rounded-xl bg-tertiary text-on-tertiary-fixed shadow-sm active:bg-primary-container/40 flex items-center justify-between transition-all" data-player="4" role="radio" type="button">
+<div class="flex flex-col min-w-0 pr-1">
+<span class="font-headline-md text-headline-md leading-tight truncate">#4 T. Bradley</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant uppercase">DEF</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-on-tertiary-fixed-variant/50 shrink-0">radio_button_unchecked</span>
+</button>
+<!-- Player Tile 5 -->
+<button aria-checked="false" class="player-tile text-left p-space-sm rounded-xl bg-tertiary text-on-tertiary-fixed shadow-sm active:bg-primary-container/40 flex items-center justify-between transition-all" data-player="5" role="radio" type="button">
+<div class="flex flex-col min-w-0 pr-1">
+<span class="font-headline-md text-headline-md leading-tight truncate">#5 L. Walker</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant uppercase">DEF</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-on-tertiary-fixed-variant/50 shrink-0">radio_button_unchecked</span>
+</button>
+</div>
+<!-- Special Own Goal / Unknown Tile -->
+<button aria-checked="false" class="player-tile w-full text-left p-space-sm mt-0.5 rounded-xl bg-tertiary text-on-tertiary-fixed shadow-sm active:bg-primary-container/40 flex items-center justify-between transition-all" data-player="og" role="radio" type="button">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-primary-container text-[22px] shrink-0">warning</span>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-md text-[18px] text-on-tertiary-fixed leading-tight">UNKNOWN / OWN GOAL</span>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant truncate">United SC Defender Deflection / Unassigned</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[20px] text-on-tertiary-fixed-variant/50 shrink-0">radio_button_unchecked</span>
+</button>
+</div>
+<!-- 2. GOAL TYPE / ATTRIBUTES -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-wider text-on-tertiary-fixed">
+          GOAL TYPE
+        </label>
+<div class="grid grid-cols-4 gap-space-xs" id="goal-type-chips">
+<button class="type-chip py-2.5 px-1 rounded-lg bg-secondary-container text-on-secondary-container font-label-meta text-label-meta text-center truncate shadow-sm transition-all" data-type="normal" type="button">
+            Normal Play
+          </button>
+<button class="type-chip py-2.5 px-1 rounded-lg bg-tertiary text-on-tertiary-fixed font-label-meta text-label-meta text-center truncate shadow-sm transition-all" data-type="pen" type="button">
+            Penalty
+          </button>
+<button class="type-chip py-2.5 px-1 rounded-lg bg-tertiary text-on-tertiary-fixed font-label-meta text-label-meta text-center truncate shadow-sm transition-all" data-type="fk" type="button">
+            Free Kick
+          </button>
+<button class="type-chip py-2.5 px-1 rounded-lg bg-tertiary text-on-tertiary-fixed font-label-meta text-label-meta text-center truncate shadow-sm transition-all" data-type="head" type="button">
+            Header
+          </button>
+</div>
+</div>
+<!-- 3. ASSIST SELECTION (OPTIONAL) -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-wider text-on-tertiary-fixed">
+            ASSIST (OPTIONAL)
+          </label>
+<span class="font-label-meta text-label-meta text-on-tertiary-fixed-variant">Cross / Pass Provider</span>
+</div>
+<!-- Scrollable assist pills -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1" id="assist-chips">
+<button class="assist-chip shrink-0 py-2 px-3 rounded-full bg-tertiary text-on-tertiary-fixed font-label-meta text-label-meta flex items-center gap-1 shadow-sm" data-assist="none" type="button">
+<span>No Assist (Solo)</span>
+</button>
+<button class="assist-chip shrink-0 py-2 px-3.5 rounded-full bg-primary-container text-on-primary-container font-label-meta text-label-meta flex items-center gap-1 shadow-sm" data-assist="8" type="button">
+<span class="material-symbols-outlined text-[16px]">check</span>
+<span>#8 O. Barnes</span>
+</button>
+<button class="assist-chip shrink-0 py-2 px-3 rounded-full bg-tertiary text-on-tertiary-fixed font-label-meta text-label-meta shadow-sm" data-assist="11" type="button">
+<span>#11 D. Cole</span>
+</button>
+<button class="assist-chip shrink-0 py-2 px-3 rounded-full bg-tertiary text-on-tertiary-fixed font-label-meta text-label-meta shadow-sm" data-assist="17" type="button">
+<span>#17 A. Gerrard</span>
+</button>
+<button class="assist-chip shrink-0 py-2 px-3 rounded-full bg-tertiary text-on-tertiary-fixed font-label-meta text-label-meta shadow-sm" data-assist="5" type="button">
+<span>#5 L. Walker</span>
+</button>
+</div>
+</div>
+</div>
+<!-- STICKY BOTTOM ACTIONS (THUMB ZONE >= 52DP) -->
+<div class="w-full p-margin bg-tertiary-fixed shrink-0 flex items-center gap-space-sm shadow-[0_-4px_16px_rgba(0,0,0,0.15)] pb-safe">
+<!-- Cancel Button -->
+<button class="h-14 px-space-md rounded-xl bg-tertiary text-on-tertiary-fixed font-label-action text-label-action flex items-center justify-center active:bg-on-tertiary-fixed/20 transition-all shrink-0" id="cancel-goal-modal" type="button">
+        Cancel
+      </button>
+<!-- Primary Floodlight Amber Save Button -->
+<button class="flex-1 h-14 rounded-xl bg-primary-container text-on-primary-container font-label-action text-label-action uppercase tracking-wider flex items-center justify-center gap-space-xs shadow-lg active:translate-y-0.5 transition-all" id="save-goal-cta" type="button">
+<span class="material-symbols-outlined text-[24px]">bolt</span>
+<span class="truncate">SAVE GOAL (ROVERS 3 - 1)</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  (function initGoalRecorder() {
+    // 1. Minute Incrementor / Decrementor
+    let minute = 68;
+    const minDisplay = document.getElementById('minute-display');
+    const btnDec = document.getElementById('min-decrement');
+    const btnInc = document.getElementById('min-increment');
+
+    if (btnDec && minDisplay) {
+      btnDec.addEventListener('click', () => {
+        if (minute > 1) {
+          minute--;
+          minDisplay.textContent = minute + "'";
+        }
+      });
+    }
+
+    if (btnInc && minDisplay) {
+      btnInc.addEventListener('click', () => {
+        if (minute < 130) {
+          minute++;
+          minDisplay.textContent = minute + "'";
+        }
+      });
+    }
+
+    // 2. Goalscorer Radio Tile Selection
+    const playerTiles = document.querySelectorAll('.player-tile');
+    playerTiles.forEach(tile => {
+      tile.addEventListener('click', () => {
+        playerTiles.forEach(t => {
+          t.setAttribute('aria-checked', 'false');
+          t.classList.remove('bg-primary-container', 'text-on-primary-container', 'scale-[0.99]');
+          t.classList.add('bg-tertiary', 'text-on-tertiary-fixed');
+          const icon = t.querySelector('.material-symbols-outlined');
+          if (icon && !icon.textContent.includes('warning')) {
+            icon.textContent = 'radio_button_unchecked';
+            icon.classList.remove('text-on-primary-container');
+            icon.classList.add('text-on-tertiary-fixed-variant/50');
+          }
+        });
+
+        tile.setAttribute('aria-checked', 'true');
+        tile.classList.remove('bg-tertiary', 'text-on-tertiary-fixed');
+        tile.classList.add('bg-primary-container', 'text-on-primary-container', 'scale-[0.99]');
+        const activeIcon = tile.querySelector('.material-symbols-outlined');
+        if (activeIcon && !activeIcon.textContent.includes('warning')) {
+          activeIcon.textContent = 'check_circle';
+          activeIcon.classList.remove('text-on-tertiary-fixed-variant/50');
+          activeIcon.classList.add('text-on-primary-container');
+        }
+      });
+    });
+
+    // 3. Goal Type Selection
+    const typeChips = document.querySelectorAll('.type-chip');
+    typeChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        typeChips.forEach(c => {
+          c.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+          c.classList.add('bg-tertiary', 'text-on-tertiary-fixed');
+        });
+        chip.classList.remove('bg-tertiary', 'text-on-tertiary-fixed');
+        chip.classList.add('bg-secondary-container', 'text-on-secondary-container');
+      });
+    });
+
+    // 4. Assist Selection
+    const assistChips = document.querySelectorAll('.assist-chip');
+    assistChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        assistChips.forEach(a => {
+          a.classList.remove('bg-primary-container', 'text-on-primary-container');
+          a.classList.add('bg-tertiary', 'text-on-tertiary-fixed');
+          const check = a.querySelector('.material-symbols-outlined');
+          if (check) check.remove();
+        });
+
+        chip.classList.remove('bg-tertiary', 'text-on-tertiary-fixed');
+        chip.classList.add('bg-primary-container', 'text-on-primary-container');
+        
+        if (chip.getAttribute('data-assist') !== 'none') {
+          const checkIcon = document.createElement('span');
+          checkIcon.className = 'material-symbols-outlined text-[16px]';
+          checkIcon.textContent = 'check';
+          chip.prepend(checkIcon);
+        }
+      });
+    });
+
+    // 5. Button Actions (Interactive Mock Feedback)
+    const saveBtn = document.getElementById('save-goal-cta');
+    const cancelBtn = document.getElementById('cancel-goal-modal');
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        saveBtn.innerHTML = '<span class="material-symbols-outlined text-[24px] animate-spin">refresh</span><span>RECORDING...</span>';
+        setTimeout(() => {
+          saveBtn.innerHTML = '<span class="material-symbols-outlined text-[24px]">done_all</span><span>GOAL CONFIRMED (3-1)!</span>';
+          saveBtn.classList.remove('bg-primary-container', 'text-on-primary-container');
+          saveBtn.classList.add('bg-secondary-container', 'text-on-secondary-container');
+        }, 600);
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        if (window.history.length > 1) {
+          window.history.back();
+        }
+      });
+    }
+  })();
+</script></main></body></html>

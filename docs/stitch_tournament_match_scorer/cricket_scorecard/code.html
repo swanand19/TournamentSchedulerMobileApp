@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;}body{overscroll-behavior-y:none;-webkit-font-smoothing:antialiased;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-bright": "#393939", "surface": "#131313", "tertiary-container": "#b9b8b3", "on-tertiary-fixed-variant": "#474743", "surface-variant": "#353535", "surface-container-low": "#1b1b1b", "outline": "#9e8e7c", "surface-container-lowest": "#0e0e0e", "secondary-fixed-dim": "#a5d0b9", "background": "#131313", "primary-fixed": "#ffddb5", "on-secondary-fixed-variant": "#274e3d", "surface-container-high": "#2a2a2a", "on-tertiary-fixed": "#1b1c18", "on-primary-fixed": "#2a1800", "on-tertiary-container": "#494945", "on-background": "#e5e2e1", "on-error-container": "#ffdad6", "primary-container": "#f2a93b", "error": "#ffb4ab", "on-primary-container": "#664000", "inverse-surface": "#e5e2e1", "surface-tint": "#ffb956", "primary": "#ffca85", "on-secondary-container": "#97c2ab", "error-container": "#93000a", "on-error": "#690005", "on-tertiary": "#30312d", "surface-dim": "#131313", "secondary": "#a5d0b9", "surface-container-highest": "#353535", "on-surface-variant": "#d6c3af", "primary-fixed-dim": "#ffb956", "secondary-fixed": "#c1ecd4", "outline-variant": "#514535", "inverse-on-surface": "#313030", "secondary-container": "#29513f", "on-secondary-fixed": "#002114", "on-primary": "#452b00", "inverse-primary": "#835400", "tertiary-fixed": "#e4e2dd", "surface-container": "#20201f", "on-surface": "#e5e2e1", "on-primary-fixed-variant": "#633f00", "on-secondary": "#0e3727", "tertiary": "#d5d3ce", "tertiary-fixed-dim": "#c8c6c1" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.25rem", "space-sm": "0.5rem", "space-md": "0.75rem", "gutter": "0.75rem", "space-xs": "0.25rem", "margin-tablet": "1.5rem", "margin": "1rem", "space-xl": "2rem", "gutter-tablet": "1rem" }, "fontFamily": { "body-lg": ["Inter"], "headline-lg": ["Anton"], "body-sm": ["Inter"], "headline-xl": ["Anton"], "body-md": ["Inter"], "eyebrow-accent": ["Anton"], "headline-xl-mobile": ["Anton"], "scoreboard-num-mobile": ["Anton"], "scoreboard-num": ["Anton"], "headline-md": ["Anton"], "label-action": ["Inter"], "headline-lg-mobile": ["Anton"], "label-meta": ["Inter"] }, "fontSize": { "body-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg": ["36px", { "lineHeight": "40px", "letterSpacing": "0.03em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-xl": ["56px", { "lineHeight": "60px", "letterSpacing": "0.04em", "fontWeight": "400" }], "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "500" }], "eyebrow-accent": ["14px", { "lineHeight": "18px", "letterSpacing": "0.14em", "fontWeight": "400" }], "headline-xl-mobile": ["44px", { "lineHeight": "48px", "letterSpacing": "0.03em", "fontWeight": "400" }], "scoreboard-num-mobile": ["56px", { "lineHeight": "56px", "letterSpacing": "0.02em", "fontWeight": "400" }], "scoreboard-num": ["72px", { "lineHeight": "72px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-md": ["24px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "400" }], "label-action": ["16px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700" }], "headline-lg-mobile": ["30px", { "lineHeight": "34px", "letterSpacing": "0.02em", "fontWeight": "400" }], "label-meta": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }] } } } };</script></head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="Go back" class="w-11 h-11 flex items-center justify-center rounded-lg text-primary hover:bg-surface-container-high transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><h1 class="font-headline-md text-headline-md tracking-tight uppercase text-on-surface truncate">Cricket Scorecard</h1></div><div class="flex items-center gap-space-xs"><button aria-label="Export scorecard" class="w-11 h-11 flex items-center justify-center rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[22px]">download</span></button><button aria-label="Share match summary" class="w-11 h-11 flex items-center justify-center rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[22px]">share</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-safe bg-surface"><div class="flex flex-col w-full">
+<!-- Subtle Stadium Ambient Glow Behind Header -->
+<div class="relative w-full px-margin pt-space-md pb-space-lg flex flex-col gap-space-md bg-gradient-to-b from-surface-container-high/60 via-surface-container/40 to-transparent">
+<!-- Competition Eyebrow -->
+<div class="flex items-center gap-space-xs text-primary">
+<span class="material-symbols-outlined text-[16px] animate-pulse">sports_cricket</span>
+<span class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-wider text-primary">
+        SUMMER DUSK TROPHY 2026 · FINAL · OFFICIAL MATCH REPORT
+      </span>
+</div>
+<!-- Match Result Banner -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-highest p-space-md shadow-xl flex items-center justify-between gap-space-sm">
+<div class="flex flex-col min-w-0 z-10">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+<span class="font-label-meta text-label-meta uppercase tracking-wider text-primary font-bold">CHAMPIONS DECIDED</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile uppercase text-on-surface tracking-tight leading-none truncate">
+          STRIKERS CC WON BY 12 RUNS
+        </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1.5 line-clamp-1">
+          Toss: Rovers CC won toss &amp; elected to bowl first · Pitch 2 (Floodlit Oval)
+        </p>
+</div>
+<!-- Trophy Watermark Deco -->
+<div class="absolute -right-4 -bottom-4 opacity-10 pointer-events-none text-primary">
+<span class="material-symbols-outlined text-[100px]">trophy</span>
+</div>
+</div>
+<!-- POTM Highlight Badge & Stadium Weather Meta -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="inline-flex items-center gap-space-xs bg-primary-container px-space-md py-1.5 rounded-full text-on-primary-container shadow-sm">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-action text-label-action">POTM: A. Sharma</span>
+<span class="font-body-sm text-body-sm opacity-90">· 68 (42) &amp; 2/19</span>
+</div>
+<div class="inline-flex items-center gap-1.5 bg-surface-container-high px-space-sm py-1.5 rounded-full text-on-surface-variant font-label-meta text-label-meta">
+<span class="material-symbols-outlined text-[16px] text-secondary">flare</span>
+<span>Floodlights 100% · D/N</span>
+</div>
+</div>
+</div>
+<!-- Innings Selector Tabs (Single-handed Tap Targets) -->
+<div class="px-margin flex flex-col gap-space-sm mt-space-xs">
+<div class="grid grid-cols-2 gap-space-xs p-1 bg-surface-container-lowest rounded-xl">
+<!-- Tab 1: Active -->
+<button class="flex flex-col items-center justify-center py-2.5 px-space-sm rounded-lg bg-surface-container-highest shadow-md transition-all" id="tab-inn-1" onclick="switchInnings(1)">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-ping"></span>
+<span class="font-headline-md text-[18px] leading-tight text-primary uppercase">STRIKERS CC</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold tracking-wide">168/7 (20.0)</span>
+</button>
+<!-- Tab 2: Secondary Innings -->
+<button class="flex flex-col items-center justify-center py-2.5 px-space-sm rounded-lg hover:bg-surface-container transition-all" id="tab-inn-2" onclick="switchInnings(2)">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-md text-[18px] leading-tight text-on-surface-variant uppercase">ROVERS CC</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">156/9 (20.0)</span>
+</button>
+</div>
+<!-- Innings Meta Bar -->
+<div class="flex items-center justify-between px-space-sm py-2 bg-surface-container-low rounded-lg text-on-surface-variant font-label-meta text-label-meta">
+<span class="font-semibold text-on-surface">Strikers CC 1st Innings</span>
+<span>Run Rate: <strong class="text-primary font-bold">8.40</strong></span>
+<span>Boundaries: <strong>13 (8×4, 5×6)</strong></span>
+</div>
+</div>
+<!-- BATTING SCORECARD (Sticky Column + Horizontal Stats Scroll) -->
+<section class="mt-space-lg flex flex-col">
+<div class="px-margin flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">sports</span>
+<h3 class="font-headline-md text-headline-md uppercase text-on-surface tracking-wide">Batting Performance</h3>
+</div>
+<span class="font-label-meta text-label-meta text-on-surface-variant">Swipe stats ➔</span>
+</div>
+<!-- Responsive Table with Frozen First Column -->
+<div class="w-full overflow-x-auto relative shadow-inner">
+<table class="w-full text-left border-collapse min-w-[560px]">
+<thead>
+<tr class="bg-surface-container-highest text-on-surface-variant font-label-meta text-label-meta uppercase tracking-wider">
+<th class="sticky left-0 z-20 bg-surface-container-highest py-space-sm px-margin w-48 shadow-[2px_0_5px_rgba(0,0,0,0.3)]" scope="col">
+              Batter
+            </th>
+<th class="py-space-sm px-space-sm text-right text-primary font-bold" scope="col">R</th>
+<th class="py-space-sm px-space-sm text-right" scope="col">B</th>
+<th class="py-space-sm px-space-sm text-right" scope="col">4s</th>
+<th class="py-space-sm px-space-sm text-right" scope="col">6s</th>
+<th class="py-space-sm px-margin text-right" scope="col">SR</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
+<!-- Batter 1 -->
+<tr class="bg-surface-container hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<div class="flex flex-col min-w-0">
+<span class="font-body-lg text-[15px] text-on-surface font-semibold truncate flex items-center gap-1">
+                  A. Sharma <span class="text-[11px] px-1 py-0.2 bg-surface-variant text-primary rounded font-label-meta">C</span>
+</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant truncate">c Bradley b Bumrah</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm text-right font-headline-md text-[18px] text-primary">54</td>
+<td class="py-2.5 px-space-sm text-right font-medium">38</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">4</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">2</td>
+<td class="py-2.5 px-margin text-right font-mono font-semibold">142.1</td>
+</tr>
+<!-- Batter 2 -->
+<tr class="bg-surface-container-low hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container-low py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<div class="flex flex-col min-w-0">
+<span class="font-body-lg text-[15px] text-on-surface font-semibold truncate">D. Warner</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant truncate">b Boult</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm text-right font-headline-md text-[18px] text-primary">28</td>
+<td class="py-2.5 px-space-sm text-right font-medium">19</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">3</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">1</td>
+<td class="py-2.5 px-margin text-right font-mono font-semibold">147.4</td>
+</tr>
+<!-- Batter 3 -->
+<tr class="bg-surface-container hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<div class="flex flex-col min-w-0">
+<span class="font-body-lg text-[15px] text-on-surface font-semibold truncate">V. Kohli</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant truncate">lbw b Jadeja</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm text-right font-headline-md text-[18px] text-primary">18</td>
+<td class="py-2.5 px-space-sm text-right font-medium">14</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">2</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-margin text-right font-mono font-semibold">128.6</td>
+</tr>
+<!-- Batter 4 -->
+<tr class="bg-surface-container-low hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container-low py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<div class="flex flex-col min-w-0">
+<span class="font-body-lg text-[15px] text-on-surface font-semibold truncate flex items-center gap-1">
+                  KL Rahul <span class="text-[11px] px-1 py-0.2 bg-surface-variant text-secondary rounded font-label-meta">WK</span>
+</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant truncate">st Henderson b Khan</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm text-right font-headline-md text-[18px] text-primary">31</td>
+<td class="py-2.5 px-space-sm text-right font-medium">22</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">3</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">1</td>
+<td class="py-2.5 px-margin text-right font-mono font-semibold">140.9</td>
+</tr>
+<!-- Batter 5 -->
+<tr class="bg-surface-container hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<div class="flex flex-col min-w-0">
+<span class="font-body-lg text-[15px] text-on-surface font-semibold truncate">H. Pandya</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant truncate">c Starc b Bumrah</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm text-right font-headline-md text-[18px] text-primary">14</td>
+<td class="py-2.5 px-space-sm text-right font-medium">9</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">1</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">1</td>
+<td class="py-2.5 px-margin text-right font-mono font-semibold">155.6</td>
+</tr>
+<!-- Batter 6 -->
+<tr class="bg-surface-container-low hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container-low py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<div class="flex flex-col min-w-0">
+<span class="font-body-lg text-[15px] text-on-surface font-semibold truncate text-secondary">
+                  R. Patel *
+                </span>
+<span class="font-body-sm text-[12px] text-secondary font-medium">not out</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm text-right font-headline-md text-[18px] text-primary">12</td>
+<td class="py-2.5 px-space-sm text-right font-medium">9</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">1</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-margin text-right font-mono font-semibold">133.3</td>
+</tr>
+<!-- Batter 7 -->
+<tr class="bg-surface-container hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<div class="flex flex-col min-w-0">
+<span class="font-body-lg text-[15px] text-on-surface font-semibold truncate">M. Wade</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant truncate">run out (Walker)</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm text-right font-headline-md text-[18px] text-primary">6</td>
+<td class="py-2.5 px-space-sm text-right font-medium">5</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-margin text-right font-mono font-semibold">120.0</td>
+</tr>
+<!-- Batter 8 -->
+<tr class="bg-surface-container-low hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container-low py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<div class="flex flex-col min-w-0">
+<span class="font-body-lg text-[15px] text-on-surface font-semibold truncate text-secondary">
+                  J. Brown *
+                </span>
+<span class="font-body-sm text-[12px] text-secondary font-medium">not out</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm text-right font-headline-md text-[18px] text-primary">5</td>
+<td class="py-2.5 px-space-sm text-right font-medium">4</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-space-sm text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-margin text-right font-mono font-semibold">125.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Did Not Bat Roster Strip -->
+<div class="px-margin pt-space-sm pb-space-xs flex flex-wrap items-center gap-space-xs bg-surface-container-lowest">
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase font-semibold">Yet to Bat:</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container text-on-surface text-body-sm">T. Boult</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container text-on-surface text-body-sm">M. Starc</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container text-on-surface text-body-sm">Y. Chahal</span>
+</div>
+</section>
+<!-- EXTRAS & TOTAL AGGREGATE CARD -->
+<section class="px-margin mt-space-md">
+<div class="bg-surface-container-high rounded-xl p-space-md shadow-lg flex flex-col gap-space-sm">
+<!-- Extras Breakdown -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-action text-label-action text-on-surface">Extras</span>
+<span class="font-headline-md text-headline-md text-primary leading-none">9</span>
+</div>
+<div class="flex items-center gap-1.5 font-label-meta text-label-meta text-on-surface-variant">
+<span class="px-2 py-0.5 rounded bg-surface-container-highest">wd 4</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest">nb 2</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest">lb 3</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest">b 0</span>
+</div>
+</div>
+<!-- Divider by subtle surface shift -->
+<div class="w-full h-px bg-surface-variant opacity-60"></div>
+<!-- Cumulative Match Score -->
+<div class="flex items-end justify-between">
+<div>
+<span class="font-label-meta text-label-meta uppercase tracking-wider text-on-surface-variant block">Total Score</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-scoreboard-num-mobile text-scoreboard-num-mobile text-on-surface tracking-tight leading-none">168</span>
+<span class="font-headline-xl-mobile text-headline-xl-mobile text-primary leading-none">/7</span>
+</div>
+</div>
+<div class="text-right">
+<span class="font-label-meta text-label-meta text-on-surface-variant block">Overs: 20.0</span>
+<span class="font-headline-md text-headline-md text-secondary">RR 8.40</span>
+</div>
+</div>
+</div>
+</section>
+<!-- FALL OF WICKETS (FOW) FLOW -->
+<section class="px-margin mt-space-lg">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">timeline</span>
+<h3 class="font-headline-md text-headline-md uppercase text-on-surface">Fall of Wickets</h3>
+</div>
+<span class="font-label-meta text-label-meta text-on-surface-variant">7 Wkts</span>
+</div>
+<!-- Wrapped Chips Layout -->
+<div class="flex flex-wrap gap-space-xs">
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded bg-surface-container-high text-body-sm shadow-sm">
+<span class="font-headline-md text-[15px] text-primary">1-42</span>
+<span class="text-on-surface-variant">D. Warner (4.4 ov)</span>
+</div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded bg-surface-container-high text-body-sm shadow-sm">
+<span class="font-headline-md text-[15px] text-primary">2-85</span>
+<span class="text-on-surface-variant">V. Kohli (9.1 ov)</span>
+</div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded bg-surface-container-high text-body-sm shadow-sm">
+<span class="font-headline-md text-[15px] text-primary">3-118</span>
+<span class="text-on-surface-variant">A. Sharma (13.5 ov)</span>
+</div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded bg-surface-container-high text-body-sm shadow-sm">
+<span class="font-headline-md text-[15px] text-primary">4-135</span>
+<span class="text-on-surface-variant">KL Rahul (15.4 ov)</span>
+</div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded bg-surface-container-high text-body-sm shadow-sm">
+<span class="font-headline-md text-[15px] text-primary">5-144</span>
+<span class="text-on-surface-variant">H. Pandya (16.5 ov)</span>
+</div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded bg-surface-container-high text-body-sm shadow-sm">
+<span class="font-headline-md text-[15px] text-primary">6-155</span>
+<span class="text-on-surface-variant">M. Wade (18.2 ov)</span>
+</div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded bg-surface-container-high text-body-sm shadow-sm">
+<span class="font-headline-md text-[15px] text-primary">7-160</span>
+<span class="text-on-surface-variant">R. Khan (19.1 ov)</span>
+</div>
+</div>
+</section>
+<!-- BOWLING FIGURES TABLE -->
+<section class="mt-space-lg flex flex-col">
+<div class="px-margin flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">sports_baseball</span>
+<h3 class="font-headline-md text-headline-md uppercase text-on-surface tracking-wide">Bowling Figures</h3>
+</div>
+<span class="font-label-meta text-label-meta text-on-surface-variant">Rovers CC Attack</span>
+</div>
+<div class="w-full overflow-x-auto shadow-inner">
+<table class="w-full text-left border-collapse min-w-[520px]">
+<thead>
+<tr class="bg-surface-container-highest text-on-surface-variant font-label-meta text-label-meta uppercase tracking-wider">
+<th class="sticky left-0 z-20 bg-surface-container-highest py-space-sm px-margin w-40 shadow-[2px_0_5px_rgba(0,0,0,0.3)]" scope="col">Bowler</th>
+<th class="py-space-sm px-space-xs text-right" scope="col">O</th>
+<th class="py-space-sm px-space-xs text-right" scope="col">M</th>
+<th class="py-space-sm px-space-xs text-right" scope="col">R</th>
+<th class="py-space-sm px-space-xs text-right text-primary font-bold" scope="col">W</th>
+<th class="py-space-sm px-space-xs text-right" scope="col">Econ</th>
+<th class="py-space-sm px-space-xs text-right" scope="col">wd</th>
+<th class="py-space-sm px-margin text-right" scope="col">nb</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
+<tr class="bg-surface-container hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<span class="font-body-lg text-[15px] font-semibold text-on-surface truncate block">J. Bumrah</span>
+</td>
+<td class="py-2.5 px-space-xs text-right font-medium">4.0</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-space-xs text-right">28</td>
+<td class="py-2.5 px-space-xs text-right font-headline-md text-[17px] text-primary">2</td>
+<td class="py-2.5 px-space-xs text-right font-mono">7.00</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">1</td>
+<td class="py-2.5 px-margin text-right text-on-surface-variant">1</td>
+</tr>
+<tr class="bg-surface-container-low hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container-low py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<span class="font-body-lg text-[15px] font-semibold text-on-surface truncate block">T. Boult</span>
+</td>
+<td class="py-2.5 px-space-xs text-right font-medium">4.0</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-space-xs text-right">34</td>
+<td class="py-2.5 px-space-xs text-right font-headline-md text-[17px] text-primary">1</td>
+<td class="py-2.5 px-space-xs text-right font-mono">8.50</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">1</td>
+<td class="py-2.5 px-margin text-right text-on-surface-variant">0</td>
+</tr>
+<tr class="bg-surface-container hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<span class="font-body-lg text-[15px] font-semibold text-on-surface truncate block">M. Starc</span>
+</td>
+<td class="py-2.5 px-space-xs text-right font-medium">4.0</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-space-xs text-right">38</td>
+<td class="py-2.5 px-space-xs text-right font-headline-md text-[17px] text-primary">1</td>
+<td class="py-2.5 px-space-xs text-right font-mono">9.50</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">2</td>
+<td class="py-2.5 px-margin text-right text-on-surface-variant">1</td>
+</tr>
+<tr class="bg-surface-container-low hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container-low py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<span class="font-body-lg text-[15px] font-semibold text-on-surface truncate block">R. Jadeja</span>
+</td>
+<td class="py-2.5 px-space-xs text-right font-medium">4.0</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-space-xs text-right">32</td>
+<td class="py-2.5 px-space-xs text-right font-headline-md text-[17px] text-primary">1</td>
+<td class="py-2.5 px-space-xs text-right font-mono">8.00</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-margin text-right text-on-surface-variant">0</td>
+</tr>
+<tr class="bg-surface-container hover:bg-surface-container-high transition-colors">
+<td class="sticky left-0 z-10 bg-surface-container py-2.5 px-margin shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+<span class="font-body-lg text-[15px] font-semibold text-on-surface truncate block">R. Khan</span>
+</td>
+<td class="py-2.5 px-space-xs text-right font-medium">4.0</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-space-xs text-right">36</td>
+<td class="py-2.5 px-space-xs text-right font-headline-md text-[17px] text-primary">1</td>
+<td class="py-2.5 px-space-xs text-right font-mono">9.00</td>
+<td class="py-2.5 px-space-xs text-right text-on-surface-variant">0</td>
+<td class="py-2.5 px-margin text-right text-on-surface-variant">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- MATCH OFFICIALS & VERIFICATION BADGE -->
+<section class="px-margin my-space-lg flex items-center justify-between py-space-sm px-space-md bg-surface-container-lowest rounded-xl">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[22px]">verified</span>
+</div>
+<div>
+<span class="font-label-meta text-label-meta text-secondary uppercase tracking-wider block">Official Scorer Sign-off</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">Umpires: N. Llong &amp; H. Dharmasena</span>
+</div>
+</div>
+<div class="text-right">
+<span class="font-label-meta text-[11px] text-on-surface-variant uppercase">Code: SDT-FNL-01</span>
+</div>
+</section>
+<!-- STICKY BOTTOM ACTION COMMAND ZONE (64px Touchline Ergonomics) -->
+<div class="sticky bottom-0 z-40 bg-surface/95 backdrop-blur-md px-margin py-space-sm pb-space-md shadow-[0_-8px_20px_rgba(0,0,0,0.6)] flex flex-col gap-space-xs">
+<div class="flex gap-space-xs">
+<!-- Primary Action Button: Floodlight Amber -->
+<button class="flex-1 h-14 bg-primary-container active:scale-[0.98] transition-transform rounded-xl flex items-center justify-center gap-space-xs shadow-lg text-on-primary-container px-space-sm" onclick="triggerExportNotice()">
+<span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+<span class="font-headline-md text-[16px] uppercase tracking-wider truncate">EXPORT OFFICIAL SCORECARD</span>
+</button>
+<!-- Share Action Button -->
+<button class="w-14 h-14 bg-surface-container-high hover:bg-surface-container-highest active:scale-[0.98] transition-transform rounded-xl flex items-center justify-center text-on-surface" onclick="triggerShareNotice()">
+<span class="material-symbols-outlined text-[22px]">share</span>
+</button>
+</div>
+</div>
+<!-- Toast Container for Micro-delight feedback -->
+<div class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 transform translate-y-4 px-space-md py-space-xs rounded-full bg-primary text-on-primary font-label-action text-label-action shadow-2xl flex items-center gap-space-xs" id="toast">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span id="toast-text">Official Scorecard Generated</span>
+</div>
+</div>
+<script>
+  function switchInnings(tabIndex) {
+    const tab1 = document.getElementById('tab-inn-1');
+    const tab2 = document.getElementById('tab-inn-2');
+    
+    if (tabIndex === 1) {
+      tab1.className = 'flex flex-col items-center justify-center py-2.5 px-space-sm rounded-lg bg-surface-container-highest shadow-md transition-all';
+      tab2.className = 'flex flex-col items-center justify-center py-2.5 px-space-sm rounded-lg hover:bg-surface-container transition-all';
+      showToast('Switched to Strikers CC (1st Innings)');
+    } else {
+      tab2.className = 'flex flex-col items-center justify-center py-2.5 px-space-sm rounded-lg bg-surface-container-highest shadow-md transition-all';
+      tab1.className = 'flex flex-col items-center justify-center py-2.5 px-space-sm rounded-lg hover:bg-surface-container transition-all';
+      showToast('Switched to Rovers CC (2nd Innings)');
+    }
+  }
+
+  function triggerExportNotice() {
+    showToast('Exporting high-res Match PDF...');
+  }
+
+  function triggerShareNotice() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Summer Dusk Trophy Final - Strikers CC vs Rovers CC',
+        text: 'Final Match Report: Strikers CC won by 12 runs! Scorecard verified by Grade 1 Umpires.',
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      showToast('Scorecard summary copied to clipboard!');
+    }
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toast-text');
+    if (!toast || !toastText) return;
+    toastText.innerText = message;
+    toast.classList.remove('opacity-0', 'translate-y-4');
+    toast.classList.add('opacity-100', 'translate-y-0');
+    setTimeout(() => {
+      toast.classList.remove('opacity-100', 'translate-y-0');
+      toast.classList.add('opacity-0', 'translate-y-4');
+    }, 2400);
+  }
+</script></main></body></html>

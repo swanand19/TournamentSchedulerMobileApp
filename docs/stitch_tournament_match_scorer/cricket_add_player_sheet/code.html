@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-container": "#664000", "surface-container-high": "#2a2a2a", "on-secondary-fixed-variant": "#274e3d", "on-background": "#e5e2e1", "on-secondary": "#0e3727", "on-tertiary-fixed-variant": "#474743", "secondary-fixed": "#c1ecd4", "on-primary-fixed": "#2a1800", "surface": "#131313", "outline": "#9e8e7c", "background": "#131313", "primary": "#ffca85", "surface-container-lowest": "#0e0e0e", "tertiary-fixed-dim": "#c8c6c1", "inverse-surface": "#e5e2e1", "error": "#ffb4ab", "on-tertiary-fixed": "#1b1c18", "on-error-container": "#ffdad6", "tertiary": "#d5d3ce", "outline-variant": "#514535", "error-container": "#93000a", "on-error": "#690005", "inverse-on-surface": "#313030", "on-secondary-fixed": "#002114", "on-surface": "#e5e2e1", "surface-tint": "#ffb956", "secondary-container": "#29513f", "inverse-primary": "#835400", "tertiary-fixed": "#e4e2dd", "on-primary-fixed-variant": "#633f00", "surface-container-low": "#1b1b1b", "primary-container": "#f2a93b", "on-tertiary": "#30312d", "on-primary": "#452b00", "surface-variant": "#353535", "on-secondary-container": "#97c2ab", "surface-container": "#20201f", "secondary-fixed-dim": "#a5d0b9", "surface-dim": "#131313", "primary-fixed": "#ffddb5", "primary-fixed-dim": "#ffb956", "surface-bright": "#393939", "on-tertiary-container": "#494945", "surface-container-highest": "#353535", "tertiary-container": "#b9b8b3", "on-surface-variant": "#d6c3af", "secondary": "#a5d0b9" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin-tablet": "1.5rem", "space-lg": "1.25rem", "space-xs": "0.25rem", "space-xl": "2rem", "margin": "1rem", "space-md": "0.75rem", "gutter": "0.75rem", "gutter-tablet": "1rem", "space-sm": "0.5rem" }, "fontFamily": { "scoreboard-num-mobile": ["Anton"], "body-md": ["Inter"], "headline-xl-mobile": ["Anton"], "body-sm": ["Inter"], "eyebrow-accent": ["Anton"], "body-lg": ["Inter"], "headline-xl": ["Anton"], "headline-lg-mobile": ["Anton"], "label-meta": ["Inter"], "label-action": ["Inter"], "scoreboard-num": ["Anton"], "headline-md": ["Anton"], "headline-lg": ["Anton"] }, "fontSize": { "scoreboard-num-mobile": ["56px", { "lineHeight": "56px", "letterSpacing": "0.02em", "fontWeight": "400" }], "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "500" }], "headline-xl-mobile": ["44px", { "lineHeight": "48px", "letterSpacing": "0.03em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "eyebrow-accent": ["14px", { "lineHeight": "18px", "letterSpacing": "0.14em", "fontWeight": "400" }], "body-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-xl": ["56px", { "lineHeight": "60px", "letterSpacing": "0.04em", "fontWeight": "400" }], "headline-lg-mobile": ["30px", { "lineHeight": "34px", "letterSpacing": "0.02em", "fontWeight": "400" }], "label-meta": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }], "label-action": ["16px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700" }], "scoreboard-num": ["72px", { "lineHeight": "72px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-md": ["24px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-lg": ["36px", { "lineHeight": "40px", "letterSpacing": "0.03em", "fontWeight": "400" }] } } } };</script></head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container/90 backdrop-blur-xl shadow-[0_4px_16px_rgba(0,0,0,0.45)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="Go back" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-high/60 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors flex-shrink-0" onclick="history.back()"><span class="material-symbols-outlined text-[22px]">arrow_back</span></button><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-xs text-on-surface-variant"><span class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-widest text-primary-container">PITCH CONTROL</span><span class="text-[10px] text-outline">/</span><span class="font-label-meta text-label-meta truncate text-outline">OFFICIAL LOG</span></div><h1 class="font-headline-md text-headline-md tracking-tight uppercase text-on-surface truncate leading-none">Team Roster Detail</h1></div></div><div class="flex items-center gap-space-md flex-shrink-0"><div class="flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-secondary-container/60 shadow-[0_0_8px_rgba(41,81,63,0.5)]"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-meta text-label-meta text-on-secondary-container uppercase tracking-wider hidden sm:inline">LIVE SYNC</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(255,202,133,0.25)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full relative">
+<!-- Backdrop Pitch View / Cricket Atmosphere (Dusk Navy Stadium) -->
+<div class="w-full px-margin pb-space-lg pt-space-xs flex flex-col gap-space-md opacity-40 pointer-events-none select-none">
+<!-- Active Match Mini Banner behind modal scrim -->
+<div class="w-full bg-surface-container-high rounded-xl p-space-md shadow-md flex items-center justify-between">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-headline-md text-headline-md">
+          RS
+        </div>
+<div class="flex flex-col min-w-0">
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary truncate tracking-wider">ROYAL STRIKERS CC</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant truncate">MATCH 14 · INNINGS 1 (18.2 OV)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-surface-container text-on-surface">
+<span class="font-scoreboard-num-mobile text-headline-md text-primary">164/5</span>
+</div>
+</div>
+<!-- Roster Overview Card behind scrim -->
+<div class="w-full bg-surface-container rounded-xl p-space-md flex flex-col gap-space-xs">
+<div class="flex justify-between items-center text-on-surface-variant font-label-meta text-label-meta">
+<span>ACTIVE SQUAD QUOTA</span>
+<span>14 / 15 REGISTERED</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[92%]"></div>
+</div>
+</div>
+</div>
+<!-- Modal Scrim Overlay -->
+<div class="fixed inset-0 z-40 bg-surface-container-lowest/80 backdrop-blur-sm transition-opacity" id="modal-backdrop"></div>
+<!-- Bottom Sheet Container (High Contrast Cream Match Card Tone #F7F5EF with Dusk Navy Highlights) -->
+<div class="fixed inset-x-0 bottom-0 z-50 max-w-xl mx-auto flex flex-col bg-[#F7F5EF] text-[#131313] rounded-t-[24px] shadow-2xl max-h-[90vh] pb-safe overflow-hidden transition-transform" id="cricket-modal-sheet">
+<!-- Top Drag Handle Area -->
+<div class="w-full pt-3 pb-2 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing flex-shrink-0">
+<div class="w-12 h-1.5 rounded-full bg-[#131313]/25 hover:bg-[#131313]/40 transition-colors"></div>
+</div>
+<!-- Sheet Header -->
+<div class="px-margin pt-1 pb-space-sm flex items-start justify-between gap-space-sm flex-shrink-0">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#12243B] text-[#FFCA85] font-label-meta text-[11px] tracking-wider uppercase font-bold">
+            🏏 T20 SQUAD SPECIFICATION
+          </span>
+<span class="text-[10px] text-[#514535] font-semibold">· ROYAL STRIKERS</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile uppercase tracking-tight text-[#131313] leading-none">
+          ADD CRICKET SQUAD PLAYER
+        </h2>
+</div>
+<!-- Close Button with >=48dp Hit Target -->
+<button aria-label="Close dialog" class="w-12 h-12 -mr-2 -mt-1 flex items-center justify-center rounded-full bg-[#131313]/5 text-[#131313] hover:bg-[#131313]/10 active:scale-95 transition-transform flex-shrink-0" id="btn-close-modal">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+</div>
+<!-- Scrollable Form Body -->
+<div class="px-margin overflow-y-auto flex flex-col gap-space-md py-space-sm">
+<!-- 1. Basic Info Section: Player Name & Jersey Stepper -->
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-space-sm items-start">
+<!-- Player Full Name -->
+<div class="sm:col-span-7 flex flex-col gap-1.5">
+<label class="font-label-action text-[13px] uppercase tracking-wider text-[#131313] flex items-center gap-1" for="player-name-input">
+            PLAYER FULL NAME <span class="text-error-container font-bold">*</span>
+</label>
+<div class="relative w-full">
+<span class="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#514535] text-[20px] pointer-events-none">
+              badge
+            </span>
+<input class="w-full h-12 pl-11 pr-3 rounded-lg bg-[#EDEAE0] text-[#131313] font-body-md text-body-md placeholder-[#9E8E7C] focus:outline-none focus:bg-white shadow-sm transition-colors" id="player-name-input" placeholder="e.g. Rohan Sharma" type="text" value="Rohan Sharma"/>
+</div>
+</div>
+<!-- Jersey Number Stepper -->
+<div class="sm:col-span-5 flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-action text-[13px] uppercase tracking-wider text-[#131313] flex items-center gap-1">
+              JERSEY NO. <span class="text-error-container font-bold">*</span>
+</label>
+<span class="font-label-meta text-[11px] text-[#0E3727] bg-[#C1ECD4] px-1.5 py-0.5 rounded font-bold uppercase">
+              Available
+            </span>
+</div>
+<div class="flex items-center h-12 bg-[#EDEAE0] rounded-lg p-1 shadow-sm">
+<button aria-label="Decrease jersey number" class="w-10 h-10 rounded flex items-center justify-center bg-white text-[#131313] hover:bg-[#F2A93B] active:scale-95 transition-all shadow-sm" id="stepper-dec" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<div class="flex-1 flex items-center justify-center font-scoreboard-num-mobile text-[28px] text-[#131313] tracking-wide" id="jersey-display">
+              18
+            </div>
+<button aria-label="Increase jersey number" class="w-10 h-10 rounded flex items-center justify-center bg-white text-[#131313] hover:bg-[#F2A93B] active:scale-95 transition-all shadow-sm" id="stepper-inc" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 2. Primary Squad Role (>=48dp touch target quick chips) -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-action text-[13px] uppercase tracking-wider text-[#131313] flex items-center gap-1">
+          PRIMARY SQUAD ROLE <span class="text-error-container font-bold">*</span>
+</label>
+<div aria-label="Primary Squad Role" class="grid grid-cols-2 sm:grid-cols-5 gap-2" role="radiogroup">
+<!-- Batter -->
+<button class="role-chip min-h-[48px] px-3 py-2 rounded-lg bg-[#EDEAE0] text-[#131313] font-label-action text-[14px] flex items-center justify-center text-center transition-all hover:bg-white active:scale-98" type="button">
+            Batter
+          </button>
+<!-- Bowler (Active / Selected state with Gold Highlight #F2A93B / Dusk Navy) -->
+<button class="role-chip active min-h-[48px] px-3 py-2 rounded-lg bg-[#F2A93B] text-[#131313] font-label-action text-[14px] flex items-center justify-center text-center shadow-md font-bold scale-[1.02] transition-all" type="button">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">sports_baseball</span>
+              Bowler
+            </span>
+</button>
+<!-- All-rounder -->
+<button class="role-chip min-h-[48px] px-3 py-2 rounded-lg bg-[#EDEAE0] text-[#131313] font-label-action text-[14px] flex items-center justify-center text-center transition-all hover:bg-white active:scale-98" type="button">
+            All-rounder
+          </button>
+<!-- Wicket-keeper -->
+<button class="role-chip min-h-[48px] px-3 py-2 rounded-lg bg-[#EDEAE0] text-[#131313] font-label-action text-[14px] flex items-center justify-center text-center transition-all hover:bg-white active:scale-98" type="button">
+            Wicket-keeper
+          </button>
+<!-- WK-batter -->
+<button class="role-chip col-span-2 sm:col-span-1 min-h-[48px] px-3 py-2 rounded-lg bg-[#EDEAE0] text-[#131313] font-label-action text-[14px] flex items-center justify-center text-center transition-all hover:bg-white active:scale-98" type="button">
+            WK-batter
+          </button>
+</div>
+</div>
+<!-- 3. Batting Style Segmented Chips -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-action text-[13px] uppercase tracking-wider text-[#131313] flex items-center gap-1">
+          BATTING ORIENTATION <span class="text-error-container font-bold">*</span>
+</label>
+<div aria-label="Batting Orientation" class="grid grid-cols-2 gap-2" role="radiogroup">
+<!-- Right-hand (Selected) -->
+<button class="bat-orient-chip active min-h-[48px] px-4 py-2.5 rounded-lg bg-[#12243B] text-[#FFCA85] font-label-action text-[14px] flex items-center justify-center gap-2 shadow-sm transition-all font-bold" type="button">
+<span class="text-[16px]">🏏</span>
+<span>Right-hand Bat</span>
+</button>
+<!-- Left-hand -->
+<button class="bat-orient-chip min-h-[48px] px-4 py-2.5 rounded-lg bg-[#EDEAE0] text-[#131313] font-label-action text-[14px] flex items-center justify-center gap-2 hover:bg-white transition-all" type="button">
+<span class="text-[16px] opacity-80">🏏</span>
+<span>Left-hand Bat</span>
+</button>
+</div>
+</div>
+<!-- 4. Preferred Batting Position -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-action text-[13px] uppercase tracking-wider text-[#131313]">
+          PREFERRED BATTING POSITION
+        </label>
+<div aria-label="Preferred Batting Position" class="grid grid-cols-3 gap-2" role="radiogroup">
+<button class="order-chip active min-h-[48px] px-2 py-2 rounded-lg bg-[#12243B] text-[#FFCA85] font-label-meta text-[13px] flex flex-col items-center justify-center text-center font-bold shadow-sm" type="button">
+<span>Top Order</span>
+<span class="text-[10px] text-[#FFCA85]/80 font-normal">POS 1 - 3</span>
+</button>
+<button class="order-chip min-h-[48px] px-2 py-2 rounded-lg bg-[#EDEAE0] text-[#131313] font-label-meta text-[13px] flex flex-col items-center justify-center text-center hover:bg-white" type="button">
+<span>Middle Order</span>
+<span class="text-[10px] text-[#514535]">POS 4 - 6</span>
+</button>
+<button class="order-chip min-h-[48px] px-2 py-2 rounded-lg bg-[#EDEAE0] text-[#131313] font-label-meta text-[13px] flex flex-col items-center justify-center text-center hover:bg-white" type="button">
+<span>Finisher / Tail</span>
+<span class="text-[10px] text-[#514535]">POS 7 - 11</span>
+</button>
+</div>
+</div>
+<!-- 5. Bowling Arm & Bowling Type (Dedicated Bowling Specifications Card) -->
+<div class="w-full rounded-xl bg-[#0F1F34] text-[#E5E2E1] p-space-md flex flex-col gap-space-md shadow-lg relative overflow-hidden" id="bowling-spec-section">
+<!-- Subtle Pitch Stamp Graphic Accent -->
+<div class="absolute -right-4 -bottom-6 text-[#FFCA85]/10 font-headline-xl text-[90px] select-none pointer-events-none">
+          W
+        </div>
+<!-- Section Title & Status Indicator -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-[#F2A93B] animate-pulse"></span>
+<span class="font-headline-md text-[18px] uppercase tracking-wide text-[#FFCA85]">
+              BOWLING SPECIFICATIONS
+            </span>
+</div>
+<span class="px-2 py-0.5 rounded bg-[#1B4332] text-[#A5D0B9] font-label-meta text-[11px] font-bold uppercase">
+            Active Roster Filter
+          </span>
+</div>
+<!-- Bowling Arm Toggle -->
+<div class="flex flex-col gap-1.5">
+<span class="font-label-meta text-[12px] uppercase tracking-wider text-[#D6C3AF]">
+            BOWLING ARM
+          </span>
+<div aria-label="Bowling Arm" class="grid grid-cols-2 gap-2" role="radiogroup">
+<button class="arm-chip active min-h-[48px] px-3 py-2 rounded-lg bg-[#F2A93B] text-[#1B1B1B] font-label-action text-[14px] flex items-center justify-center gap-1.5 font-bold shadow-md" type="button">
+<span class="material-symbols-outlined text-[18px]">sports_cricket</span>
+              Right-arm
+            </button>
+<button class="arm-chip min-h-[48px] px-3 py-2 rounded-lg bg-[#1B2F48] text-[#E5E2E1] font-label-action text-[14px] flex items-center justify-center gap-1.5 hover:bg-[#253E5C] transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] opacity-75">sports_cricket</span>
+              Left-arm
+            </button>
+</div>
+</div>
+<!-- Bowling Type Chips -->
+<div class="flex flex-col gap-1.5">
+<span class="font-label-meta text-[12px] uppercase tracking-wider text-[#D6C3AF]">
+            BOWLING VARIANT / STYLE
+          </span>
+<div aria-label="Bowling Type" class="grid grid-cols-3 gap-2" role="radiogroup">
+<button class="style-chip min-h-[48px] px-2 py-2 rounded-lg bg-[#1B2F48] text-[#E5E2E1] font-label-meta text-[12px] flex items-center justify-center text-center hover:bg-[#253E5C]" type="button">
+              Fast
+            </button>
+<button class="style-chip min-h-[48px] px-2 py-2 rounded-lg bg-[#1B2F48] text-[#E5E2E1] font-label-meta text-[12px] flex items-center justify-center text-center hover:bg-[#253E5C]" type="button">
+              Fast-medium
+            </button>
+<button class="style-chip min-h-[48px] px-2 py-2 rounded-lg bg-[#1B2F48] text-[#E5E2E1] font-label-meta text-[12px] flex items-center justify-center text-center hover:bg-[#253E5C]" type="button">
+              Medium-fast
+            </button>
+<button class="style-chip min-h-[48px] px-2 py-2 rounded-lg bg-[#1B2F48] text-[#E5E2E1] font-label-meta text-[12px] flex items-center justify-center text-center hover:bg-[#253E5C]" type="button">
+              Medium
+            </button>
+<button class="style-chip min-h-[48px] px-2 py-2 rounded-lg bg-[#1B2F48] text-[#E5E2E1] font-label-meta text-[12px] flex items-center justify-center text-center hover:bg-[#253E5C]" type="button">
+              Finger spin
+            </button>
+<button class="style-chip active min-h-[48px] px-2 py-2 rounded-lg bg-[#F2A93B] text-[#131313] font-label-meta text-[12px] flex items-center justify-center text-center font-bold shadow-md" type="button">
+              Wrist spin
+            </button>
+</div>
+</div>
+<!-- Prominent Live Profile Pill / Badge -->
+<div class="w-full bg-[#12243B] rounded-lg p-2.5 flex items-center justify-between gap-space-sm shadow-inner">
+<div class="flex items-center gap-2 min-w-0">
+<span class="flex-shrink-0 w-6 h-6 rounded-full bg-[#F2A93B] text-[#131313] flex items-center justify-center text-xs font-bold">
+              ⚡
+            </span>
+<div class="flex flex-col min-w-0">
+<span class="text-[10px] font-label-meta uppercase tracking-wider text-[#FFCA85]/80">TOUCHLINE CALLOUT BADGE</span>
+<span class="font-label-action text-[13px] text-[#FFCA85] truncate font-bold" id="live-profile-summary">
+                LIVE PROFILE: Right-arm leg break (Wrist spin)
+              </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[#F2A93B] text-[20px] flex-shrink-0">check_circle</span>
+</div>
+</div>
+<!-- Quick Tournament Compliance Notice -->
+<div class="p-space-sm rounded-lg bg-[#EDEAE0] flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[#514535] text-[20px] flex-shrink-0">verified</span>
+<span class="font-body-sm text-body-sm text-[#514535] leading-snug">
+          Player will be immediately licensed for Royal Strikers' active T20 squad sheet and available for the immediate innings toss.
+        </span>
+</div>
+</div>
+<!-- 6. Action Buttons in Thumb Zone (Ergonomic Lower Shelf) -->
+<div class="p-margin bg-[#EDEAE0] flex items-center gap-space-sm flex-shrink-0">
+<!-- Cancel Button -->
+<button class="w-1/3 min-h-[52px] h-[52px] rounded-lg bg-transparent text-[#131313] hover:bg-black/5 font-label-action text-label-action tracking-wider uppercase transition-colors flex items-center justify-center" id="btn-cancel" type="button">
+        Cancel
+      </button>
+<!-- Large Cricket Gold CTA (Height: 52dp+, Gold #F2A93B, Bold Text) -->
+<button class="w-2/3 min-h-[52px] h-[52px] px-space-md rounded-lg bg-[#F2A93B] hover:bg-[#E0982E] active:scale-[0.98] text-[#1B1B1B] font-label-action text-label-action tracking-wide uppercase font-bold shadow-lg transition-all flex items-center justify-center gap-2" id="btn-register-player" type="button">
+<span class="text-[18px]">⚡</span>
+<span class="truncate">REGISTER CRICKET PLAYER</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // Stepper logic for Jersey Number
+    const jerseyDisplay = document.getElementById('jersey-display');
+    const decBtn = document.getElementById('stepper-dec');
+    const incBtn = document.getElementById('stepper-inc');
+    let jerseyNum = 18;
+
+    if (decBtn && incBtn && jerseyDisplay) {
+      decBtn.addEventListener('click', () => {
+        if (jerseyNum > 1) {
+          jerseyNum--;
+          jerseyDisplay.textContent = jerseyNum;
+        }
+      });
+      incBtn.addEventListener('click', () => {
+        if (jerseyNum < 99) {
+          jerseyNum++;
+          jerseyDisplay.textContent = jerseyNum;
+        }
+      });
+    }
+
+    // Role chip selection logic
+    const roleChips = document.querySelectorAll('.role-chip');
+    const bowlingSection = document.getElementById('bowling-spec-section');
+
+    roleChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        roleChips.forEach(c => {
+          c.classList.remove('active', 'bg-[#F2A93B]', 'text-[#131313]', 'font-bold', 'scale-[1.02]');
+          c.classList.add('bg-[#EDEAE0]', 'text-[#131313]');
+        });
+        chip.classList.add('active', 'bg-[#F2A93B]', 'text-[#131313]', 'font-bold', 'scale-[1.02]');
+        chip.classList.remove('bg-[#EDEAE0]');
+
+        const roleText = chip.textContent.trim().toLowerCase();
+        if (bowlingSection) {
+          // Dynamic presentation for Bowler or All-rounder
+          if (roleText.includes('bowler') || roleText.includes('all-rounder')) {
+            bowlingSection.style.display = 'flex';
+          } else {
+            bowlingSection.style.display = 'none';
+          }
+        }
+      });
+    });
+
+    // Batting Orientation chips
+    const batChips = document.querySelectorAll('.bat-orient-chip');
+    batChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        batChips.forEach(c => {
+          c.classList.remove('active', 'bg-[#12243B]', 'text-[#FFCA85]', 'font-bold');
+          c.classList.add('bg-[#EDEAE0]', 'text-[#131313]');
+        });
+        chip.classList.add('active', 'bg-[#12243B]', 'text-[#FFCA85]', 'font-bold');
+        chip.classList.remove('bg-[#EDEAE0]', 'text-[#131313]');
+      });
+    });
+
+    // Batting Position chips
+    const orderChips = document.querySelectorAll('.order-chip');
+    orderChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        orderChips.forEach(c => {
+          c.classList.remove('active', 'bg-[#12243B]', 'text-[#FFCA85]', 'font-bold');
+          c.classList.add('bg-[#EDEAE0]', 'text-[#131313]');
+        });
+        chip.classList.add('active', 'bg-[#12243B]', 'text-[#FFCA85]', 'font-bold');
+        chip.classList.remove('bg-[#EDEAE0]', 'text-[#131313]');
+      });
+    });
+
+    // Bowling Specifications interactive state & dynamic callout pill update
+    const armChips = document.querySelectorAll('.arm-chip');
+    const styleChips = document.querySelectorAll('.style-chip');
+    const summaryBadge = document.getElementById('live-profile-summary');
+
+    let currentArm = 'Right-arm';
+    let currentStyle = 'Wrist spin';
+
+    function updateBadge() {
+      if (!summaryBadge) return;
+      let nuance = 'leg break';
+      if (currentArm.includes('Left')) {
+        nuance = (currentStyle.includes('spin')) ? 'chinaman / wrist spin' : 'seam';
+      } else {
+        if (currentStyle.includes('Finger')) nuance = 'off-break';
+        else if (currentStyle.includes('Fast') || currentStyle.includes('Medium')) nuance = 'pace';
+      }
+      summaryBadge.textContent = `LIVE PROFILE: ${currentArm} ${nuance} (${currentStyle})`;
+    }
+
+    armChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        armChips.forEach(c => {
+          c.classList.remove('active', 'bg-[#F2A93B]', 'text-[#1B1B1B]', 'font-bold');
+          c.classList.add('bg-[#1B2F48]', 'text-[#E5E2E1]');
+        });
+        chip.classList.add('active', 'bg-[#F2A93B]', 'text-[#1B1B1B]', 'font-bold');
+        chip.classList.remove('bg-[#1B2F48]', 'text-[#E5E2E1]');
+        currentArm = chip.textContent.trim();
+        updateBadge();
+      });
+    });
+
+    styleChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        styleChips.forEach(c => {
+          c.classList.remove('active', 'bg-[#F2A93B]', 'text-[#131313]', 'font-bold');
+          c.classList.add('bg-[#1B2F48]', 'text-[#E5E2E1]');
+        });
+        chip.classList.add('active', 'bg-[#F2A93B]', 'text-[#131313]', 'font-bold');
+        chip.classList.remove('bg-[#1B2F48]', 'text-[#E5E2E1]');
+        currentStyle = chip.textContent.trim();
+        updateBadge();
+      });
+    });
+
+    // Close and Cancel buttons demo feedback
+    const closeBtn = document.getElementById('btn-close-modal');
+    const cancelBtn = document.getElementById('btn-cancel');
+    const regBtn = document.getElementById('btn-register-player');
+
+    const dismissModal = () => {
+      const sheet = document.getElementById('cricket-modal-sheet');
+      const backdrop = document.getElementById('modal-backdrop');
+      if (sheet && backdrop) {
+        sheet.style.transform = 'translateY(100%)';
+        backdrop.style.opacity = '0';
+        setTimeout(() => {
+          sheet.style.transform = 'translateY(0)';
+          backdrop.style.opacity = '1';
+        }, 1200);
+      }
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', dismissModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', dismissModal);
+    if (regBtn) {
+      regBtn.addEventListener('click', () => {
+        regBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span> REGISTERING...';
+        setTimeout(() => {
+          regBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check</span> ADDED TO SQUAD';
+          regBtn.classList.remove('bg-[#F2A93B]');
+          regBtn.classList.add('bg-[#29513F]', 'text-[#A5D0B9]');
+          setTimeout(dismissModal, 600);
+        }, 800);
+      });
+    }
+  })();
+</script></main></body></html>

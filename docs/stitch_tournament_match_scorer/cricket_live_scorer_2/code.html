@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-secondary-fixed-variant": "#274e3d", "primary-fixed": "#ffddb5", "on-tertiary-fixed": "#1b1c18", "surface-container-high": "#2a2a2a", "on-tertiary": "#30312d", "inverse-surface": "#e5e2e1", "surface-tint": "#ffb956", "on-secondary-fixed": "#002114", "on-surface": "#e5e2e1", "primary-container": "#f2a93b", "outline": "#9e8e7c", "outline-variant": "#514535", "error-container": "#93000a", "surface-variant": "#353535", "surface-container-low": "#1b1b1b", "on-primary-fixed": "#2a1800", "surface-container": "#20201f", "surface-container-lowest": "#0e0e0e", "primary": "#ffca85", "error": "#ffb4ab", "surface-dim": "#131313", "primary-fixed-dim": "#ffb956", "surface": "#131313", "on-tertiary-fixed-variant": "#474743", "on-primary-container": "#664000", "on-error-container": "#ffdad6", "on-background": "#e5e2e1", "surface-bright": "#393939", "tertiary-fixed": "#e4e2dd", "tertiary-fixed-dim": "#c8c6c1", "secondary-fixed-dim": "#a5d0b9", "surface-container-highest": "#353535", "secondary": "#a5d0b9", "tertiary": "#d5d3ce", "secondary-fixed": "#c1ecd4", "background": "#131313", "on-secondary": "#0e3727", "on-primary": "#452b00", "on-tertiary-container": "#494945", "secondary-container": "#29513f", "on-primary-fixed-variant": "#633f00", "on-error": "#690005", "inverse-on-surface": "#313030", "tertiary-container": "#b9b8b3", "inverse-primary": "#835400", "on-secondary-container": "#97c2ab", "on-surface-variant": "#d6c3af" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "0.75rem", "space-md": "0.75rem", "margin": "1rem", "space-lg": "1.25rem", "margin-tablet": "1.5rem", "gutter-tablet": "1rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-xl": "2rem" }, "fontFamily": { "headline-lg": ["Anton"], "label-meta": ["Inter"], "scoreboard-num-mobile": ["Anton"], "headline-md": ["Anton"], "headline-xl-mobile": ["Anton"], "body-sm": ["Inter"], "body-md": ["Inter"], "body-lg": ["Inter"], "scoreboard-num": ["Anton"], "headline-xl": ["Anton"], "eyebrow-accent": ["Anton"], "headline-lg-mobile": ["Anton"], "label-action": ["Inter"] }, "fontSize": { "headline-lg": ["36px", { "lineHeight": "40px", "letterSpacing": "0.03em", "fontWeight": "400" }], "label-meta": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }], "scoreboard-num-mobile": ["56px", { "lineHeight": "56px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-md": ["24px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-xl-mobile": ["44px", { "lineHeight": "48px", "letterSpacing": "0.03em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "500" }], "body-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "scoreboard-num": ["72px", { "lineHeight": "72px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-xl": ["56px", { "lineHeight": "60px", "letterSpacing": "0.04em", "fontWeight": "400" }], "eyebrow-accent": ["14px", { "lineHeight": "18px", "letterSpacing": "0.14em", "fontWeight": "400" }], "headline-lg-mobile": ["30px", { "lineHeight": "34px", "letterSpacing": "0.02em", "fontWeight": "400" }], "label-action": ["16px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700" }] } } } };</script></head><body class="bg-surface text-on-surface flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0 flex-1"><button aria-label="Go back" class="w-11 h-11 -ml-space-xs flex items-center justify-center rounded-full text-on-surface hover:text-primary active:scale-95 transition-transform duration-100" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><div class="flex flex-col min-w-0 leading-none"><span class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-widest text-primary-container truncate">SUMMER DUSK TROPHY 2026</span><h1 class="font-headline-md text-headline-md uppercase tracking-tight text-on-surface truncate">Cricket Live Scorer</h1></div></div><div class="flex items-center gap-space-xs shrink-0"><button aria-label="Match Options Overflow" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:text-primary active:scale-95 transition-transform duration-100" type="button"><span class="material-symbols-outlined text-[24px]">more_vert</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface flex-1"><div class="flex flex-col w-full pb-safe select-none">
+<!-- 1. MATCH CONTEXT & QUICK ACTIONS OVERFLOW SCRIM / MENU -->
+<div class="px-margin pt-space-sm pb-space-xs flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-high rounded-full shadow-sm max-w-[78%]">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse shrink-0"></span>
+<span class="font-label-meta text-label-meta text-on-surface uppercase tracking-wider truncate">
+        FINAL · ROVERS CC VS STRIKERS CC · FLOODLIT OVAL
+      </span>
+</div>
+<!-- Quick Actions Overflow Trigger Button -->
+<div class="relative">
+<button aria-label="Quick Match Menu" class="w-10 h-10 rounded-full bg-surface-container-high text-primary hover:bg-surface-variant active:scale-95 transition-all flex items-center justify-center shadow-md" id="overflowTriggerBtn" onclick="document.getElementById('quickActionsMenu').classList.toggle('hidden')" type="button">
+<span class="material-symbols-outlined text-[22px]">tune</span>
+</button>
+<!-- Dropdown Quick Action Sheet -->
+<div class="hidden absolute right-0 top-12 w-64 bg-surface-container-highest shadow-2xl rounded-xl p-space-xs z-40 flex flex-col gap-1" id="quickActionsMenu">
+<div class="px-space-sm py-space-xs font-eyebrow-accent text-eyebrow-accent text-primary uppercase">
+          Match Operations
+        </div>
+<button class="w-full text-left px-space-sm py-space-xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-between font-body-sm text-body-sm" type="button">
+<span>Full Scorecard</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">analytics</span>
+</button>
+<button class="w-full text-left px-space-sm py-space-xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-between font-body-sm text-body-sm" type="button">
+<span>Reduce Overs (Rain DLS)</span>
+<span class="material-symbols-outlined text-[18px] text-primary">rainy</span>
+</button>
+<button class="w-full text-left px-space-sm py-space-xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-between font-body-sm text-body-sm" type="button">
+<span>Declare Innings</span>
+<span class="material-symbols-outlined text-[18px] text-secondary">flag</span>
+</button>
+<button class="w-full text-left px-space-sm py-space-xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-between font-body-sm text-body-sm" type="button">
+<span>End 2nd Innings</span>
+<span class="material-symbols-outlined text-[18px] text-error">stop_circle</span>
+</button>
+<button class="w-full text-left px-space-sm py-space-xs rounded-lg bg-error-container text-on-error-container flex items-center justify-between font-body-sm text-body-sm font-bold" type="button">
+<span>Complete Match &amp; Sign</span>
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 2. SCOREBOARD HEADER (MONUMENTAL HERO DECK) -->
+<div class="mx-margin mt-space-xs bg-surface-container-low rounded-xl p-space-md shadow-xl flex flex-col gap-space-sm relative overflow-hidden">
+<!-- Top Row: Team + Target Pill + Run Rate -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary-container tracking-wider uppercase">
+          STRIKERS CC
+        </span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-tertiary font-label-meta text-label-meta">
+          TGT: 172
+        </span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="px-space-sm py-0.5 rounded-full bg-surface-container-high font-label-meta text-label-meta text-tertiary-fixed">
+          CRR 8.46
+        </span>
+</div>
+</div>
+<!-- Monumental Score Display & Overs -->
+<div class="flex items-baseline justify-between">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-scoreboard-num-mobile text-scoreboard-num-mobile text-on-surface tracking-tight" id="scoreDisplay">
+          148<span class="text-primary-container">/</span>6
+        </span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-headline-md text-headline-md text-on-surface">
+          17.3 <span class="font-body-sm text-body-sm text-tertiary">/ 20</span>
+</span>
+<span class="font-label-meta text-label-meta text-tertiary uppercase">OVER PROGRESS</span>
+</div>
+</div>
+<!-- Chasing Equation Bar & Flash Free Hit Banner -->
+<div class="flex flex-col gap-space-xs">
+<div class="w-full bg-primary-container text-on-primary-container px-space-md py-space-xs rounded-lg flex items-center justify-between shadow-md">
+<div class="flex items-center gap-space-xs font-label-action text-label-action tracking-wide uppercase">
+<span class="material-symbols-outlined text-[18px]">sports_cricket</span>
+<span>NEED 24 OFF 15 BALLS</span>
+</div>
+<div class="font-label-action text-label-action font-black uppercase">
+          RRR 9.60
+        </div>
+</div>
+<!-- FREE HIT BADGE (Triggered by front-foot no-ball) -->
+<div class="w-full bg-surface-container-highest px-space-md py-1.5 rounded-lg flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-xs text-primary font-eyebrow-accent text-eyebrow-accent uppercase tracking-wider">
+<span class="material-symbols-outlined text-[18px] text-primary animate-bounce">bolt</span>
+<span>⚡ FREE HIT ACTIVE · NO BOWLED/LBW DISMISSAL</span>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-meta text-label-meta">
+          NEXT BALL
+        </span>
+</div>
+</div>
+</div>
+<!-- 3. CREASE CARD (ACTIVE BATSMEN & BOWLER HUB) -->
+<div class="mx-margin mt-space-sm bg-surface-container-low rounded-xl p-space-md shadow-lg flex flex-col gap-space-sm">
+<!-- Active Batsmen Subsection -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between pb-1">
+<span class="font-eyebrow-accent text-eyebrow-accent text-tertiary uppercase">BATSMEN</span>
+<button class="flex items-center gap-1 text-primary hover:text-primary-fixed active:scale-95 transition-transform" onclick="swapBatsmen()" type="button">
+<span class="material-symbols-outlined text-[16px]">sync_alt</span>
+<span class="font-label-meta text-label-meta uppercase">SWAP STRIKER</span>
+</button>
+</div>
+<!-- Striker Row (Sharma) -->
+<div class="p-space-xs rounded-lg bg-surface-container-high flex items-center justify-between shadow-sm" id="strikerRow">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container animate-ping"></span>
+<span class="font-label-action text-label-action text-primary-fixed truncate">A. Sharma</span>
+<span class="material-symbols-outlined text-primary-container text-[16px]">sports_cricket</span>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="font-headline-md text-headline-md text-on-surface">54*</span>
+<span class="font-body-sm text-body-sm text-tertiary">38b · 4x4 · 2x6 · SR 142.1</span>
+</div>
+</div>
+<!-- Non-Striker Row (Patel) -->
+<div class="p-space-xs rounded-lg bg-surface-container flex items-center justify-between" id="nonStrikerRow">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-body-md text-body-md text-on-surface truncate">R. Patel</span>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<span class="font-headline-md text-headline-md text-tertiary">12</span>
+<span class="font-body-sm text-body-sm text-tertiary">9b · 1x4 · SR 133.3</span>
+</div>
+</div>
+</div>
+<!-- Active Bowler Subsection -->
+<div class="p-space-xs rounded-lg bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-secondary text-[20px]">sports_baseball</span>
+<div class="flex flex-col min-w-0 leading-tight">
+<span class="font-label-action text-label-action text-on-surface truncate">J. Brown</span>
+<span class="font-label-meta text-label-meta text-secondary uppercase">Right-arm Fast Medium</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-action text-label-action text-on-surface">3.3 - 0 - 28 - 2</span>
+<span class="font-body-sm text-body-sm text-tertiary">Econ 8.00</span>
+</div>
+</div>
+<!-- Partnership & Last Wicket Strip -->
+<div class="px-space-sm py-1.5 rounded-lg bg-surface-container-highest flex items-center justify-between font-label-meta text-label-meta text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-primary">groups</span>
+<span>Partnership: <strong class="text-on-surface">41 (27b)</strong></span>
+</span>
+<span class="truncate">Last: M. Wade 18 (14)</span>
+</div>
+</div>
+<!-- 4. THIS OVER STRIP (HORIZONTAL BALL CHIPS) -->
+<div class="mx-margin mt-space-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-xs font-eyebrow-accent text-eyebrow-accent text-on-surface uppercase">
+<span>THIS OVER (17.3)</span>
+<span class="text-primary-container">· 8 RUNS</span>
+</div>
+<span class="font-label-meta text-label-meta text-tertiary uppercase">6 VALID BALLS REQ</span>
+</div>
+<div class="flex items-center gap-space-xs overflow-x-auto py-1">
+<!-- Ball 1: 1 run -->
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-headline-md text-headline-md text-on-surface shrink-0 shadow-sm">
+        1
+      </div>
+<!-- Ball 2: 4 boundary -->
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center font-headline-md text-headline-md text-on-primary-container shrink-0 shadow-md">
+        4
+      </div>
+<!-- Ball 3: Wicket -->
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center font-headline-md text-headline-md text-on-error-container shrink-0 shadow-md">
+        W
+      </div>
+<!-- Ball 4: Wide extra -->
+<div class="w-10 h-10 rounded-full bg-surface-container flex flex-col items-center justify-center font-label-action text-label-action text-primary-container shrink-0 shadow-sm">
+<span>wd</span>
+</div>
+<!-- Ball 5: Dot ball (0) -->
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center font-headline-md text-headline-md text-outline shrink-0 shadow-inner">
+        0
+      </div>
+<!-- Ball 6: 2 runs -->
+<div class="w-10 h-10 rounded-full bg-surface-bright flex items-center justify-center font-headline-md text-headline-md text-inverse-on-surface shrink-0 shadow-sm">
+        2
+      </div>
+<!-- Current / Next Pending Delivery Slot -->
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 shadow-lg">
+<span class="material-symbols-outlined text-primary text-[20px] animate-spin">progress_activity</span>
+</div>
+</div>
+</div>
+<!-- 5. TACTILE THUMB-ZONE RUN KEYPAD & EXTRAS (OUTDOOR HIGH-IMPACT >=52DP TARGETS) -->
+<div class="mt-space-sm bg-surface-container-lowest px-margin pt-space-sm pb-space-lg flex flex-col gap-space-sm shadow-[0_-8px_24px_rgba(0,0,0,0.6)]">
+<!-- Row 1: Extras & Modifiers Toggles -->
+<div class="grid grid-cols-4 gap-space-xs">
+<button class="h-12 rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action uppercase flex flex-col items-center justify-center active:scale-95 transition-all shadow-sm" onclick="toggleModifier(this, 'WIDE')" type="button">
+<span>WIDE</span>
+<span class="font-label-meta text-label-meta text-primary">+1 wd</span>
+</button>
+<button class="h-12 rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action uppercase flex flex-col items-center justify-center active:scale-95 transition-all shadow-sm" onclick="toggleModifier(this, 'NO_BALL')" type="button">
+<span>NO BALL</span>
+<span class="font-label-meta text-label-meta text-primary">+1 nb</span>
+</button>
+<button class="h-12 rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action uppercase flex flex-col items-center justify-center active:scale-95 transition-all shadow-sm" onclick="toggleModifier(this, 'BYE')" type="button">
+<span>BYES</span>
+<span class="font-label-meta text-label-meta text-tertiary">B</span>
+</button>
+<button class="h-12 rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action uppercase flex flex-col items-center justify-center active:scale-95 transition-all shadow-sm" onclick="toggleModifier(this, 'LEG_BYE')" type="button">
+<span>LEG BYE</span>
+<span class="font-label-meta text-label-meta text-tertiary">LB</span>
+</button>
+</div>
+<!-- Row 2: Tactile Runs Grid (Large buttons >= 58px) -->
+<div class="grid grid-cols-4 gap-space-xs">
+<!-- 0 Dot Ball -->
+<button class="h-16 rounded-xl bg-surface-container text-on-surface font-headline-lg-mobile text-headline-lg-mobile flex items-center justify-center active:scale-90 transition-transform shadow-md" onclick="recordBall('0', 'DOT')" type="button">
+        0
+      </button>
+<!-- 1 Single -->
+<button class="h-16 rounded-xl bg-surface-container-high text-on-surface font-headline-lg-mobile text-headline-lg-mobile flex items-center justify-center active:scale-90 transition-transform shadow-md" onclick="recordBall('1', 'RUN')" type="button">
+        1
+      </button>
+<!-- 2 Double -->
+<button class="h-16 rounded-xl bg-surface-container-high text-on-surface font-headline-lg-mobile text-headline-lg-mobile flex items-center justify-center active:scale-90 transition-transform shadow-md" onclick="recordBall('2', 'RUN')" type="button">
+        2
+      </button>
+<!-- 3 Three -->
+<button class="h-16 rounded-xl bg-surface-container-high text-on-surface font-headline-lg-mobile text-headline-lg-mobile flex items-center justify-center active:scale-90 transition-transform shadow-md" onclick="recordBall('3', 'RUN')" type="button">
+        3
+      </button>
+<!-- 4 Boundary Four (Floodlight Gold Accent) -->
+<button class="h-16 rounded-xl bg-primary-container text-on-primary-container font-headline-lg-mobile text-headline-lg-mobile flex flex-col items-center justify-center active:scale-90 transition-transform shadow-lg" onclick="recordBall('4', 'BOUNDARY_FOUR')" type="button">
+<span>4</span>
+<span class="font-label-meta text-label-meta -mt-1 uppercase tracking-tighter">FOUR</span>
+</button>
+<!-- 6 Maximum Six (High-Lumen Gold Burst) -->
+<button class="h-16 rounded-xl bg-primary text-on-primary font-headline-lg-mobile text-headline-lg-mobile flex flex-col items-center justify-center active:scale-90 transition-transform shadow-xl" onclick="recordBall('6', 'BOUNDARY_SIX')" type="button">
+<span>6</span>
+<span class="font-label-meta text-label-meta -mt-1 uppercase tracking-tighter">MAXIMUM</span>
+</button>
+<!-- 5+ Overthrows / Penalty -->
+<button class="h-16 rounded-xl bg-surface-container text-on-surface font-headline-lg-mobile text-headline-lg-mobile flex flex-col items-center justify-center active:scale-90 transition-transform shadow-md" onclick="recordBall('5+', 'OVERTHROW')" type="button">
+<span>5+</span>
+<span class="font-label-meta text-label-meta -mt-1 uppercase text-tertiary">EXTRAS</span>
+</button>
+<!-- Change Strike Quick Switch -->
+<button class="h-16 rounded-xl bg-secondary-container text-on-secondary-container font-label-action text-label-action uppercase flex flex-col items-center justify-center active:scale-90 transition-transform shadow-md" onclick="swapBatsmen()" type="button">
+<span class="material-symbols-outlined text-[24px]">swap_horiz</span>
+<span class="font-label-meta text-label-meta -mt-1 uppercase">STRIKE</span>
+</button>
+</div>
+<!-- Row 3: Tactical Safeguards & Wicket Dismissal Control -->
+<div class="grid grid-cols-3 gap-space-xs pt-space-xs">
+<!-- Tactile Undo Button -->
+<button class="h-14 rounded-xl bg-surface-container-high text-on-surface font-label-action text-label-action uppercase flex items-center justify-center gap-1 active:scale-95 transition-all shadow-md col-span-1" id="undoBtn" onclick="triggerUndo()" type="button">
+<span class="material-symbols-outlined text-[20px] text-primary">undo</span>
+<div class="flex flex-col text-left leading-none">
+<span>UNDO</span>
+<span class="font-label-meta text-label-meta text-tertiary -mt-0.5">Last 2</span>
+</div>
+</button>
+<!-- Wicket Primary Action Button (Tactile Dismissal Console) -->
+<button class="h-14 rounded-xl bg-error-container text-on-error-container font-headline-md text-headline-md uppercase flex items-center justify-center gap-space-xs active:scale-95 transition-all shadow-xl col-span-2" onclick="openDismissalModal()" type="button">
+<span class="material-symbols-outlined text-[28px]">sports</span>
+<span>OUT / WICKET</span>
+</button>
+</div>
+</div>
+<!-- MODAL: WICKET DISMISSAL DIALOG -->
+<div class="hidden fixed inset-0 z-50 bg-black/85 flex flex-col justify-end p-margin" id="wicketModal">
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-space-md shadow-2xl">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-error text-[24px]">warning</span>
+<span class="font-headline-md text-headline-md text-on-surface uppercase">Confirm Dismissal</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface" onclick="closeDismissalModal()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="font-body-md text-body-md text-on-surface">
+        Select method of dismissal for <strong class="text-primary-container">A. Sharma (54)</strong>:
+      </div>
+<div class="grid grid-cols-2 gap-space-xs">
+<button class="p-space-sm rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action text-left flex items-center justify-between" onclick="confirmWicket('Caught')" type="button">
+<span>Caught</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">sports_handball</span>
+</button>
+<button class="p-space-sm rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action text-left flex items-center justify-between" onclick="confirmWicket('Bowled')" type="button">
+<span>Bowled</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">sports_baseball</span>
+</button>
+<button class="p-space-sm rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action text-left flex items-center justify-between" onclick="confirmWicket('LBW')" type="button">
+<span>LBW</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">front_hand</span>
+</button>
+<button class="p-space-sm rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action text-left flex items-center justify-between" onclick="confirmWicket('Run Out')" type="button">
+<span>Run Out</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">directions_run</span>
+</button>
+<button class="p-space-sm rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action text-left flex items-center justify-between" onclick="confirmWicket('Stumped')" type="button">
+<span>Stumped</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">pan_tool</span>
+</button>
+<button class="p-space-sm rounded-lg bg-surface-container-high text-on-surface font-label-action text-label-action text-left flex items-center justify-between" onclick="confirmWicket('Hit Wicket')" type="button">
+<span>Hit Wicket</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">close</span>
+</button>
+</div>
+<div class="pt-space-xs flex gap-space-sm">
+<button class="flex-1 py-space-sm rounded-lg bg-surface-container text-on-surface font-label-action text-label-action uppercase" onclick="closeDismissalModal()" type="button">
+          Cancel
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  let runs = 148;
+  let wickets = 6;
+  let strikerIndex = 0; // 0 for Sharma, 1 for Patel
+
+  function recordBall(scoreVal, type) {
+    if (navigator.vibrate) {
+      navigator.vibrate(40);
+    }
+    const scoreEl = document.getElementById('scoreDisplay');
+    if (!isNaN(parseInt(scoreVal))) {
+      runs += parseInt(scoreVal);
+      scoreEl.innerHTML = runs + `<span class="text-primary-container">/</span>` + wickets;
+    }
+    // Simple feedback animation
+    scoreEl.classList.add('scale-105', 'text-primary');
+    setTimeout(() => {
+      scoreEl.classList.remove('scale-105', 'text-primary');
+    }, 180);
+  }
+
+  function swapBatsmen() {
+    if (navigator.vibrate) navigator.vibrate(30);
+    strikerIndex = strikerIndex === 0 ? 1 : 0;
+    const r1 = document.getElementById('strikerRow');
+    const r2 = document.getElementById('nonStrikerRow');
+    if (strikerIndex === 1) {
+      r1.classList.replace('bg-surface-container-high', 'bg-surface-container');
+      r2.classList.replace('bg-surface-container', 'bg-surface-container-high');
+    } else {
+      r2.classList.replace('bg-surface-container-high', 'bg-surface-container');
+      r1.classList.replace('bg-surface-container', 'bg-surface-container-high');
+    }
+  }
+
+  function toggleModifier(btn, mod) {
+    if (navigator.vibrate) navigator.vibrate(25);
+    btn.classList.toggle('bg-primary-container');
+    btn.classList.toggle('text-on-primary-container');
+  }
+
+  function triggerUndo() {
+    if (navigator.vibrate) navigator.vibrate([30, 30]);
+    if (runs > 0) runs -= 2;
+    document.getElementById('scoreDisplay').innerHTML = runs + `<span class="text-primary-container">/</span>` + wickets;
+  }
+
+  function openDismissalModal() {
+    document.getElementById('wicketModal').classList.remove('hidden');
+  }
+
+  function closeDismissalModal() {
+    document.getElementById('wicketModal').classList.add('hidden');
+  }
+
+  function confirmWicket(dismissalType) {
+    if (navigator.vibrate) navigator.vibrate([60, 50, 60]);
+    wickets += 1;
+    document.getElementById('scoreDisplay').innerHTML = runs + `<span class="text-primary-container">/</span>` + wickets;
+    closeDismissalModal();
+  }
+</script></main></body></html>

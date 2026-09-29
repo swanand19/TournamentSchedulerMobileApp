@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-secondary-fixed": "#002114", "primary-container": "#f2a93b", "on-tertiary-container": "#494945", "surface-container": "#20201f", "surface-container-high": "#2a2a2a", "secondary-fixed": "#c1ecd4", "error-container": "#93000a", "on-surface-variant": "#d6c3af", "inverse-on-surface": "#313030", "on-secondary-container": "#97c2ab", "on-tertiary-fixed-variant": "#474743", "on-tertiary-fixed": "#1b1c18", "on-error-container": "#ffdad6", "secondary-container": "#29513f", "surface": "#131313", "surface-container-low": "#1b1b1b", "on-error": "#690005", "secondary-fixed-dim": "#a5d0b9", "outline-variant": "#514535", "primary": "#ffca85", "on-secondary": "#0e3727", "surface-container-lowest": "#0e0e0e", "surface-bright": "#393939", "inverse-primary": "#835400", "tertiary-container": "#b9b8b3", "secondary": "#a5d0b9", "tertiary-fixed": "#e4e2dd", "on-primary-fixed": "#2a1800", "error": "#ffb4ab", "surface-variant": "#353535", "tertiary": "#d5d3ce", "on-surface": "#e5e2e1", "inverse-surface": "#e5e2e1", "tertiary-fixed-dim": "#c8c6c1", "on-background": "#e5e2e1", "on-primary": "#452b00", "primary-fixed-dim": "#ffb956", "background": "#131313", "surface-container-highest": "#353535", "on-secondary-fixed-variant": "#274e3d", "primary-fixed": "#ffddb5", "outline": "#9e8e7c", "on-tertiary": "#30312d", "on-primary-fixed-variant": "#633f00", "surface-tint": "#ffb956", "on-primary-container": "#664000", "surface-dim": "#131313" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "margin-tablet": "1.5rem", "space-xl": "2rem", "gutter-tablet": "1rem", "space-xs": "0.25rem", "gutter": "0.75rem", "space-sm": "0.5rem", "space-lg": "1.25rem", "margin": "1rem", "space-md": "0.75rem" }, fontFamily: { "scoreboard-num-mobile": ["Anton"], "body-md": ["Inter"], "headline-md": ["Anton"], "label-action": ["Inter"], "headline-lg": ["Anton"], "body-lg": ["Inter"], "headline-xl-mobile": ["Anton"], "headline-lg-mobile": ["Anton"], "scoreboard-num": ["Anton"], "body-sm": ["Inter"], "headline-xl": ["Anton"], "label-meta": ["Inter"], "eyebrow-accent": ["Anton"] }, fontSize: { "scoreboard-num-mobile": ["56px", { lineHeight: "56px", letterSpacing: "0.02em", fontWeight: "400" }], "body-md": ["15px", { lineHeight: "22px", fontWeight: "500" }], "headline-md": ["24px", { lineHeight: "28px", letterSpacing: "0.02em", fontWeight: "400" }], "label-action": ["16px", { lineHeight: "20px", letterSpacing: "0.02em", fontWeight: "700" }], "headline-lg": ["36px", { lineHeight: "40px", letterSpacing: "0.03em", fontWeight: "400" }], "body-lg": ["18px", { lineHeight: "24px", fontWeight: "600" }], "headline-xl-mobile": ["44px", { lineHeight: "48px", letterSpacing: "0.03em", fontWeight: "400" }], "headline-lg-mobile": ["30px", { lineHeight: "34px", letterSpacing: "0.02em", fontWeight: "400" }], "scoreboard-num": ["72px", { lineHeight: "72px", letterSpacing: "0.02em", fontWeight: "400" }], "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }], "headline-xl": ["56px", { lineHeight: "60px", letterSpacing: "0.04em", fontWeight: "400" }], "label-meta": ["12px", { lineHeight: "16px", letterSpacing: "0.06em", fontWeight: "600" }], "eyebrow-accent": ["14px", { lineHeight: "18px", letterSpacing: "0.14em", fontWeight: "400" }] } } } };</script></head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen antialiased"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest/85 backdrop-blur-xl pt-safe shadow-[0_4px_16px_rgba(0,0,0,0.45)]"><div class="h-16 px-space-sm flex items-center justify-between"><div class="flex items-center gap-space-xs min-w-0"><button aria-label="Go back" class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-on-surface hover:text-primary transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><div class="flex flex-col justify-center min-w-0 pr-space-xs"><span class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-[0.14em] text-primary truncate leading-none mb-1">MATCH SETUP · GROUP A</span><h1 class="font-headline-md text-headline-md uppercase tracking-[0.02em] text-on-surface truncate leading-tight">ROVERS VS UNITED</h1></div></div><div class="flex items-center gap-space-xs shrink-0"><button aria-label="Match Information" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[22px]">info</span></button><button aria-label="Close" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[22px]">close</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-1"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full pb-32">
+<!-- PITCHSIDE STRIPED CANVAS CONTAINER -->
+<div class="w-full flex flex-col px-margin gap-space-lg">
+<!-- 1. MATCH HEADER & CONTEXT CLASH POD -->
+<section class="w-full mt-space-sm">
+<!-- Fixture Pill -->
+<div class="flex items-center justify-between py-1.5 px-3 bg-surface-container-low rounded-full shadow-sm mb-3">
+<div class="flex items-center gap-2 min-w-0">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse shrink-0"></span>
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary tracking-wider uppercase truncate">
+            GROUP A · ROUND 1 · PITCH 1 (MAIN ARENA)
+          </span>
+</div>
+<span class="font-label-meta text-label-meta text-on-surface-variant shrink-0 bg-surface-container-highest px-2 py-0.5 rounded-full">
+          SUMMER CUP 2026
+        </span>
+</div>
+<!-- Teams Clash Card (Tactile Stadium Deck) -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-4 shadow-xl relative overflow-hidden">
+<!-- Ambient floodlight glow behind clash -->
+<div class="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between relative z-10">
+<!-- Home: Rovers -->
+<div class="flex items-center gap-3 min-w-0 flex-1">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0 shadow-md">
+<span class="font-headline-md text-headline-md text-primary">R</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-md text-headline-md text-on-surface tracking-wide uppercase truncate">ROVERS</span>
+<span class="font-label-meta text-label-meta text-secondary">Navy Kit · Home</span>
+</div>
+</div>
+<!-- VS Centerpiece & Kickoff Time -->
+<div class="flex flex-col items-center justify-center px-3 shrink-0">
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary-container uppercase tracking-widest">VS</span>
+<div class="flex items-center gap-1 mt-1 bg-surface-container px-2.5 py-1 rounded-md">
+<span class="material-symbols-outlined text-primary text-[14px]">schedule</span>
+<span class="font-scoreboard-num-mobile text-[16px] text-on-surface leading-none">09:30</span>
+</div>
+</div>
+<!-- Away: United -->
+<div class="flex items-center justify-end gap-3 min-w-0 flex-1 text-right">
+<div class="flex flex-col min-w-0 items-end">
+<span class="font-headline-md text-headline-md text-on-surface tracking-wide uppercase truncate">UNITED</span>
+<span class="font-label-meta text-label-meta text-error">Crimson Kit · Away</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0 shadow-md">
+<span class="font-headline-md text-headline-md text-error">U</span>
+</div>
+</div>
+</div>
+<!-- Touchline Official Bar -->
+<div class="mt-4 pt-3 flex items-center justify-between bg-surface-container-low px-3 py-2 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">sports</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">OFFICIAL:</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">T. Bennett (FA Grade 1)</span>
+</div>
+<span class="font-label-meta text-label-meta text-secondary-fixed bg-secondary-container px-2 py-0.5 rounded">VERIFIED</span>
+</div>
+</div>
+</section>
+<!-- 2. SECTION: RULES & FORMAT (Tactile Cream Card #F7F5EF with Dark Ink) -->
+<section class="w-full bg-[#F7F5EF] text-[#1B1B1B] rounded-[14px] p-4 shadow-xl">
+<!-- Card Header -->
+<div class="flex items-start justify-between pb-3">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-lg bg-[#EDEAE0] flex items-center justify-center text-[#1B1B1B]">
+<span class="material-symbols-outlined text-[20px]">drive_file_rename</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-md text-[20px] leading-tight uppercase tracking-wider text-[#1B1B1B]">MATCH RULES &amp; FORMAT</h2>
+<span class="font-label-meta text-[11px] text-[#514535]">Official competition regulations · 11v11 Standard</span>
+</div>
+</div>
+<span class="font-label-meta text-[10px] tracking-widest font-bold uppercase px-2 py-1 bg-[#EDEAE0] rounded text-[#1B1B1B]">
+          LOCKED BY FA
+        </span>
+</div>
+<!-- Numeric Steppers Grid -->
+<div class="grid grid-cols-2 gap-2.5 mt-2">
+<!-- Stepper 1 -->
+<div class="bg-[#EDEAE0] p-2.5 rounded-lg flex flex-col justify-between">
+<div class="flex flex-col">
+<span class="font-label-action text-[12px] leading-tight text-[#1B1B1B]">Players per side</span>
+<span class="font-label-meta text-[10px] text-[#664000]">Standard: 11 active</span>
+</div>
+<div class="flex items-center justify-between mt-2">
+<button class="w-10 h-10 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[18px]" onclick="adjustValue('players-val', 5, 11, -1)" type="button">
+              -
+            </button>
+<span class="font-scoreboard-num-mobile text-[28px] text-[#1B1B1B] leading-none" id="players-val">11</span>
+<button class="w-10 h-10 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[18px]" onclick="adjustValue('players-val', 5, 11, 1)" type="button">
+              +
+            </button>
+</div>
+</div>
+<!-- Stepper 2 -->
+<div class="bg-[#EDEAE0] p-2.5 rounded-lg flex flex-col justify-between">
+<div class="flex flex-col">
+<span class="font-label-action text-[12px] leading-tight text-[#1B1B1B]">Minimum players</span>
+<span class="font-label-meta text-[10px] text-[#664000]">To avoid forfeit</span>
+</div>
+<div class="flex items-center justify-between mt-2">
+<button class="w-10 h-10 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[18px]" onclick="adjustValue('min-players-val', 6, 9, -1)" type="button">
+              -
+            </button>
+<span class="font-scoreboard-num-mobile text-[28px] text-[#1B1B1B] leading-none" id="min-players-val">7</span>
+<button class="w-10 h-10 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[18px]" onclick="adjustValue('min-players-val', 6, 9, 1)" type="button">
+              +
+            </button>
+</div>
+</div>
+<!-- Stepper 3 -->
+<div class="bg-[#EDEAE0] p-2.5 rounded-lg flex flex-col justify-between">
+<div class="flex flex-col">
+<span class="font-label-action text-[12px] leading-tight text-[#1B1B1B]">Minutes per half</span>
+<span class="font-label-meta text-[10px] text-[#664000]">Regular time</span>
+</div>
+<div class="flex items-center justify-between mt-2">
+<button class="w-10 h-10 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[18px]" onclick="adjustValue('mins-val', 20, 45, -5)" type="button">
+              -
+            </button>
+<span class="font-scoreboard-num-mobile text-[28px] text-[#1B1B1B] leading-none" id="mins-val">45</span>
+<button class="w-10 h-10 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[18px]" onclick="adjustValue('mins-val', 20, 45, 5)" type="button">
+              +
+            </button>
+</div>
+</div>
+<!-- Stepper 4 -->
+<div class="bg-[#EDEAE0] p-2.5 rounded-lg flex flex-col justify-between">
+<div class="flex flex-col">
+<span class="font-label-action text-[12px] leading-tight text-[#1B1B1B]">Max substitutions</span>
+<span class="font-label-meta text-[10px] text-[#664000]">3 stoppage windows</span>
+</div>
+<div class="flex items-center justify-between mt-2">
+<button class="w-10 h-10 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[18px]" onclick="adjustValue('subs-val', 3, 7, -1)" type="button">
+              -
+            </button>
+<span class="font-scoreboard-num-mobile text-[28px] text-[#1B1B1B] leading-none" id="subs-val">5</span>
+<button class="w-10 h-10 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[18px]" onclick="adjustValue('subs-val', 3, 7, 1)" type="button">
+              +
+            </button>
+</div>
+</div>
+</div>
+<!-- Feature Switches & Toggles -->
+<div class="flex flex-col gap-2 mt-3 pt-3">
+<!-- Switch 1: Rolling Subs -->
+<div class="flex items-center justify-between bg-[#EDEAE0] p-3 rounded-lg">
+<div class="flex flex-col">
+<span class="font-label-action text-[13px] text-[#1B1B1B]">Rolling substitutions</span>
+<span class="font-label-meta text-[11px] text-[#514535]">Unlimited re-entry allowed</span>
+</div>
+<button class="w-13 h-7 w-12 bg-primary-container rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none flex items-center justify-end pr-1" onclick="toggleSwitch(this)" type="button">
+<div class="w-5 h-5 bg-[#1B1B1B] rounded-full shadow-md"></div>
+</button>
+</div>
+<!-- Switch 2: Draw Allowed -->
+<div class="flex items-center justify-between bg-[#EDEAE0] p-3 rounded-lg">
+<div class="flex flex-col">
+<span class="font-label-action text-[13px] text-[#1B1B1B]">Draw allowed</span>
+<span class="font-label-meta text-[11px] text-[#514535]">Extra time &amp; penalties apply</span>
+</div>
+<button class="w-12 h-7 bg-[#D5D3CE] rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none flex items-center justify-start pl-1" onclick="toggleSwitch(this)" type="button">
+<div class="w-5 h-5 bg-[#757570] rounded-full shadow-md"></div>
+</button>
+</div>
+<!-- Switch 3: Extra Time Allowed -->
+<div class="flex items-center justify-between bg-[#EDEAE0] p-3 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#F2A93B]"></span>
+<div class="flex flex-col">
+<span class="font-label-action text-[13px] text-[#1B1B1B]">Extra time allowed</span>
+<span class="font-label-meta text-[11px] text-[#514535]">Knockout protocol armed</span>
+</div>
+</div>
+<button class="w-12 h-7 bg-primary-container rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none flex items-center justify-end pr-1" onclick="toggleSwitch(this)" type="button">
+<div class="w-5 h-5 bg-[#1B1B1B] rounded-full shadow-md"></div>
+</button>
+</div>
+<!-- Conditional Stepper for Extra Time -->
+<div class="bg-[#E4E2DD] p-3 rounded-lg flex items-center justify-between mt-0.5">
+<div class="flex flex-col">
+<span class="font-label-action text-[13px] text-[#1B1B1B]">Extra time half length</span>
+<span class="font-label-meta text-[11px] text-[#514535]">2x 15-min periods before penalties</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-9 h-9 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[16px]" onclick="adjustValue('et-val', 5, 20, -5)" type="button">
+              -
+            </button>
+<span class="font-scoreboard-num-mobile text-[22px] text-[#1B1B1B] w-8 text-center leading-none" id="et-val">15</span>
+<button class="w-9 h-9 rounded-md bg-[#F7F5EF] active:translate-y-0.5 shadow-sm flex items-center justify-center text-[#1B1B1B] font-bold text-[16px]" onclick="adjustValue('et-val', 5, 20, 5)" type="button">
+              +
+            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. SECTION: SQUADS & STARTING XI VERIFICATION -->
+<section class="w-full flex flex-col gap-3">
+<!-- Section Title & Status Counter Bar -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">groups</span>
+<h2 class="font-headline-md text-headline-md uppercase tracking-wider text-on-surface">SQUADS &amp; STARTING XI</h2>
+</div>
+<span class="font-label-meta text-label-meta text-on-surface-variant">14 SQUAD REGISTERED</span>
+</div>
+<!-- High-Visibility Tactical Counter Bar -->
+<div class="bg-surface-container-low p-3 rounded-xl flex flex-col gap-2 shadow-md">
+<div class="flex items-center justify-between">
+<!-- Rovers Status (Needs 2) -->
+<div class="flex items-center gap-2">
+<span class="font-label-action text-[13px] text-on-surface font-semibold">ROVERS:</span>
+<span class="bg-primary-container text-on-primary-container px-2.5 py-0.5 rounded-full font-headline-md text-[13px] tracking-wide flex items-center gap-1 shadow-sm" id="squad-counter-badge">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span id="roster-active-count">9</span> / 11 SELECTED
+              </span>
+</div>
+<!-- United Status (Ready) -->
+<div class="flex items-center gap-1.5 bg-secondary-container text-secondary-fixed px-2.5 py-0.5 rounded-full font-label-meta text-label-meta">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+              UNITED: 11/11 READY
+            </div>
+</div>
+<!-- Prompt Alert -->
+<div class="bg-surface-container-high px-3 py-1.5 rounded-lg flex items-center gap-2" id="roster-alert-msg">
+<span class="material-symbols-outlined text-primary text-[16px] shrink-0">info</span>
+<span class="font-body-sm text-body-sm text-primary truncate">Assign 2 more starting players for Rovers to unlock kickoff.</span>
+</div>
+</div>
+</div>
+<!-- Two-Tab Segment Toggle -->
+<div class="grid grid-cols-2 p-1 bg-surface-container-lowest rounded-xl shadow-inner">
+<button class="py-2.5 rounded-lg font-headline-md text-[16px] uppercase tracking-wider bg-surface-container text-primary shadow-sm flex items-center justify-center gap-2" type="button">
+<span>ROVERS</span>
+<span class="bg-primary-container text-on-primary-container px-1.5 py-0.2 rounded text-[12px] font-bold">9/11</span>
+</button>
+<button class="py-2.5 rounded-lg font-headline-md text-[16px] uppercase tracking-wider text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-2" type="button">
+<span>UNITED</span>
+<span class="bg-surface-container-high text-secondary-fixed px-1.5 py-0.2 rounded text-[12px] font-bold">11/11</span>
+</button>
+</div>
+<!-- Player Roster List with 3-State Segmented Controls -->
+<div class="flex flex-col gap-2">
+<!-- Player 1: GK Henderson -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-headline-md text-[16px] shrink-0">
+              #1
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">J. Henderson</span>
+<span class="font-label-meta text-[11px] text-primary tracking-wider uppercase">GK · Goalkeeper</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 2: DEF Bradley -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-headline-md text-[16px] shrink-0">
+              #4
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">T. Bradley</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">DEF · Center Back</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 3: DEF Walker -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-headline-md text-[16px] shrink-0">
+              #5
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">L. Walker</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">DEF · Right Back</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 4: DEF Phillips -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-headline-md text-[16px] shrink-0">
+              #6
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">K. Phillips</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">DEF · Left Back</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 5: MID Barnes (Captain) -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-md text-[16px] shrink-0 shadow-sm">
+              #8
+            </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-action text-body-md text-on-surface truncate">O. Barnes</span>
+<span class="bg-primary text-on-primary font-bold text-[9px] px-1 rounded">CPT</span>
+</div>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">MID · Central</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 6: MID Silva -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-headline-md text-[16px] shrink-0">
+              #10
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">M. Silva</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">MID · Playmaker</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 7: FWD Cole -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-headline-md text-[16px] shrink-0">
+              #11
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">D. Cole</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">FWD · Left Wing</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 8: MID Gerrard -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-headline-md text-[16px] shrink-0">
+              #17
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">A. Gerrard</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">MID · Box to Box</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 9: FWD Kane -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-headline-md text-[16px] shrink-0">
+              #21
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">H. Kane</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">FWD · Striker</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 10: BENCH Player - Ndidi -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant font-headline-md text-[16px] shrink-0">
+              #23
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">S. Ndidi</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">MID · Defensive</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-surface-bright text-on-surface shadow-sm" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 11: BENCH Player - Dawson -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant font-headline-md text-[16px] shrink-0">
+              #15
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">C. Dawson</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">DEF · Full Back</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-surface-bright text-on-surface shadow-sm" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 12: BENCH Player - Martinez (Reserve GK) -->
+<div class="player-card bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant font-headline-md text-[16px] shrink-0">
+              #13
+            </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-action text-body-md text-on-surface truncate">E. Martinez</span>
+<span class="font-label-meta text-[11px] text-on-surface-variant tracking-wider uppercase">GK · Sub Goalkeeper</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-surface-bright text-on-surface shadow-sm" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+<!-- Player 13: OUT Player - Taylor (Injured) -->
+<div class="player-card bg-surface-container-low/70 p-2.5 rounded-xl flex items-center justify-between shadow-sm opacity-75">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-error font-headline-md text-[16px] shrink-0">
+              #9
+            </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-action text-body-md text-on-surface-variant line-through truncate">R. Taylor</span>
+<span class="bg-error-container text-on-error-container font-bold text-[9px] px-1 rounded uppercase">Injured</span>
+</div>
+<span class="font-label-meta text-[11px] text-error tracking-wider uppercase">FWD · Hamstring Strain</span>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-highest p-0.5 rounded-lg shrink-0">
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'STARTING')" type="button">START</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant" onclick="setPlayerState(this, 'BENCH')" type="button">BENCH</button>
+<button class="status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-error-container text-on-error-container shadow-sm" onclick="setPlayerState(this, 'OUT')" type="button">OUT</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- 4. BOTTOM STICKY BAR: WHISTLE / KICK OFF TRIGGER -->
+<aside class="fixed bottom-0 left-0 w-full z-40 bg-surface-container-lowest/95 backdrop-blur-xl px-margin py-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.6)] flex flex-col gap-2">
+<!-- Mandatory Requirement Warning Note -->
+<div class="flex items-center justify-center gap-1.5 text-center" id="bottom-bar-status">
+<span class="material-symbols-outlined text-primary text-[15px]">report_problem</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">Both teams require exactly 11 starting players before kickoff whistle.</span>
+</div>
+<!-- Kick Off CTA Button (Initially Disabled) -->
+<button class="w-full h-14 bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed rounded-xl font-headline-md text-[18px] uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all duration-200" disabled="" id="kickoff-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+<span id="kickoff-btn-label">9/11 STARTERS SELECTED - KICK OFF LOCKED</span>
+</button>
+</aside>
+</div>
+<script>
+  // Dynamic Stepper Counter Logic
+  function adjustValue(id, min, max, delta) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let curr = parseInt(el.textContent, 10);
+    let next = curr + delta;
+    if (next >= min && next <= max) {
+      el.textContent = next;
+    }
+  }
+
+  // Stadium Toggle Switch Interaction
+  function toggleSwitch(btn) {
+    const knob = btn.firstElementChild;
+    const isChecked = btn.classList.contains('bg-primary-container');
+    if (isChecked) {
+      btn.classList.remove('bg-primary-container', 'justify-end', 'pr-1');
+      btn.classList.add('bg-[#D5D3CE]', 'justify-start', 'pl-1');
+      knob.classList.remove('bg-[#1B1B1B]');
+      knob.classList.add('bg-[#757570]');
+    } else {
+      btn.classList.remove('bg-[#D5D3CE]', 'justify-start', 'pl-1');
+      btn.classList.add('bg-primary-container', 'justify-end', 'pr-1');
+      knob.classList.remove('bg-[#757570]');
+      knob.classList.add('bg-[#1B1B1B]');
+    }
+  }
+
+  // Roster Status Chip State Management
+  function setPlayerState(button, state) {
+    const container = button.parentElement;
+    const buttons = container.querySelectorAll('.status-btn');
+    
+    // Reset all buttons in this segment
+    buttons.forEach(btn => {
+      btn.className = 'status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all text-on-surface-variant';
+    });
+
+    // Apply active design token classes
+    if (state === 'STARTING') {
+      button.className = 'status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-secondary-container text-secondary-fixed shadow-sm';
+    } else if (state === 'BENCH') {
+      button.className = 'status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-surface-bright text-on-surface shadow-sm';
+    } else if (state === 'OUT') {
+      button.className = 'status-btn px-2.5 py-1.5 rounded-md font-label-meta text-[11px] font-bold transition-all bg-error-container text-on-error-container shadow-sm';
+    }
+
+    recalcRoster();
+  }
+
+  // Live starting count & kickoff lock validation
+  function recalcRoster() {
+    const startingBtns = document.querySelectorAll('.status-btn.bg-secondary-container');
+    const count = startingBtns.length;
+    const countDisplay = document.getElementById('roster-active-count');
+    const badge = document.getElementById('squad-counter-badge');
+    const alertMsg = document.getElementById('roster-alert-msg');
+    const kickOffBtn = document.getElementById('kickoff-btn');
+    const kickOffLabel = document.getElementById('kickoff-btn-label');
+
+    if (countDisplay) countDisplay.textContent = count;
+
+    if (count === 11) {
+      // 11 Starters unlocked!
+      if (badge) {
+        badge.className = 'bg-secondary-container text-secondary-fixed px-2.5 py-0.5 rounded-full font-headline-md text-[13px] tracking-wide flex items-center gap-1 shadow-sm';
+        badge.innerHTML = '<span class="material-symbols-outlined text-[14px]">check_circle</span> 11 / 11 READY';
+      }
+      if (alertMsg) {
+        alertMsg.className = 'bg-secondary-container/40 px-3 py-1.5 rounded-lg flex items-center gap-2';
+        alertMsg.innerHTML = '<span class="material-symbols-outlined text-secondary-fixed text-[16px] shrink-0">verified</span><span class="font-body-sm text-body-sm text-secondary-fixed truncate">Starting XI confirmed! Whistle ready to blow.</span>';
+      }
+      if (kickOffBtn) {
+        kickOffBtn.removeAttribute('disabled');
+        kickOffBtn.className = 'w-full h-14 bg-primary-container text-on-primary-container active:scale-[0.99] rounded-xl font-headline-md text-[20px] uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl cursor-pointer';
+        kickOffBtn.innerHTML = '<span class="material-symbols-outlined text-[24px]">sports_and_outdoors</span> START MATCH / KICK OFF';
+      }
+    } else {
+      const needed = 11 - count;
+      if (badge) {
+        badge.className = 'bg-primary-container text-on-primary-container px-2.5 py-0.5 rounded-full font-headline-md text-[13px] tracking-wide flex items-center gap-1 shadow-sm';
+        badge.innerHTML = `<span class="material-symbols-outlined text-[14px]">warning</span> <span id="roster-active-count">${count}</span> / 11 SELECTED`;
+      }
+      if (alertMsg) {
+        alertMsg.className = 'bg-surface-container-high px-3 py-1.5 rounded-lg flex items-center gap-2';
+        alertMsg.innerHTML = `<span class="material-symbols-outlined text-primary text-[16px] shrink-0">info</span><span class="font-body-sm text-body-sm text-primary truncate">Assign ${needed > 0 ? needed : 0} more starting player${needed > 1 ? 's' : ''} for Rovers to unlock kickoff.</span>`;
+      }
+      if (kickOffBtn) {
+        kickOffBtn.setAttribute('disabled', 'true');
+        kickOffBtn.className = 'w-full h-14 bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed rounded-xl font-headline-md text-[18px] uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all duration-200';
+        kickOffBtn.innerHTML = `<span class="material-symbols-outlined text-[20px]">lock</span> <span id="kickoff-btn-label">${count}/11 STARTERS SELECTED - KICK OFF LOCKED</span>`;
+      }
+    }
+  }
+</script></main></body></html>

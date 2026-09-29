@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary": "#d5d3ce", "tertiary-fixed": "#e4e2dd", "background": "#131313", "surface": "#131313", "on-background": "#e5e2e1", "error-container": "#93000a", "primary": "#ffca85", "on-primary-fixed-variant": "#633f00", "on-surface": "#e5e2e1", "primary-fixed": "#ffddb5", "secondary-fixed": "#c1ecd4", "on-tertiary-fixed": "#1b1c18", "on-tertiary-fixed-variant": "#474743", "surface-container-highest": "#353535", "inverse-surface": "#e5e2e1", "surface-variant": "#353535", "secondary-container": "#29513f", "primary-fixed-dim": "#ffb956", "surface-dim": "#131313", "surface-tint": "#ffb956", "tertiary-container": "#b9b8b3", "inverse-primary": "#835400", "surface-container": "#20201f", "on-error-container": "#ffdad6", "surface-container-low": "#1b1b1b", "error": "#ffb4ab", "on-tertiary": "#30312d", "surface-bright": "#393939", "on-surface-variant": "#d6c3af", "tertiary-fixed-dim": "#c8c6c1", "secondary": "#a5d0b9", "secondary-fixed-dim": "#a5d0b9", "on-secondary-fixed": "#002114", "primary-container": "#f2a93b", "on-primary-fixed": "#2a1800", "on-primary-container": "#664000", "on-secondary-fixed-variant": "#274e3d", "on-error": "#690005", "surface-container-high": "#2a2a2a", "on-primary": "#452b00", "outline": "#9e8e7c", "surface-container-lowest": "#0e0e0e", "on-secondary": "#0e3727", "outline-variant": "#514535", "inverse-on-surface": "#313030", "on-secondary-container": "#97c2ab", "on-tertiary-container": "#494945" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter-tablet": "1rem", "space-md": "0.75rem", "space-xs": "0.25rem", "space-xl": "2rem", "space-lg": "1.25rem", "margin-tablet": "1.5rem", "margin": "1rem", "space-sm": "0.5rem", "gutter": "0.75rem" }, "fontFamily": { "scoreboard-num-mobile": ["Anton"], "headline-lg-mobile": ["Anton"], "body-md": ["Inter"], "eyebrow-accent": ["Anton"], "label-meta": ["Inter"], "headline-md": ["Anton"], "body-lg": ["Inter"], "headline-xl": ["Anton"], "label-action": ["Inter"], "headline-lg": ["Anton"], "scoreboard-num": ["Anton"], "body-sm": ["Inter"], "headline-xl-mobile": ["Anton"] }, "fontSize": { "scoreboard-num-mobile": ["56px", { "lineHeight": "56px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-lg-mobile": ["30px", { "lineHeight": "34px", "letterSpacing": "0.02em", "fontWeight": "400" }], "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "500" }], "eyebrow-accent": ["14px", { "lineHeight": "18px", "letterSpacing": "0.14em", "fontWeight": "400" }], "label-meta": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }], "headline-md": ["24px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "400" }], "body-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-xl": ["56px", { "lineHeight": "60px", "letterSpacing": "0.04em", "fontWeight": "400" }], "label-action": ["16px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700" }], "headline-lg": ["36px", { "lineHeight": "40px", "letterSpacing": "0.03em", "fontWeight": "400" }], "scoreboard-num": ["72px", { "lineHeight": "72px", "letterSpacing": "0.02em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-xl-mobile": ["44px", { "lineHeight": "48px", "letterSpacing": "0.03em", "fontWeight": "400" }] } } } };</script><style>@layer base{html,body{width:100vw;min-height:100vh;margin:0;padding:0;}body{overscroll-behavior:none;background-color:#131313;background-image:repeating-linear-gradient(to bottom,#1B4332 0px,#1B4332 80px,#17402E 80px,#17402E 160px);background-attachment:fixed;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="text-on-surface font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl pt-safe shadow-[0_4px_20px_rgba(0,0,0,0.5)]"><div class="h-20 px-margin flex items-center justify-between gap-space-sm"><div class="flex flex-col justify-center min-w-0 flex-1"><div class="flex items-center gap-space-xs"><span class="font-eyebrow-accent text-eyebrow-accent text-primary-container tracking-wider uppercase truncate">METRO SUNDAY PREMIER CUP</span><span class="w-1.5 h-1.5 rounded-full bg-secondary shrink-0"></span><span class="font-label-meta text-label-meta text-secondary shrink-0">FLOODLIT PITCH</span></div><h1 class="font-headline-md text-headline-md text-on-surface uppercase tracking-wide truncate mt-0.5">Tournaments</h1></div><div class="flex items-center gap-space-xs shrink-0"><div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high/90 text-secondary border border-secondary/20"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-meta text-label-meta uppercase tracking-wider">ONLINE</span></div><div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-md ring-2 ring-primary-container/40"><span class="material-symbols-outlined text-on-primary text-[20px]">person</span></div></div></div></header><main class="flex flex-col relative w-full px-margin pt-20 pb-28"><div class="flex flex-col w-full pb-10 space-y-5">
+<!-- Top Navigation & Status Bar -->
+<div class="flex items-center justify-between gap-space-sm pt-1">
+<button aria-label="Back to tournaments" class="w-12 h-12 rounded-xl bg-surface-container-high/90 text-on-surface flex items-center justify-center active:scale-95 shadow-md" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high/90 text-primary-container shadow-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-meta text-label-meta uppercase tracking-wider text-primary">NOT STARTED · DRAFT SCHEDULE</span>
+</div>
+</div>
+<!-- Tournament Identity Header -->
+<div class="flex flex-col space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary-container tracking-widest uppercase">TOURNAMENT HUB · 8 TEAMS</span>
+<span class="w-1 h-1 rounded-full bg-secondary"></span>
+<span class="font-label-meta text-label-meta text-secondary uppercase tracking-wider">PRE-KICKOFF</span>
+</div>
+<h2 class="font-headline-xl-mobile text-headline-xl-mobile text-on-surface uppercase tracking-wide">SUMMER CUP 2026</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Metro Ground Complex · Sunday League Invitation Cup</p>
+</div>
+<!-- Quick Summary Chips Grid -->
+<div class="grid grid-cols-2 gap-2">
+<div class="flex items-center gap-2.5 p-3 rounded-xl bg-surface-container/85 shadow-sm">
+<span class="text-lg">⚽</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">SPORT</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold truncate">FOOTBALL 11v11</span>
+</div>
+</div>
+<div class="flex items-center gap-2.5 p-3 rounded-xl bg-surface-container/85 shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[22px]">hub</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">STRUCTURE</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold truncate">2 GROUPS · 8 TEAMS</span>
+</div>
+</div>
+<div class="flex items-center gap-2.5 p-3 rounded-xl bg-surface-container/85 shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[22px]">calendar_month</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">CALENDAR</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold truncate">24 FIXTURES · 6 RDS</span>
+</div>
+</div>
+<div class="flex items-center gap-2.5 p-3 rounded-xl bg-surface-container/85 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">stadium</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-meta text-label-meta text-on-surface-variant uppercase">LOCATION</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold truncate">A-PITCH (P1 &amp; P2)</span>
+</div>
+</div>
+</div>
+<!-- Setup Section Headline -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex flex-col">
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary-container tracking-wider uppercase">SETUP CHECKLIST · TOUCHLINE READY</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase">PREPARATION PROGRESS</h3>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-meta text-label-meta uppercase tracking-wider">2 OF 3 READY</span>
+</div>
+<!-- Vertical 3-Step Setup Checklist (Cream Cards #F7F5EF style) -->
+<div class="flex flex-col space-y-3">
+<!-- STEP 1: Teams & Rosters (Done) -->
+<div class="rounded-xl bg-tertiary-fixed text-on-tertiary-fixed p-4 shadow-[0_2px_0_0_#0e0e0e] flex flex-col gap-3">
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<h4 class="font-headline-md text-headline-md uppercase tracking-wide leading-none">Teams &amp; Rosters</h4>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-meta text-label-meta uppercase">VERIFIED</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-tertiary-fixed-variant mt-1">8 teams fully confirmed · 96 touchline-cleared players</p>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<div class="flex -space-x-1.5 overflow-hidden">
+<div class="w-7 h-7 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-label-meta text-label-meta uppercase">RV</div>
+<div class="w-7 h-7 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-label-meta text-label-meta uppercase">UT</div>
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-meta text-label-meta uppercase">CT</div>
+<div class="w-7 h-7 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-label-meta text-label-meta uppercase">+5</div>
+</div>
+<button class="h-12 px-5 rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary-container transition-all active:scale-95 font-label-action text-label-action uppercase tracking-wider flex items-center gap-1.5 shadow-sm" type="button">
+<span>Manage</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- STEP 2: Groups & Schedule (Rounds Ready) -->
+<div class="rounded-xl bg-tertiary-fixed text-on-tertiary-fixed p-4 shadow-[0_2px_0_0_#0e0e0e] flex flex-col gap-3">
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 font-headline-md text-headline-md mt-0.5">
+            2
+          </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<h4 class="font-headline-md text-headline-md uppercase tracking-wide leading-none">Groups &amp; Schedule</h4>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed-dim text-on-primary-fixed font-label-meta text-label-meta uppercase">ROUNDS READY</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-tertiary-fixed-variant mt-1">2 groups · 24 matches generated across 6 matchday rounds</p>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-1">
+<button class="flex-1 h-12 px-4 rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary-container transition-all active:scale-95 font-label-action text-label-action uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+<span>Rebuild</span>
+</button>
+<button class="flex-1 h-12 px-4 rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary-container transition-all active:scale-95 font-label-action text-label-action uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span>History</span>
+</button>
+</div>
+</div>
+<!-- STEP 3: Start Tournament CTA Card -->
+<div class="rounded-xl bg-tertiary-fixed text-on-tertiary-fixed p-4 shadow-[0_4px_16px_rgba(0,0,0,0.4)] flex flex-col gap-3.5 relative overflow-hidden">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest text-primary-container flex items-center justify-center shrink-0 font-headline-md text-headline-md shadow-sm">
+          3
+        </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<h4 class="font-headline-md text-headline-md uppercase tracking-wide leading-none">Start Tournament</h4>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-meta text-label-meta uppercase tracking-wider animate-pulse">PENDING ACTION</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-tertiary-fixed-variant mt-1">Locks team rosters, launches touchline live-score telemetry, and pushes official kick-off push alerts.</p>
+</div>
+</div>
+<!-- Exaggerated Primary Action Button (64px ergonomic height) -->
+<button class="w-full h-16 rounded-xl bg-primary-container text-on-primary-container hover:bg-primary-fixed-dim font-headline-md text-headline-md uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_0_0_#664000] active:translate-y-0.5 active:shadow-[0_2px_0_0_#664000] transition-all" id="start-btn" type="button">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span>START TOURNAMENT</span>
+</button>
+<div class="flex items-center justify-center gap-1.5 text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+<span class="font-label-meta text-label-meta tracking-wide uppercase">Locking roster edits once active</span>
+</div>
+</div>
+</div>
+<!-- Matchday Fixtures Preview Section -->
+<div class="flex flex-col space-y-3 pt-3">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary-container tracking-wider uppercase">MATCHDAY 1 PREVIEW</span>
+<h3 class="font-headline-md text-headline-md text-on-surface uppercase">FIXTURES SCHEDULE</h3>
+</div>
+<div class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-meta text-label-meta">
+        24 MATCHES TOTAL
+      </div>
+</div>
+<!-- Group A Badge & Pitch Slot Info -->
+<div class="flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-surface-container-high/90 shadow-sm">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-primary-container"></span>
+<span class="font-eyebrow-accent text-eyebrow-accent text-primary-container uppercase tracking-wider">GROUP A · PITCH 1 &amp; 2</span>
+</div>
+<span class="font-label-meta text-label-meta text-secondary uppercase">ROUND 1 — 09:30 AM KICKOFF</span>
+</div>
+<!-- Match Fixtures List -->
+<div class="flex flex-col space-y-2">
+<!-- Fixture 1 -->
+<div class="p-3.5 rounded-xl bg-surface-container-high/95 flex items-center justify-between gap-2 shadow-sm">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-lowest flex flex-col items-center justify-center shrink-0">
+<span class="font-headline-md text-headline-md text-primary-container leading-none">09</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant leading-none mt-0.5">30 AM</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-body-lg text-body-lg text-on-surface truncate">Rovers</span>
+<span class="font-label-meta text-label-meta text-primary-container">VS</span>
+<span class="font-body-lg text-body-lg text-on-surface truncate">United</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-body-sm text-body-sm text-secondary font-medium">Pitch 1 (North)</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">Match #1</span>
+</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-meta text-label-meta uppercase shrink-0">
+          Scheduled
+        </span>
+</div>
+<!-- Fixture 2 -->
+<div class="p-3.5 rounded-xl bg-surface-container-high/95 flex items-center justify-between gap-2 shadow-sm">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-lowest flex flex-col items-center justify-center shrink-0">
+<span class="font-headline-md text-headline-md text-primary-container leading-none">09</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant leading-none mt-0.5">30 AM</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-body-lg text-body-lg text-on-surface truncate">City FC</span>
+<span class="font-label-meta text-label-meta text-primary-container">VS</span>
+<span class="font-body-lg text-body-lg text-on-surface truncate">Athletic</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-body-sm text-body-sm text-secondary font-medium">Pitch 2 (South)</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">Match #2</span>
+</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-meta text-label-meta uppercase shrink-0">
+          Scheduled
+        </span>
+</div>
+<!-- Fixture 3 -->
+<div class="p-3.5 rounded-xl bg-surface-container-high/95 flex items-center justify-between gap-2 shadow-sm">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-lowest flex flex-col items-center justify-center shrink-0">
+<span class="font-headline-md text-headline-md text-primary-container leading-none">10</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant leading-none mt-0.5">15 AM</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-body-lg text-body-lg text-on-surface truncate">Strikers</span>
+<span class="font-label-meta text-label-meta text-primary-container">VS</span>
+<span class="font-body-lg text-body-lg text-on-surface truncate">Wanderers</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-body-sm text-body-sm text-secondary font-medium">Pitch 1 (North)</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">Match #3</span>
+</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-meta text-label-meta uppercase shrink-0">
+          Scheduled
+        </span>
+</div>
+<!-- Fixture 4 -->
+<div class="p-3.5 rounded-xl bg-surface-container-high/95 flex items-center justify-between gap-2 shadow-sm">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-lowest flex flex-col items-center justify-center shrink-0">
+<span class="font-headline-md text-headline-md text-primary-container leading-none">10</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant leading-none mt-0.5">15 AM</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-body-lg text-body-lg text-on-surface truncate">Harbor FC</span>
+<span class="font-label-meta text-label-meta text-primary-container">VS</span>
+<span class="font-body-lg text-body-lg text-on-surface truncate">Olympic</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-body-sm text-body-sm text-secondary font-medium">Pitch 2 (South)</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-meta text-label-meta text-on-surface-variant">Match #4</span>
+</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-meta text-label-meta uppercase shrink-0">
+          Scheduled
+        </span>
+</div>
+</div>
+<!-- Group B Accordion Preview Trigger -->
+<button class="w-full h-14 rounded-xl bg-surface-container hover:bg-surface-container-high transition-all active:scale-[0.99] px-4 flex items-center justify-between text-on-surface shadow-sm" id="group-b-toggle" type="button">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-sm bg-secondary"></span>
+<span class="font-headline-md text-headline-md uppercase tracking-wider text-secondary">GROUP B (4 FIXTURES)</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="font-label-meta text-label-meta uppercase">11:00 AM START</span>
+<span class="material-symbols-outlined text-[20px] transition-transform duration-200" id="group-b-icon">expand_more</span>
+</div>
+</button>
+<!-- Group B Collapsible Container -->
+<div class="hidden flex flex-col space-y-2 pt-1" id="group-b-panel">
+<div class="p-3.5 rounded-xl bg-surface-container-high/95 flex items-center justify-between gap-2 shadow-sm">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-lowest flex flex-col items-center justify-center shrink-0">
+<span class="font-headline-md text-headline-md text-primary-container leading-none">11</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant leading-none mt-0.5">00 AM</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-body-lg text-body-lg text-on-surface truncate">Vanguard FC</span>
+<span class="font-label-meta text-label-meta text-primary-container">VS</span>
+<span class="font-body-lg text-body-lg text-on-surface truncate">Highland</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary font-medium">Pitch 1 (North) · Match #5</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-meta text-label-meta uppercase shrink-0">
+          Scheduled
+        </span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container-high/95 flex items-center justify-between gap-2 shadow-sm">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-lowest flex flex-col items-center justify-center shrink-0">
+<span class="font-headline-md text-headline-md text-primary-container leading-none">11</span>
+<span class="font-label-meta text-label-meta text-on-surface-variant leading-none mt-0.5">00 AM</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-body-lg text-body-lg text-on-surface truncate">Metro Celtic</span>
+<span class="font-label-meta text-label-meta text-primary-container">VS</span>
+<span class="font-body-lg text-body-lg text-on-surface truncate">Apex Stars</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary font-medium">Pitch 2 (South) · Match #6</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-meta text-label-meta uppercase shrink-0">
+          Scheduled
+        </span>
+</div>
+</div>
+</div>
+<!-- Tactile Whistle Confirmation Modal Backdrop -->
+<div class="fixed inset-0 z-50 bg-surface-container-lowest/80 backdrop-blur-md hidden items-end sm:items-center justify-center p-margin" id="confirm-modal">
+<div class="w-full max-w-sm rounded-xl bg-tertiary-fixed text-on-tertiary-fixed p-5 shadow-2xl flex flex-col space-y-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">sports</span>
+</div>
+<div class="flex flex-col">
+<h4 class="font-headline-md text-headline-md uppercase">BLOW WHISTLE?</h4>
+<span class="font-body-sm text-body-sm text-on-tertiary-fixed-variant">Activate live touchline match console</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-tertiary-fixed">
+        Starting locks the 8-team roster and notifies match officials on Pitches 1 &amp; 2. Match clock will be synchronized.
+      </p>
+<div class="flex flex-col gap-2 pt-1">
+<button class="w-full h-14 rounded-lg bg-primary-container text-on-primary-container font-headline-md text-headline-md uppercase tracking-wide flex items-center justify-center gap-2 shadow-md" id="modal-confirm-btn" type="button">
+<span class="material-symbols-outlined">check_circle</span>
+<span>CONFIRM KICKOFF</span>
+</button>
+<button class="w-full h-12 rounded-lg bg-tertiary text-on-tertiary font-label-action text-label-action uppercase tracking-wider flex items-center justify-center" id="modal-cancel-btn" type="button">
+          Cancel
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function () {
+    const groupBToggle = document.getElementById('group-b-toggle');
+    const groupBPanel = document.getElementById('group-b-panel');
+    const groupBIcon = document.getElementById('group-b-icon');
+
+    if (groupBToggle && groupBPanel && groupBIcon) {
+      groupBToggle.addEventListener('click', function () {
+        const isHidden = groupBPanel.classList.contains('hidden');
+        if (isHidden) {
+          groupBPanel.classList.remove('hidden');
+          groupBIcon.style.transform = 'rotate(180deg)';
+        } else {
+          groupBPanel.classList.add('hidden');
+          groupBIcon.style.transform = 'rotate(0deg)';
+        }
+      });
+    }
+
+    const startBtn = document.getElementById('start-btn');
+    const modal = document.getElementById('confirm-modal');
+    const cancelBtn = document.getElementById('modal-cancel-btn');
+    const confirmBtn = document.getElementById('modal-confirm-btn');
+
+    if (startBtn && modal && cancelBtn && confirmBtn) {
+      startBtn.addEventListener('click', function () {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      });
+
+      cancelBtn.addEventListener('click', function () {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      });
+
+      confirmBtn.addEventListener('click', function () {
+        startBtn.innerHTML = '<span class="material-symbols-outlined text-[24px] animate-spin">refresh</span><span>INITIALIZING PITCHES...</span>';
+        startBtn.classList.remove('bg-primary-container', 'text-on-primary-container');
+        startBtn.classList.add('bg-secondary-container', 'text-on-secondary-container');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        setTimeout(function() {
+          startBtn.innerHTML = '<span class="material-symbols-outlined text-[26px]">sports_soccer</span><span>TOURNAMENT LIVE</span>';
+        }, 1200);
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-container-lowest/95 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container bg-surface-container/60"><div class="flex justify-around items-center h-20 px-space-xs"><a aria-current="page" class="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl transition-all active:scale-95 text-primary-container bg-surface-container/60" data-path="tournaments" href="#"><span class="material-symbols-outlined text-[26px]">emoji_events</span><span class="font-label-meta text-label-meta">Tournaments</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="cricket-live-scorer" href="#"><span class="material-symbols-outlined text-[26px]">scoreboard</span><span class="font-label-meta text-label-meta">Score</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="fixtures" href="#"><span class="material-symbols-outlined text-[26px]">calendar_today</span><span class="font-label-meta text-label-meta">Fixtures</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl text-on-surface-variant hover:text-on-surface transition-all active:scale-95" data-path="standings" href="#"><span class="material-symbols-outlined text-[26px]">leaderboard</span><span class="font-label-meta text-label-meta">Standings</span></a></div></nav></body></html>

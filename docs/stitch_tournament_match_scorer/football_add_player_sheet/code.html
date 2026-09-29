@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-container": "#664000", "surface-container-high": "#2a2a2a", "on-secondary-fixed-variant": "#274e3d", "on-background": "#e5e2e1", "on-secondary": "#0e3727", "on-tertiary-fixed-variant": "#474743", "secondary-fixed": "#c1ecd4", "on-primary-fixed": "#2a1800", "surface": "#131313", "outline": "#9e8e7c", "background": "#131313", "primary": "#ffca85", "surface-container-lowest": "#0e0e0e", "tertiary-fixed-dim": "#c8c6c1", "inverse-surface": "#e5e2e1", "error": "#ffb4ab", "on-tertiary-fixed": "#1b1c18", "on-error-container": "#ffdad6", "tertiary": "#d5d3ce", "outline-variant": "#514535", "error-container": "#93000a", "on-error": "#690005", "inverse-on-surface": "#313030", "on-secondary-fixed": "#002114", "on-surface": "#e5e2e1", "surface-tint": "#ffb956", "secondary-container": "#29513f", "inverse-primary": "#835400", "tertiary-fixed": "#e4e2dd", "on-primary-fixed-variant": "#633f00", "surface-container-low": "#1b1b1b", "primary-container": "#f2a93b", "on-tertiary": "#30312d", "on-primary": "#452b00", "surface-variant": "#353535", "on-secondary-container": "#97c2ab", "surface-container": "#20201f", "secondary-fixed-dim": "#a5d0b9", "surface-dim": "#131313", "primary-fixed": "#ffddb5", "primary-fixed-dim": "#ffb956", "surface-bright": "#393939", "on-tertiary-container": "#494945", "surface-container-highest": "#353535", "tertiary-container": "#b9b8b3", "on-surface-variant": "#d6c3af", "secondary": "#a5d0b9" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin-tablet": "1.5rem", "space-lg": "1.25rem", "space-xs": "0.25rem", "space-xl": "2rem", "margin": "1rem", "space-md": "0.75rem", "gutter": "0.75rem", "gutter-tablet": "1rem", "space-sm": "0.5rem" }, "fontFamily": { "scoreboard-num-mobile": ["Anton"], "body-md": ["Inter"], "headline-xl-mobile": ["Anton"], "body-sm": ["Inter"], "eyebrow-accent": ["Anton"], "body-lg": ["Inter"], "headline-xl": ["Anton"], "headline-lg-mobile": ["Anton"], "label-meta": ["Inter"], "label-action": ["Inter"], "scoreboard-num": ["Anton"], "headline-md": ["Anton"], "headline-lg": ["Anton"] }, "fontSize": { "scoreboard-num-mobile": ["56px", { "lineHeight": "56px", "letterSpacing": "0.02em", "fontWeight": "400" }], "body-md": ["15px", { "lineHeight": "22px", "fontWeight": "500" }], "headline-xl-mobile": ["44px", { "lineHeight": "48px", "letterSpacing": "0.03em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "eyebrow-accent": ["14px", { "lineHeight": "18px", "letterSpacing": "0.14em", "fontWeight": "400" }], "body-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-xl": ["56px", { "lineHeight": "60px", "letterSpacing": "0.04em", "fontWeight": "400" }], "headline-lg-mobile": ["30px", { "lineHeight": "34px", "letterSpacing": "0.02em", "fontWeight": "400" }], "label-meta": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }], "label-action": ["16px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700" }], "scoreboard-num": ["72px", { "lineHeight": "72px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-md": ["24px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-lg": ["36px", { "lineHeight": "40px", "letterSpacing": "0.03em", "fontWeight": "400" }] } } } };</script></head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container/90 backdrop-blur-xl shadow-[0_4px_16px_rgba(0,0,0,0.45)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="Go back" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-high/60 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors flex-shrink-0" onclick="history.back()"><span class="material-symbols-outlined text-[22px]">arrow_back</span></button><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-xs text-on-surface-variant"><span class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-widest text-primary-container">PITCH CONTROL</span><span class="text-[10px] text-outline">/</span><span class="font-label-meta text-label-meta truncate text-outline">OFFICIAL LOG</span></div><h1 class="font-headline-md text-headline-md tracking-tight uppercase text-on-surface truncate leading-none">Team Roster Detail</h1></div></div><div class="flex items-center gap-space-md flex-shrink-0"><div class="flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-secondary-container/60 shadow-[0_0_8px_rgba(41,81,63,0.5)]"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-meta text-label-meta text-on-secondary-container uppercase tracking-wider hidden sm:inline">LIVE SYNC</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(255,202,133,0.25)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full relative">
+<!-- SQUAD LIST BACKGROUND CONTEXT (Dimmed touchline perspective) -->
+<div class="w-full px-margin pb-24 pt-2 flex flex-col gap-space-md opacity-40 filter blur-[1.5px] pointer-events-none select-none">
+<!-- Team Roster Summary Banner -->
+<div class="w-full bg-surface-container rounded-xl p-space-md shadow-md flex items-center justify-between">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-container font-headline-md text-headline-md flex-shrink-0">
+          RFC
+        </div>
+<div class="flex flex-col min-w-0">
+<span class="font-eyebrow-accent text-eyebrow-accent uppercase tracking-widest text-primary-container">MATCHDAY 14</span>
+<span class="font-headline-md text-headline-md uppercase text-on-surface truncate">ROVERS FC</span>
+<span class="font-body-sm text-body-sm text-outline">16 Active Registered Players</span>
+</div>
+</div>
+<div class="px-space-sm py-1 rounded bg-secondary-container text-on-secondary-container font-label-meta text-label-meta uppercase">
+        READY
+      </div>
+</div>
+<!-- Match Squad Sample Items (Visual depth behind modal) -->
+<div class="flex flex-col gap-space-xs">
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm">
+<span class="font-scoreboard-num-mobile text-headline-md text-primary-container w-8 text-center">1</span>
+<div class="flex flex-col">
+<span class="font-body-lg text-body-lg text-on-surface">Jack Turner</span>
+<span class="font-body-sm text-body-sm text-secondary">GOALKEEPER · STARTING XI</span>
+</div>
+</div>
+<span class="font-label-meta text-label-meta px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">#01</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm">
+<span class="font-scoreboard-num-mobile text-headline-md text-primary-container w-8 text-center">4</span>
+<div class="flex flex-col">
+<span class="font-body-lg text-body-lg text-on-surface">Declan Rice</span>
+<span class="font-body-sm text-body-sm text-secondary">DEFENDER · STARTING XI</span>
+</div>
+</div>
+<span class="font-label-meta text-label-meta px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">#04</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm">
+<span class="font-scoreboard-num-mobile text-headline-md text-primary-container w-8 text-center">7</span>
+<div class="flex flex-col">
+<span class="font-body-lg text-body-lg text-on-surface">Bukayo Saka</span>
+<span class="font-body-sm text-body-sm text-secondary">MIDFIELDER · STARTING XI</span>
+</div>
+</div>
+<span class="font-label-meta text-label-meta px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">#07</span>
+</div>
+</div>
+</div>
+<!-- MODAL SCRIM OVERLAY -->
+<div class="fixed inset-0 z-40 bg-surface-container-lowest/80 backdrop-blur-sm transition-opacity" id="modalScrim"></div>
+<!-- ELEVATED CREAM BOTTOM SHEET (#F7F5EF) -->
+<div class="fixed bottom-0 left-0 right-0 z-50 flex flex-col max-w-lg mx-auto w-full bg-[#F7F5EF] text-[#1B1B1B] rounded-t-[24px] shadow-[0_-10px_35px_rgba(0,0,0,0.65)] max-h-[92vh] overflow-hidden" id="bottomSheetContainer">
+<!-- Drag Pill Handle Area -->
+<div class="w-full pt-3 pb-1 flex items-center justify-center cursor-grab active:cursor-grabbing flex-shrink-0 touch-none" id="sheetPillZone">
+<div class="w-12 h-1.5 rounded-full bg-[#1B1B1B]/20"></div>
+</div>
+<!-- Sheet Header -->
+<div class="px-margin pt-1 pb-space-sm flex items-start justify-between flex-shrink-0">
+<div class="flex flex-col min-w-0 pr-space-sm">
+<span class="font-eyebrow-accent text-eyebrow-accent text-on-primary-container uppercase tracking-widest leading-tight">ROVERS FC · SQUAD REGISTRY</span>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile uppercase text-[#1B1B1B] tracking-tight leading-none mt-0.5">
+          ADD FOOTBALL PLAYER
+        </h2>
+<p class="font-body-sm text-body-sm text-[#514535] mt-1">Official Matchday Roster · Pitch 4 Referee Sign-off</p>
+</div>
+<!-- Close 'X' Button (min 48dp target) -->
+<button aria-label="Close add player sheet" class="w-12 h-12 flex items-center justify-center rounded-xl bg-[#EDEAE0] text-[#1B1B1B] hover:bg-[#E0DCD3] active:scale-95 transition-transform flex-shrink-0 shadow-sm" id="closeSheetBtn" type="button">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+</div>
+<!-- Form Body (Scrollable for smaller screens) -->
+<div class="px-margin py-space-xs flex flex-col gap-space-md overflow-y-auto flex-1">
+<!-- Field 1: Full Name -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-meta text-label-meta uppercase tracking-wider text-[#514535] flex items-center gap-1" for="playerNameInput">
+<span>PLAYER FULL NAME</span>
+<span class="text-error-container font-body-md text-body-md leading-none">*</span>
+</label>
+<div class="relative w-full">
+<input class="w-full h-12 px-4 rounded-[12px] bg-white text-[#1B1B1B] font-body-md text-body-md shadow-sm outline-none focus:bg-white placeholder:text-[#9e8e7c] transition-all" id="playerNameInput" onblur="this.style.boxShadow='inset 0 0 0 1.5px #E0DCD3';" onfocus="this.style.boxShadow='inset 0 0 0 2px #F2A93B';" placeholder="e.g. Liam Davies" style="box-shadow: inset 0 0 0 1.5px #E0DCD3;" type="text" value="Marcus Rashford"/>
+<span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9e8e7c] text-[20px] pointer-events-none">
+            badge
+          </span>
+</div>
+</div>
+<!-- Field 2: Jersey Number Stepper -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-meta text-label-meta uppercase tracking-wider text-[#514535] flex items-center gap-1">
+<span>JERSEY NUMBER (1 - 99)</span>
+<span class="text-error-container font-body-md text-body-md leading-none">*</span>
+</label>
+<span class="font-label-meta text-label-meta text-secondary-container flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+            Number 9 is available
+          </span>
+</div>
+<div class="flex items-center gap-space-sm">
+<!-- Stepper Minus -->
+<button aria-label="Decrease jersey number" class="h-12 w-14 rounded-[12px] bg-[#EDEAE0] text-[#1B1B1B] hover:bg-[#E0DCD3] active:translate-y-0.5 flex items-center justify-center shadow-sm transition-all" id="btnDecNumber" type="button">
+<span class="material-symbols-outlined text-[24px]">remove</span>
+</button>
+<!-- Number Center Display -->
+<div class="flex-1 h-12 bg-white rounded-[12px] flex items-center justify-center shadow-sm relative" style="box-shadow: inset 0 0 0 1.5px #E0DCD3;">
+<span class="material-symbols-outlined text-[16px] text-[#9e8e7c] absolute left-3">tag</span>
+<span class="font-scoreboard-num-mobile text-headline-lg-mobile text-[#1B1B1B] tracking-wide pt-1" id="jerseyNumberDisplay">9</span>
+</div>
+<!-- Stepper Plus -->
+<button aria-label="Increase jersey number" class="h-12 w-14 rounded-[12px] bg-[#EDEAE0] text-[#1B1B1B] hover:bg-[#E0DCD3] active:translate-y-0.5 flex items-center justify-center shadow-sm transition-all" id="btnIncNumber" type="button">
+<span class="material-symbols-outlined text-[24px]">add</span>
+</button>
+</div>
+</div>
+<!-- Field 3: Position Selector (Touch Chips >= 48dp) -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-meta text-label-meta uppercase tracking-wider text-[#514535] flex items-center gap-1">
+<span>TACTICAL POSITION</span>
+<span class="text-error-container font-body-md text-body-md leading-none">*</span>
+</label>
+<div class="grid grid-cols-4 gap-2" id="positionChipsGroup">
+<!-- GK -->
+<button class="pos-chip h-12 rounded-[12px] bg-[#EDEAE0] text-[#514535] flex flex-col items-center justify-center transition-all shadow-sm active:scale-95" data-pos="GK" type="button">
+<span class="font-headline-md text-headline-md leading-none">GK</span>
+<span class="font-label-meta text-[10px] uppercase text-[#633f00]/70">Keeper</span>
+</button>
+<!-- DEF -->
+<button class="pos-chip h-12 rounded-[12px] bg-[#EDEAE0] text-[#514535] flex flex-col items-center justify-center transition-all shadow-sm active:scale-95" data-pos="DEF" type="button">
+<span class="font-headline-md text-headline-md leading-none">DEF</span>
+<span class="font-label-meta text-[10px] uppercase text-[#633f00]/70">Defender</span>
+</button>
+<!-- MID -->
+<button class="pos-chip h-12 rounded-[12px] bg-[#EDEAE0] text-[#514535] flex flex-col items-center justify-center transition-all shadow-sm active:scale-95" data-pos="MID" type="button">
+<span class="font-headline-md text-headline-md leading-none">MID</span>
+<span class="font-label-meta text-[10px] uppercase text-[#633f00]/70">Midfield</span>
+</button>
+<!-- FWD (Selected Active Amber) -->
+<button class="pos-chip active-pos h-12 rounded-[12px] bg-[#F2A93B] text-[#1B1B1B] shadow-[0_3px_0_0_#D48F28] flex flex-col items-center justify-center transition-all active:scale-95 relative" data-pos="FWD" type="button">
+<div class="flex items-center gap-0.5">
+<span class="font-headline-md text-headline-md leading-none">FWD</span>
+<span class="material-symbols-outlined text-[16px] text-[#1B1B1B] font-bold">check</span>
+</div>
+<span class="font-label-meta text-[10px] uppercase text-[#1B1B1B] font-bold">Forward</span>
+</button>
+</div>
+</div>
+<!-- Field 4: Detailed Role / Sub-Position Pills -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-meta text-label-meta uppercase tracking-wider text-[#514535]">
+          SUB-ROLE FOCUS (OPTIONAL)
+        </label>
+<div class="flex items-center gap-2 flex-wrap" id="subRoleChips">
+<button class="role-pill px-3 py-2 min-h-[38px] rounded-full bg-[#1B1B1B] text-[#F7F5EF] font-label-meta text-label-meta tracking-wider uppercase transition-all shadow-sm flex items-center gap-1.5" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-[#F2A93B]"></span>
+            Striker (ST)
+          </button>
+<button class="role-pill px-3 py-2 min-h-[38px] rounded-full bg-[#EDEAE0] text-[#514535] font-label-meta text-label-meta tracking-wider uppercase transition-all shadow-sm hover:bg-[#E0DCD3]" type="button">
+            Left Wing (LW)
+          </button>
+<button class="role-pill px-3 py-2 min-h-[38px] rounded-full bg-[#EDEAE0] text-[#514535] font-label-meta text-label-meta tracking-wider uppercase transition-all shadow-sm hover:bg-[#E0DCD3]" type="button">
+            Right Wing (RW)
+          </button>
+<button class="role-pill px-3 py-2 min-h-[38px] rounded-full bg-[#EDEAE0] text-[#514535] font-label-meta text-label-meta tracking-wider uppercase transition-all shadow-sm hover:bg-[#E0DCD3]" type="button">
+            Center Forward (CF)
+          </button>
+</div>
+</div>
+<!-- Field 5: Squad Status Toggle Switch -->
+<div class="bg-[#EDEAE0] p-space-sm rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-[#29513F] text-[#C1ECD4] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">sports_soccer</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-lg text-body-md text-[#1B1B1B]">Starting XI Selection</span>
+<span class="font-body-sm text-body-sm text-[#514535]" id="statusToggleDesc">Assigned to first whistle squad</span>
+</div>
+</div>
+<!-- Touch Toggle Segment -->
+<button aria-checked="true" class="relative w-14 h-8 rounded-full bg-[#29513F] transition-colors p-1 flex items-center shadow-inner" id="squadStatusToggle" role="switch" type="button">
+<div class="w-6 h-6 rounded-full bg-[#F7F5EF] shadow-md transform translate-x-6 transition-transform flex items-center justify-center" id="toggleKnob">
+<span class="material-symbols-outlined text-[14px] text-[#29513F] font-bold">check</span>
+</div>
+</button>
+</div>
+</div>
+<!-- Sticky Bottom Action Command Zone (Thumb zone) -->
+<div class="px-margin pt-space-sm pb-space-lg bg-[#F7F5EF] flex items-center gap-space-sm shadow-[0_-4px_16px_rgba(0,0,0,0.06)] flex-shrink-0">
+<!-- Cancel Button -->
+<button class="min-h-[52px] px-5 rounded-xl bg-[#EDEAE0] text-[#1B1B1B] hover:bg-[#E0DCD3] active:scale-95 transition-all flex items-center justify-center font-label-action text-label-action uppercase tracking-wider shadow-sm" id="btnCancel" type="button">
+        Cancel
+      </button>
+<!-- Primary Save Amber Button -->
+<button class="flex-1 min-h-[52px] px-4 rounded-xl bg-[#F2A93B] text-[#1B1B1B] active:translate-y-0.5 active:shadow-[0_2px_0_0_#D48F28] shadow-[0_4px_0_0_#D48F28] transition-all flex items-center justify-center gap-2" id="btnSavePlayer" type="button">
+<span class="material-symbols-outlined text-[20px] font-bold">bolt</span>
+<span class="font-headline-md text-headline-md uppercase tracking-wide leading-none pt-0.5">SAVE PLAYER TO SQUAD</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  (function initAddPlayerModal() {
+    const jerseyDisplay = document.getElementById('jerseyNumberDisplay');
+    const btnInc = document.getElementById('btnIncNumber');
+    const btnDec = document.getElementById('btnDecNumber');
+    const posChips = document.querySelectorAll('.pos-chip');
+    const rolePills = document.querySelectorAll('.role-pill');
+    const toggleBtn = document.getElementById('squadStatusToggle');
+    const toggleKnob = document.getElementById('toggleKnob');
+    const statusDesc = document.getElementById('statusToggleDesc');
+    const closeBtn = document.getElementById('closeSheetBtn');
+    const cancelBtn = document.getElementById('btnCancel');
+    const saveBtn = document.getElementById('btnSavePlayer');
+    const sheetContainer = document.getElementById('bottomSheetContainer');
+    const scrim = document.getElementById('modalScrim');
+
+    let currentJersey = 9;
+    let isStartingXI = true;
+
+    // Jersey Stepper Logic
+    if (btnInc && jerseyDisplay) {
+      btnInc.addEventListener('click', () => {
+        if (currentJersey < 99) {
+          currentJersey++;
+          jerseyDisplay.textContent = currentJersey;
+        }
+      });
+    }
+
+    if (btnDec && jerseyDisplay) {
+      btnDec.addEventListener('click', () => {
+        if (currentJersey > 1) {
+          currentJersey--;
+          jerseyDisplay.textContent = currentJersey;
+        }
+      });
+    }
+
+    // Tactical Position Quick Chips
+    posChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        posChips.forEach(c => {
+          c.className = 'pos-chip h-12 rounded-[12px] bg-[#EDEAE0] text-[#514535] flex flex-col items-center justify-center transition-all shadow-sm active:scale-95';
+          const innerPos = c.getAttribute('data-pos');
+          c.innerHTML = `
+            <span class="font-headline-md text-headline-md leading-none">${innerPos}</span>
+            <span class="font-label-meta text-[10px] uppercase text-[#633f00]/70">${innerPos === 'GK' ? 'Keeper' : innerPos === 'DEF' ? 'Defender' : innerPos === 'MID' ? 'Midfield' : 'Forward'}</span>
+          `;
+        });
+
+        const activePos = chip.getAttribute('data-pos');
+        chip.className = 'pos-chip active-pos h-12 rounded-[12px] bg-[#F2A93B] text-[#1B1B1B] shadow-[0_3px_0_0_#D48F28] flex flex-col items-center justify-center transition-all active:scale-95 relative';
+        chip.innerHTML = `
+          <div class="flex items-center gap-0.5">
+            <span class="font-headline-md text-headline-md leading-none">${activePos}</span>
+            <span class="material-symbols-outlined text-[16px] text-[#1B1B1B] font-bold">check</span>
+          </div>
+          <span class="font-label-meta text-[10px] uppercase text-[#1B1B1B] font-bold">${activePos === 'GK' ? 'Keeper' : activePos === 'DEF' ? 'Defender' : activePos === 'MID' ? 'Midfield' : 'Forward'}</span>
+        `;
+      });
+    });
+
+    // Sub-Role Selection Pills
+    rolePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        rolePills.forEach(p => {
+          p.className = 'role-pill px-3 py-2 min-h-[38px] rounded-full bg-[#EDEAE0] text-[#514535] font-label-meta text-label-meta tracking-wider uppercase transition-all shadow-sm hover:bg-[#E0DCD3]';
+          const text = p.textContent.trim().replace(/^•\s*/, '');
+          p.innerHTML = text;
+        });
+
+        pill.className = 'role-pill px-3 py-2 min-h-[38px] rounded-full bg-[#1B1B1B] text-[#F7F5EF] font-label-meta text-label-meta tracking-wider uppercase transition-all shadow-sm flex items-center gap-1.5';
+        const label = pill.textContent.trim();
+        pill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-[#F2A93B]"></span>${label}`;
+      });
+    });
+
+    // Starting XI / Bench Toggle
+    if (toggleBtn && toggleKnob && statusDesc) {
+      toggleBtn.addEventListener('click', () => {
+        isStartingXI = !isStartingXI;
+        toggleBtn.setAttribute('aria-checked', String(isStartingXI));
+        if (isStartingXI) {
+          toggleBtn.className = 'relative w-14 h-8 rounded-full bg-[#29513F] transition-colors p-1 flex items-center shadow-inner';
+          toggleKnob.className = 'w-6 h-6 rounded-full bg-[#F7F5EF] shadow-md transform translate-x-6 transition-transform flex items-center justify-center';
+          toggleKnob.innerHTML = '<span class="material-symbols-outlined text-[14px] text-[#29513F] font-bold">check</span>';
+          statusDesc.textContent = 'Assigned to first whistle squad';
+        } else {
+          toggleBtn.className = 'relative w-14 h-8 rounded-full bg-[#514535]/30 transition-colors p-1 flex items-center shadow-inner';
+          toggleKnob.className = 'w-6 h-6 rounded-full bg-[#F7F5EF] shadow-md transform translate-x-0 transition-transform flex items-center justify-center';
+          toggleKnob.innerHTML = '<span class="material-symbols-outlined text-[14px] text-[#514535]">remove</span>';
+          statusDesc.textContent = 'Named on substitutes bench';
+        }
+      });
+    }
+
+    // Modal Dismiss Functionality
+    const dismissSheet = () => {
+      if (sheetContainer && scrim) {
+        sheetContainer.style.transform = 'translateY(100%)';
+        sheetContainer.style.transition = 'transform 260ms cubic-bezier(0.32, 0.72, 0, 1)';
+        scrim.style.opacity = '0';
+        scrim.style.transition = 'opacity 200ms ease';
+        setTimeout(() => {
+          sheetContainer.style.display = 'none';
+          scrim.style.display = 'none';
+        }, 260);
+      }
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', dismissSheet);
+    if (cancelBtn) cancelBtn.addEventListener('click', dismissSheet);
+    if (scrim) scrim.addEventListener('click', dismissSheet);
+
+    // Save Feedback micro-interaction
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        saveBtn.innerHTML = `
+          <span class="material-symbols-outlined text-[20px] animate-spin font-bold">progress_activity</span>
+          <span class="font-headline-md text-headline-md uppercase tracking-wide leading-none pt-0.5">REGISTERING...</span>
+        `;
+        setTimeout(() => {
+          saveBtn.classList.remove('bg-[#F2A93B]');
+          saveBtn.classList.add('bg-[#29513F]', 'text-[#C1ECD4]');
+          saveBtn.innerHTML = `
+            <span class="material-symbols-outlined text-[20px] font-bold">check_circle</span>
+            <span class="font-headline-md text-headline-md uppercase tracking-wide leading-none pt-0.5">ROSTER UPDATED!</span>
+          `;
+          setTimeout(dismissSheet, 650);
+        }, 500);
+      });
+    }
+  })();
+</script></main></body></html>
