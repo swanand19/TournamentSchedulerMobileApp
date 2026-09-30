@@ -50,6 +50,15 @@ export class NetworkError extends Error {
   }
 }
 
-export async function responseError(res: Response): Promise<ApiError> {
-  return new ApiError(messageFor(res.status, await res.text()), res.status);
+/**
+ * The error for a failed answer. `envelopeText` is the { status, data } envelope as JSON — decrypted
+ * when the answer was encrypted, as sent when the gateway refused the request before decrypting it.
+ */
+export function apiError(status: number, envelopeText: string): ApiError {
+  return new ApiError(messageFor(status, envelopeText), status);
+}
+
+/** The server's encrypted answer couldn't be opened — corrupted in transit, or not from our server. */
+export function unreadableAnswer(status: number): ApiError {
+  return new ApiError("The server's answer couldn't be read. Check the server address, then try again.", status);
 }

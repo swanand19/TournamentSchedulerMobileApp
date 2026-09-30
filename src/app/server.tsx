@@ -77,7 +77,9 @@ export default function ServerScreen() {
             {result.ok ? `Connected in ${result.ms} ms` : 'Not connected'}
           </Text>
           <Text style={[type.body, { color: theme.ink }]}>
-            {result.ok ? `The API and its database are answering (${result.environment}).` : result.message}
+            {result.ok
+              ? `The API, its database and the encrypted connection are all working (${result.environment}).`
+              : result.message}
           </Text>
         </View>
       )}

@@ -1,15 +1,17 @@
-import { NetworkError, responseError } from './errors';
-import { ROUTES, type ServiceRequestId } from './routes';
+import { apiError, NetworkError, unreadableAnswer } from './errors';
+import { openResponse, sealRequest } from './gateway';
+import type { ServiceRequestId } from './services';
 
 // The one way the app talks to the API. Screens call api.call("SERVICE_ID", { ... }) and get plain
-// data back; they never see fetch, URLs, keys or the response envelope. When the encrypted gateway
-// lands, only this file changes.
+// data back; they never see fetch, URLs, keys or the response envelope.
 //
-// Every API response is { status: { isSuccess, message, statusCode }, data }. Screens get `data`;
-// a failure becomes an ApiError carrying `status.message` (see errors.ts).
+// Every call goes through the secure gateway: the request is encrypted for the server's public key
+// and posted to {server}/api/gateway, and the answer comes back encrypted for this request alone
+// (see gateway.ts). Inside, the answer is the usual { status: { isSuccess, message, statusCode },
+// data }; screens get `data`, and a failure becomes an ApiError carrying `status.message`.
 
 export type CallOptions = {
-  /** Fills `{name}` placeholders in the route. */
+  /** Values for the service's route parameters, by name — e.g. { matchId: 42 }. */
   routeParams?: Record<string, string | number>;
   query?: Record<string, string | number | boolean | undefined>;
   body?: unknown;
@@ -28,39 +30,30 @@ export function getApiBaseUrl() {
   return baseUrl;
 }
 
-function buildUrl(root: string, path: string, options: CallOptions): string {
-  const filled = path.replace(/\{(\w+)\}/g, (_, name: string) => {
-    const value = options.routeParams?.[name];
-    if (value === undefined) throw new Error(`Missing route parameter "${name}".`);
-    return encodeURIComponent(String(value));
-  });
-
-  const query = Object.entries(options.query ?? {})
-    .filter(([, v]) => v !== undefined)
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-    .join('&');
-
-  return `${root}/api/${filled}${query ? `?${query}` : ''}`;
-}
-
-/** A single request to `root`, with a timeout. Exported for the Server screen's connection test. */
+/** A single request to the server at `root`, with a timeout. Exported for the Server screen's connection test. */
 export async function request<T>(
   root: string,
   serviceRequestId: ServiceRequestId,
   options: CallOptions = {},
 ): Promise<T> {
-  const route = ROUTES[serviceRequestId];
+  const query = Object.fromEntries(
+    Object.entries(options.query ?? {}).filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined),
+  );
+  const sealed = await sealRequest(serviceRequestId, { routeParams: options.routeParams, query, body: options.body });
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 15000);
 
   let res: Response;
+  let text: string;
   try {
-    res = await fetch(buildUrl(root, route.path, options), {
-      method: route.method,
-      headers: options.body === undefined ? undefined : { 'Content-Type': 'application/json' },
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    res = await fetch(`${root}/api/gateway`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sealed.envelope),
       signal: controller.signal,
     });
+    text = await res.text();
   } catch {
     // Unreachable, refused, or timed out: all mean the same thing to the scorer.
     throw new NetworkError(root);
@@ -68,15 +61,35 @@ export async function request<T>(
     clearTimeout(timer);
   }
 
-  if (!res.ok) throw await responseError(res);
-  if (res.status === 204) return null as T;
-  const body: unknown = await res.json();
-  return (isEnvelope(body) ? body.data : body) as T;
+  let outer: unknown = null;
+  try {
+    outer = text ? JSON.parse(text) : null;
+  } catch {
+    // Not JSON (an IIS error page, say): errors.ts words it from the status alone.
+  }
+
+  let envelope: unknown;
+  try {
+    envelope = openResponse(outer, sealed.contentKey);
+  } catch {
+    throw unreadableAnswer(res.status);
+  } finally {
+    sealed.contentKey.fill(0);
+  }
+
+  // Refused before decryption: the gateway could only answer in the clear.
+  if (envelope === undefined) {
+    throw apiError(res.status, text);
+  }
+
+  if (!res.ok || (isEnvelope(envelope) && !envelope.status.isSuccess)) {
+    throw apiError(res.status, JSON.stringify(envelope));
+  }
+  return (isEnvelope(envelope) ? envelope.data : envelope) as T;
 }
 
 type Envelope = { status: { isSuccess: boolean; message: string | null; statusCode: number }; data: unknown };
 
-/** Tolerates a server from before the envelope, so the app and API can be updated in either order. */
 export function isEnvelope(body: unknown): body is Envelope {
   if (typeof body !== 'object' || body === null || !('data' in body) || !('status' in body)) return false;
   const status = (body as { status: unknown }).status;

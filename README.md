@@ -23,12 +23,18 @@ It talks to the same ASP.NET Core API as the website, hosted in IIS on the lapto
 
 The first-run default address lives in `.env.local` (`EXPO_PUBLIC_API_BASE_URL`), which is not committed.
 
+Every request is encrypted for the server's public key (the secure gateway — see
+`TournamentScheduler.Api/Gateway/README.md`). `.env.local` also needs `EXPO_PUBLIC_GATEWAY_KEY_ID` and
+`EXPO_PUBLIC_GATEWAY_PUBLIC_KEY`; the IIS setup script prints them, or run
+`dotnet run -- gateway-keys show` in `TournamentScheduler.Api`. Restart Expo after changing them.
+
 ## Checks before calling anything done
 
 ```bash
 npx tsc --noEmit     # typecheck
 npx expo lint        # lint
 npx expo-doctor      # dependency and config health
+npm run verify:gateway  # the gateway encryption still matches the API's (shared test vectors)
 ```
 
 ## Layout
@@ -36,8 +42,9 @@ npx expo-doctor      # dependency and config health
 | Path | What it is |
 | --- | --- |
 | `src/app/` | Screens (Expo Router: every file is a route) |
-| `src/api/client.ts` | The only way the app calls the API: `api.call("SERVICE_ID", {...})` |
-| `src/api/routes.ts` | Service IDs → API routes (replaced by the encrypted gateway later) |
+| `src/api/client.ts` | The only way the app calls the API: `api.call("SERVICE_ID", { routeParams, query, body })` |
+| `src/api/services.ts` | Every service ID the app may call (the API owns the routes) |
+| `src/api/gateway.ts` · `gatewayCrypto.ts` | Encrypting requests and opening answers (JWE; keep in step with the website's copy) |
 | `src/config/server.tsx` | The saved server address and the connection test |
 | `src/api/types.ts` | TypeScript shapes of every API response (mirrors `TournamentScheduler.Api/Models`) |
 | `src/theme/theme.ts` | Colours, fonts, spacing and type scale shared by every screen |
