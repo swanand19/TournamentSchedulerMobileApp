@@ -9,7 +9,7 @@ import { plural } from '@/lib/format';
 // Teams & rosters: the first step of the setup checklist.
 
 export default function TeamsScreen() {
-  const { id, name, isStarted } = useTournament();
+  const { id, name, isStarted, access } = useTournament();
   const teams = useTeams(id);
   const players = teams.data?.reduce((n, t) => n + t.players.length, 0) ?? 0;
 
@@ -21,7 +21,7 @@ export default function TeamsScreen() {
         large
       />
       {teams.data ? (
-        <TeamsList tournamentId={id} teams={teams.data} editable={!isStarted} onChanged={teams.reload} />
+        <TeamsList tournamentId={id} teams={teams.data} editable={!isStarted && access.canEdit} onChanged={teams.reload} />
       ) : teams.loading ? (
         <Skeleton rows={5} />
       ) : null}

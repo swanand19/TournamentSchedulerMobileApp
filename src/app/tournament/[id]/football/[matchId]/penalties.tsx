@@ -11,6 +11,7 @@ import { Card, Deck } from '@/components/Card';
 import ErrorBanner from '@/components/ErrorBanner';
 import Icon from '@/components/Icon';
 import PlayerGrid from '@/components/PlayerGrid';
+import ScoringBanner, { isScoringLocked } from '@/components/ScoringBanner';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import Sheet from '@/components/Sheet';
@@ -109,7 +110,10 @@ export default function PenaltiesScreen() {
     }
   };
 
-  const footer = finished ? (
+  // Someone else is scoring (or the tournament is closed): follow the tally, no kicking controls.
+  const locked = isScoringLocked(match.scoring, finished);
+
+  const footer = locked ? undefined : finished ? (
     <Button label="Back to matches" icon="arrow-left" size="lg" variant="deck" onPress={() => router.dismissTo({ pathname: '/tournament/[id]', params: { id: String(tournamentId) } })} />
   ) : (
     <View style={styles.row}>
@@ -213,7 +217,9 @@ export default function PenaltiesScreen() {
         );
       })}
 
-      {!finished && (
+      <ScoringBanner sport="football" matchId={matchId} scoring={match.scoring} onChanged={data.reload} />
+
+      {!finished && !locked && (
         <>
           <SectionHeader
             eyebrow={`${available.length} available on the pitch`}

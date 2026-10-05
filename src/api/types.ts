@@ -5,7 +5,42 @@
 import type { Sport } from '@/theme/theme';
 
 // ---------------------------------------------------------------------------------------------
+// Accounts (Models/Accounts/AccountDtos.cs)
+
+export type Account = {
+  userId: number;
+  name: string;
+  email: string | null;
+  roleId: number;
+  roleName: string | null;
+  memberSince: string;
+  /** Their own cricket profile, copied to every cricket team place linked to them. */
+  cricket: CricketProfile | null;
+  /** Admin accounts are removed by another admin, not from the app. */
+  canDelete: boolean;
+};
+
+export type SendOtpResponse = { email: string; expiresInSeconds: number; resendAfterSeconds: number };
+
+/** "NeedsName": the code is right but the email is new — send the same code again with a name. */
+export type VerifyOtpResponse = {
+  outcome: 'SignedIn' | 'NeedsName';
+  isNewUser: boolean;
+  sessionToken: string | null;
+  sessionId: string | null;
+  expiresAt: string | null;
+  user: Account | null;
+};
+
+export type LogoutAllResponse = { signedOutDevices: number };
+
+// ---------------------------------------------------------------------------------------------
 // Tournaments, teams, players
+
+export type TournamentStatus = 'Upcoming' | 'Live' | 'Completed' | 'Cancelled';
+
+/** What the signed-in person is in a tournament: "creator", "owner", "scorer", "player". */
+export type TournamentRole = 'creator' | 'owner' | 'scorer' | 'player';
 
 export type TournamentListItem = {
   id: number;
@@ -13,8 +48,29 @@ export type TournamentListItem = {
   sport: Sport;
   createdAt: string;
   isStarted: boolean;
+  status: TournamentStatus;
+  /** "YYYY-MM-DD"; null on tournaments from before dates existed. */
+  startDate: string | null;
+  endDate: string | null;
   hasSchedule: boolean;
   latestScheduleId: number | null;
+  myRoles: TournamentRole[];
+};
+
+/** What the signed-in person may do in this tournament (Models/Accounts/TournamentAccessModels.cs). */
+export type TournamentAccess = {
+  myRoles: TournamentRole[];
+  /** Their own squad place here, when they play in it. */
+  myPlayerId: number | null;
+  myTeamId: number | null;
+  canEdit: boolean;
+  canScore: boolean;
+  canManageMembers: boolean;
+  canDelete: boolean;
+  canLeave: boolean;
+  canComplete: boolean;
+  /** Live and every match is over: ask once "All matches played. Mark the tournament complete?" */
+  allMatchesPlayed: boolean;
 };
 
 export type Tournament = {
@@ -24,6 +80,34 @@ export type Tournament = {
   createdAt: string;
   isStarted: boolean;
   startedAt: string | null;
+  status: TournamentStatus;
+  startDate: string | null;
+  endDate: string | null;
+  access: TournamentAccess | null;
+};
+
+export type TournamentMember = {
+  userId: number;
+  name: string;
+  /** Only owners see emails. */
+  email: string | null;
+  role: 'Creator' | 'Owner' | 'Scorer';
+  isCreator: boolean;
+  isMe: boolean;
+  canRemove: boolean;
+};
+
+export type Person = { userId: number; name: string };
+
+/** Who is scoring a match and what the caller may do about it — on every match answer as `scoring`. */
+export type Scoring = {
+  activeScorer: Person | null;
+  isActiveScorer: boolean;
+  canScore: boolean;
+  canRequestScoring: boolean;
+  canTakeOverScoring: boolean;
+  pendingRequest: { by: Person; requestedAt: string; expiresAt: string } | null;
+  canRespondToRequest: boolean;
 };
 
 export type CricketRole = 'Batter' | 'Bowler' | 'AllRounder' | 'WicketKeeper' | 'WicketKeeperBatter';
@@ -41,12 +125,18 @@ export type CricketProfile = {
   roleLabel?: string;
 };
 
+/** A squad place. Once linked to an account it shows that person's name and cricket profile. */
 export type Player = {
   id: number;
   name: string;
   position: string | null;
   jerseyNumber: number | null;
   teamId: number;
+  isLinked: boolean;
+  /** The signed-in person's own place. */
+  isMe: boolean;
+  /** Owners only: the email that links (or will link) it to an account. */
+  email: string | null;
   cricket: CricketProfile | null;
 };
 
@@ -55,7 +145,42 @@ export type Team = {
   name: string;
   tournamentId: number;
   defaultCaptainPlayerId: number | null;
+  /** Owners only: what players type under "Join a team". */
+  joinCode: string | null;
   players: Player[];
+};
+
+// Joining a team with its code (Models/Accounts/PlayerAccountModels.cs)
+
+export type JoinPlace = { playerId: number; name: string; detail: string | null };
+
+export type JoinTeamPreview = {
+  tournamentId: number;
+  tournamentName: string;
+  sport: Sport;
+  teamId: number;
+  teamName: string;
+  /** "Are you one of these?" — names nobody has claimed yet. */
+  places: JoinPlace[];
+};
+
+export type JoinTeamResult = {
+  tournamentId: number;
+  tournamentName: string;
+  sport: Sport;
+  teamId: number;
+  teamName: string;
+  playerId: number;
+};
+
+export type AccountDeletionPreview = {
+  codeSentTo: string;
+  expiresInSeconds: number;
+  resendAfterSeconds: number;
+  tournamentsDeleted: { id: number; name: string; sport: Sport; otherPeople: number }[];
+  tournamentsHandedOver: { id: number; name: string; newCreator: string }[];
+  tournamentsLeft: number;
+  squadPlaces: number;
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -177,6 +302,7 @@ export type MatchPlayer = {
 /** GET matches/{id}: the stored match plus the flow flags the server derives. */
 export type FootballMatch = {
   id: number;
+  scoring: Scoring | null;
   tournamentId: number;
   groupName: string;
   matchNumber: number;
@@ -486,6 +612,7 @@ export type CricketActions = {
 
 export type CricketMatchState = {
   id: number;
+  scoring: Scoring | null;
   tournamentId: number;
   groupName: string;
   matchNumber: number;

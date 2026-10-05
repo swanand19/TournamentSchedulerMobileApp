@@ -10,7 +10,7 @@ import EmptyState from '@/components/EmptyState';
 import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
 import Sheet from '@/components/Sheet';
-import HubPage, { StickyBand } from '@/features/hub/HubPage';
+import HubPage, { AboveSticky, StickyBand } from '@/features/hub/HubPage';
 import { useSportTheme } from '@/theme/SportTheme';
 import { fonts, radius, space, type } from '@/theme/theme';
 
@@ -147,7 +147,7 @@ export function FootballStatsPage({ stats, refreshing, onRefresh }: PageProps<Fo
 
   return (
     <HubPage refreshing={refreshing} onRefresh={onRefresh} stickyIndex={1}>
-      <View style={{ gap: space.lg }}>
+      <AboveSticky style={{ gap: space.lg }}>
         <Progress done={s.matchesCompleted} total={s.totalMatches} />
         <View style={styles.grid}>
           <Tile label="Goals" value={s.totalGoals} sub={`${s.goalsPerMatch.toFixed(2)} a match`} accent />
@@ -159,7 +159,7 @@ export function FootballStatsPage({ stats, refreshing, onRefresh }: PageProps<Fo
           {s.highestScoringMatch ? <Tile label="Highest scoring match" value={s.highestScoringMatch} wide /> : null}
           {s.biggestWin ? <Tile label="Biggest win" value={s.biggestWin} wide /> : null}
         </View>
-      </View>
+      </AboveSticky>
 
       <StickyBand>
         <SectionHeader title={board?.title ?? 'Leaderboards'} />
@@ -212,7 +212,7 @@ export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<Cri
 
   return (
     <HubPage refreshing={refreshing} onRefresh={onRefresh} stickyIndex={1}>
-      <View style={{ gap: space.lg }}>
+      <AboveSticky style={{ gap: space.lg }}>
         <Progress done={s.matchesCompleted} total={s.totalMatches} />
         <View style={styles.grid}>
           <Tile label="Runs" value={s.totalRuns.toLocaleString()} accent />
@@ -230,7 +230,7 @@ export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<Cri
           </Panel>
         ) : null}
         <Records stats={stats} />
-      </View>
+      </AboveSticky>
 
       <StickyBand>
         <SectionHeader title={board?.title ?? 'Leaderboards'} />

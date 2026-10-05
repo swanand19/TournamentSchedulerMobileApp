@@ -89,7 +89,16 @@ export type SealedEnvelope = {
   requestUUID: string;
 };
 
-export async function sealRequest(serviceRequestId: ServiceRequestId, payload: GatewayPayload): Promise<SealedEnvelope> {
+/**
+ * `session` (for the server this request goes to) is sealed into the payload — never put in the
+ * clear header, where anyone on the Wi-Fi could copy it. The header carries only the session's id,
+ * for the server's logs.
+ */
+export async function sealRequest(
+  serviceRequestId: ServiceRequestId,
+  payload: GatewayPayload,
+  session: { token: string; sessionId: string } | null = null,
+): Promise<SealedEnvelope> {
   const { keyId, key } = serverPublicKey();
   const requestUUID = ExpoCrypto.randomUUID();
   const timestamp = new Date().toISOString();
@@ -98,7 +107,7 @@ export async function sealRequest(serviceRequestId: ServiceRequestId, payload: G
     serverPublicKey: key,
     keyId,
     claims: { serviceRequestId, requestUUID, timestamp },
-    plaintext: utf8ToBytes(JSON.stringify(payload)),
+    plaintext: utf8ToBytes(JSON.stringify(session ? { ...payload, session: session.token } : payload)),
     randomBytes: (length) => ExpoCrypto.getRandomBytes(length),
   });
 
@@ -109,7 +118,7 @@ export async function sealRequest(serviceRequestId: ServiceRequestId, payload: G
         requestUUID,
         timestamp,
         journeyId,
-        sessionId: null,
+        sessionId: session?.sessionId ?? null,
         channel,
         appVersion: Constants.expoConfig?.version ?? 'unknown',
         deviceId: await deviceId(),

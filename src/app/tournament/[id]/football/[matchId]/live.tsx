@@ -9,6 +9,7 @@ import Button from '@/components/Button';
 import { Deck } from '@/components/Card';
 import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
+import ScoringBanner, { isScoringLocked } from '@/components/ScoringBanner';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import Skeleton from '@/components/Skeleton';
@@ -87,9 +88,11 @@ export default function FootballLive() {
     }
   };
 
-  const live = match.isLiveOrPaused;
-  const ended = match.periodState === 'Ended';
   const completed = match.status === 'Completed';
+  // Someone else is scoring (or the tournament is closed): follow along, no scoring controls.
+  const locked = isScoringLocked(match.scoring, completed);
+  const live = match.isLiveOrPaused && !locked;
+  const ended = match.periodState === 'Ended';
   const shootout = match.status === 'PenaltyShootout';
   const periodShort = match.currentPeriodLabel;
 
@@ -168,6 +171,7 @@ export default function FootballLive() {
   return (
     <Screen footer={footer} onRefresh={data.refresh} refreshing={data.refreshing} error={action.error ?? data.error} onRetry={data.refresh}>
       <Scoreboard match={match} events={events} />
+      <ScoringBanner sport="football" matchId={matchId} scoring={match.scoring} onChanged={data.reload} />
 
       {live && (
         <View style={{ gap: space.sm }}>

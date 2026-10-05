@@ -1,6 +1,6 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
 import type { Player, Team } from '@/api/types';
@@ -23,19 +23,24 @@ import { useAction } from '@/hooks/useAction';
 import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
 import { CRICKET_ROLES, describeCricketer, roleShort } from '@/lib/cricketLabels';
+import { confirm } from '@/lib/confirm';
 import { plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSportTheme } from '@/theme/SportTheme';
 import { fonts, lip, radius, space, type } from '@/theme/theme';
 
 // A team's squad: who's in it, sorted by shirt number, with a line-count summary on top and a
-// filter by position (football) or role (cricket). Tap a player to edit; add from the footer.
+// filter by position (football) or role (cricket). Owners tap a player to edit, add from the footer,
+// and share the team's join code; everyone else sees the squad read-only, and a player can leave
+// their own place in it.
 
 type Filter = 'ALL' | Line | string;
 
 export default function TeamScreen() {
   const { teamId } = useLocalSearchParams<{ teamId: string }>();
-  const { id: tournamentId, name: tournamentName, sport } = useTournament();
+  const router = useRouter();
+  const { id: tournamentId, name: tournamentName, sport, access, closed } = useTournament();
+  const canEdit = access.canEdit;
   const theme = useSportTheme();
   const isCricket = sport === 'Cricket';
 
@@ -50,8 +55,51 @@ export default function TeamScreen() {
   const [rename, setRename] = useState({ open: false, key: 0 });
 
   const openPlayer = (player: Player | null) => setSheet((s) => ({ open: true, player, key: s.key + 1 }));
+  const codeAction = useAction();
+  const leaveAction = useAction();
 
   const t = team.data;
+  const mine = t?.players.find((p) => p.isMe);
+
+  const shareCode = (code: string) =>
+    Share.share({
+      message: `Join ${t?.name} in ${tournamentName}: open Tournament Scheduler, tap "Join a team" and enter ${code}.`,
+    });
+
+  const newCode = async () => {
+    if (!t) return;
+    const ok = await confirm({
+      title: 'Make a new join code?',
+      message: `The old code for ${t.name} stops working. Anyone who already joined stays in the team.`,
+      confirmLabel: 'New code',
+    });
+    if (!ok) return;
+    const res = await codeAction.run(() => api.call<Team>('TEAM_JOIN_CODE_RESET', { routeParams: { id: tournamentId, teamId: t.id } }));
+    if (res.ok) {
+      haptic.success();
+      team.reload();
+    }
+  };
+
+  // A player who picked the wrong name, or no longer plays here. If that was all they were in the
+  // tournament, it disappears for them — so go back to the home screen.
+  const leaveTeam = async (place: Player) => {
+    if (!t) return;
+    const ok = await confirm({
+      title: `Leave ${t.name}?`,
+      message: "Your name stays on the team sheet, but it won't be linked to you any more.",
+      confirmLabel: 'Leave team',
+      destructive: true,
+    });
+    if (!ok) return;
+    const res = await leaveAction.run(() =>
+      api.call('PLAYER_UNLINK', { routeParams: { id: tournamentId, teamId: t.id, playerId: place.id } }),
+    );
+    if (!res.ok) return;
+    haptic.heavy();
+    if (access.myRoles.some((r) => r !== 'player')) team.reload();
+    else router.dismissTo('/');
+  };
   const players = [...(t?.players ?? [])].sort(
     (a, b) => (a.jerseyNumber ?? 999) - (b.jerseyNumber ?? 999) || a.name.localeCompare(b.name),
   );
@@ -68,7 +116,7 @@ export default function TeamScreen() {
       refreshing={team.refreshing}
       error={team.error}
       onRetry={team.refresh}
-      footer={t ? <Button label="Add player" icon="account-plus" size="lg" onPress={() => openPlayer(null)} /> : undefined}
+      footer={t && canEdit ? <Button label="Add player" icon="account-plus" size="lg" onPress={() => openPlayer(null)} /> : undefined}
     >
       {!t ? (
         team.loading ? <Skeleton rows={6} /> : null
@@ -78,7 +126,7 @@ export default function TeamScreen() {
             eyebrow={tournamentName}
             title={t.name}
             large
-            right={
+            right={canEdit ? (
               <PressableScale
                 onPress={() => setRename((r) => ({ open: true, key: r.key + 1 }))}
                 accessibilityLabel={`Rename ${t.name}`}
@@ -86,8 +134,43 @@ export default function TeamScreen() {
               >
                 <Icon name="pencil" size={20} color={theme.accent} />
               </PressableScale>
-            }
+            ) : undefined}
           />
+
+          {/* Owners share this; players type it under "Join a team" and pick their name. */}
+          {canEdit && t.joinCode && !closed && (
+            <Card>
+              <ErrorBanner message={codeAction.error?.message} />
+              <Text style={[type.label, { color: theme.muted }]}>Join code</Text>
+              <Text
+                style={[styles.code, { color: theme.ink }]}
+                accessibilityLabel={`Join code ${t.joinCode.split('').join(' ')}`}
+                selectable
+              >
+                {t.joinCode}
+              </Text>
+              <Text style={[type.caption, { color: theme.muted }]}>
+                Players enter it under “Join a team”, then pick their name — or join as a new player.
+              </Text>
+              <View style={styles.codeActions}>
+                <Button label="Share" icon="share-variant" onPress={() => shareCode(t.joinCode!)} style={{ flex: 2 }} />
+                <Button label="New code" variant="secondary" onPress={newCode} busy={codeAction.busy} style={{ flex: 1 }} />
+              </View>
+            </Card>
+          )}
+
+          {mine && !canEdit && (
+            <Card>
+              <ErrorBanner message={leaveAction.error?.message} />
+              <Text style={[type.headline, { color: theme.ink }]}>You play for {t.name}</Text>
+              <Text style={[type.caption, { color: theme.muted }]}>
+                Picked the wrong name, or not playing any more? Leave the team; your name stays on its team sheet.
+              </Text>
+              {!closed && (
+                <Button label="Leave team" variant="secondary" icon="account-remove-outline" onPress={() => leaveTeam(mine)} busy={leaveAction.busy} />
+              )}
+            </Card>
+          )}
 
           <Card>
             <Text style={[type.label, { color: theme.muted }]}>
@@ -119,9 +202,9 @@ export default function TeamScreen() {
             <EmptyState
               icon="account-multiple-plus"
               title="No players yet"
-              message="Add the squad. Shirt numbers make scoring faster — pickers show them first."
-              actionLabel="Add player"
-              onAction={() => openPlayer(null)}
+              message={canEdit ? "Add the squad. Shirt numbers make scoring faster — pickers show them first." : "The organisers haven't added anyone yet."}
+              actionLabel={canEdit ? "Add player" : undefined}
+              onAction={canEdit ? () => openPlayer(null) : undefined}
             />
           ) : (
             shown.map((p) => {
@@ -131,8 +214,9 @@ export default function TeamScreen() {
                 <PressableScale
                   key={p.id}
                   onPress={() => openPlayer(p)}
+                  disabled={!canEdit}
                   accessibilityLabel={`${p.jerseyNumber != null ? `Number ${p.jerseyNumber}, ` : ''}${p.name}${captain ? ', captain' : ''}`}
-                  accessibilityHint="Edit player"
+                  accessibilityHint={canEdit ? "Edit player" : undefined}
                   style={[styles.row, { backgroundColor: theme.cream }, lip(theme), captain && { borderWidth: 2, borderColor: theme.accent }]}
                 >
                   <JerseyBadge number={p.jerseyNumber} highlight={captain} />
@@ -146,9 +230,17 @@ export default function TeamScreen() {
                           <Text style={[type.label, { color: theme.accent }]}>Captain</Text>
                         </View>
                       )}
+                      {p.isMe ? (
+                        <View style={[styles.capt, { backgroundColor: theme.accent }]}>
+                          <Text style={[type.label, { color: theme.accentInk }]}>You</Text>
+                        </View>
+                      ) : p.isLinked ? (
+                        <Icon name="account-check" size={18} color={theme.successInk} label="Linked to their account" />
+                      ) : null}
                     </View>
                     <Text style={[type.caption, { color: theme.muted }]} numberOfLines={1}>
                       {isCricket ? describeCricketer(p.cricket) || 'Role not set' : p.position || 'No position set'}
+                      {canEdit && p.email && !p.isLinked ? ' · waiting for sign-up' : ''}
                     </Text>
                   </View>
                   {tag && (
@@ -228,4 +320,6 @@ const styles = StyleSheet.create({
   capt: { borderRadius: radius.sm, paddingHorizontal: 6, paddingVertical: 1 },
   tag: { borderRadius: radius.sm, paddingHorizontal: space.sm, paddingVertical: space.xs, minWidth: 44, alignItems: 'center' },
   tagText: { fontFamily: fonts.display, fontSize: 15 },
+  code: { fontFamily: fonts.display, fontSize: 40, lineHeight: 48, letterSpacing: 6 },
+  codeActions: { flexDirection: 'row', gap: space.sm },
 });

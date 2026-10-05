@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { createContext, useCallback, useContext, type ReactNode } from 'react';
 
 import { api } from '@/api/client';
-import type { Tournament } from '@/api/types';
+import type { Tournament, TournamentAccess } from '@/api/types';
 import { useQuery, type Query } from '@/hooks/useQuery';
 import { SportThemeProvider } from '@/theme/SportTheme';
 import type { Sport } from '@/theme/theme';
@@ -16,7 +16,16 @@ type TournamentContextValue = {
   name: string;
   sport: Sport;
   isStarted: boolean;
+  /** What the signed-in person may do here. Empty (nothing allowed) until the tournament has loaded. */
+  access: TournamentAccess;
+  /** Completed or cancelled: nothing can be started or changed. */
+  closed: boolean;
   query: Query<Tournament>;
+};
+
+const NO_ACCESS: TournamentAccess = {
+  myRoles: [], myPlayerId: null, myTeamId: null, canEdit: false, canScore: false, canManageMembers: false, canDelete: false, canLeave: false,
+  canComplete: false, allMatchesPlayed: false,
 };
 
 const TournamentContext = createContext<TournamentContextValue | null>(null);
@@ -35,6 +44,8 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     name: t?.name ?? params.name ?? 'Tournament',
     sport,
     isStarted: t?.isStarted ?? false,
+    access: t?.access ?? NO_ACCESS,
+    closed: t?.status === 'Completed' || t?.status === 'Cancelled',
     query,
   };
 

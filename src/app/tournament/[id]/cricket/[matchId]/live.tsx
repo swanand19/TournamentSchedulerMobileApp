@@ -3,11 +3,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
-import type { CricketMatchAwards, CricketMatchState, CricketScorecard, RecordBallRequest } from '@/api/types';
+import type { CricketActions, CricketMatchAwards, CricketMatchState, CricketScorecard, RecordBallRequest } from '@/api/types';
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
 import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
+import ScoringBanner, { isScoringLocked } from '@/components/ScoringBanner';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import Skeleton from '@/components/Skeleton';
@@ -102,8 +103,11 @@ export default function CricketLive() {
     return <Screen error={match.error} onRetry={match.refresh}>{match.loading && <Skeleton rows={4} height={140} />}</Screen>;
   }
 
-  const a = state.actions;
   const finished = state.status === 'Completed' || state.status === 'Abandoned';
+  // Someone else is scoring (or the tournament is closed): every "can…" is off, so the console
+  // shows the match without a single scoring control — the banner says who has it.
+  const locked = isScoringLocked(state.scoring, finished);
+  const a = locked ? allOff(state.actions) : state.actions;
   const errorText = action.error?.message;
 
   const recordRuns = (runs: number) => act(() => call('CRICKET_BALL_RECORD', buildBall(runs)), runs >= 4 ? haptic.success : () => {});
@@ -199,15 +203,21 @@ export default function CricketLive() {
       <Stack.Screen
         options={{
           title: `${state.homeTeamName} v ${state.awayTeamName}`,
-          headerRight: () => (
-            <PressableScale onPress={() => openSheet('more')} accessibilityLabel="Match actions" style={styles.headerBtn}>
-              <Icon name="dots-vertical" size={24} color={theme.accent} />
-            </PressableScale>
-          ),
+          headerRight: () =>
+            locked ? (
+              <PressableScale onPress={() => more('scorecard')} accessibilityLabel="Scorecard" style={styles.headerBtn}>
+                <Icon name="table-large" size={24} color={theme.accent} />
+              </PressableScale>
+            ) : (
+              <PressableScale onPress={() => openSheet('more')} accessibilityLabel="Match actions" style={styles.headerBtn}>
+                <Icon name="dots-vertical" size={24} color={theme.accent} />
+              </PressableScale>
+            ),
         }}
       />
       <Screen footer={footer} onRefresh={match.refresh} refreshing={match.refreshing} error={action.error ?? match.error} onRetry={match.refresh}>
         <CricketScoreboard state={state} />
+        <ScoringBanner sport="cricket" matchId={matchId} scoring={state.scoring} onChanged={match.reload} />
         {/* The batters come straight after the score: the scorer checks them every ball, and the
             keypad covers whatever sits lower on a short phone. */}
         {live && <CreaseCard live={live} />}
@@ -298,7 +308,7 @@ export default function CricketLive() {
       {live && (
         <PickPlayerSheet
           key={`bowl-${live.inningsNumber}-${live.overs}`}
-          visible={needsBowler}
+          visible={needsBowler && !locked}
           title="Next over"
           subtitle={`End of the over · ${live.battingTeamName} ${live.scoreLine}`}
           players={a.availableBowlers.map((p) => ({ id: p.playerId, name: p.playerName, sub: bowlerSub(p.playerId) }))}
@@ -312,6 +322,13 @@ export default function CricketLive() {
       )}
     </>
   );
+}
+
+/** The engine's actions with every switch off — what a follower (not the scorer) may do. */
+function allOff(actions: CricketActions): CricketActions {
+  return Object.fromEntries(
+    Object.entries(actions).map(([key, value]) => [key, typeof value === 'boolean' ? false : value]),
+  ) as CricketActions;
 }
 
 const styles = StyleSheet.create({

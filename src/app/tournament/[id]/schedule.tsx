@@ -8,6 +8,7 @@ import { ApiError } from '@/api/errors';
 import type { GroupInput, SavedSchedule, Team, TournamentSchedule } from '@/api/types';
 import Button from '@/components/Button';
 import { Card, Deck } from '@/components/Card';
+import DateField, { todayValue } from '@/components/DateField';
 import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import Screen from '@/components/Screen';
@@ -38,9 +39,16 @@ const STEP_IN = FadeIn.duration(180);
 export default function ScheduleWizard() {
   const router = useRouter();
   const theme = useSportTheme();
-  const { id } = useTournament();
+  const tournament = useTournament();
+  const { id } = tournament;
   const teams = useTeams(id);
   const action = useAction();
+
+  // What's picked, or the dates it already has, or today and a week on.
+  const [startDraft, setStartDraft] = useState<string | null>(null);
+  const [endDraft, setEndDraft] = useState<string | null>(null);
+  const startDate = startDraft ?? tournament.query.data?.startDate ?? todayValue();
+  const endDate = endDraft ?? tournament.query.data?.endDate ?? todayValue(7);
 
   const fetchExisting = useCallback(async () => {
     try {
@@ -146,10 +154,11 @@ export default function ScheduleWizard() {
       if (!ok) return;
     }
     const res = await action.run(() =>
-      api.call('TOURNAMENT_SCHEDULE_APPROVE', { body: { tournamentId: id, schedule } }),
+      api.call('TOURNAMENT_SCHEDULE_APPROVE', { body: { tournamentId: id, schedule, startDate, endDate } }),
     );
     if (res.ok) {
       haptic.success();
+      tournament.query.reload(); // its dates are set now
       router.back();
     }
   };
@@ -255,7 +264,26 @@ export default function ScheduleWizard() {
           </>
         )}
 
-        {step === 3 && schedule && <Preview schedule={schedule} onRegenerate={generate} busy={action.busy} />}
+        {step === 3 && schedule && (
+          <>
+            {/* The dates are settled with the fixtures, now that it's clear how many matches there are. */}
+            <Card>
+              <SectionHeader onCard title="When is it played?" />
+              <View style={styles.footerRow}>
+                <View style={{ flex: 1 }}>
+                  <DateField label="Starts" value={startDate} onChange={setStartDraft} disabled={action.busy} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <DateField label="Ends" value={endDate} onChange={setEndDraft} disabled={action.busy} />
+                </View>
+              </View>
+              <Text style={[type.caption, { color: theme.muted }]}>
+                {"It completes by itself the day after it ends, if you haven't marked it complete."}
+              </Text>
+            </Card>
+            <Preview schedule={schedule} onRegenerate={generate} busy={action.busy} />
+          </>
+        )}
       </Animated.View>
     </Screen>
   );

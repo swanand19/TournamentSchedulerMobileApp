@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '@/api/client';
 import { NetworkError } from '@/api/errors';
 import type { TournamentListItem } from '@/api/types';
+import { useSessionState } from '@/auth/session';
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
 import EmptyState from '@/components/EmptyState';
@@ -36,10 +37,34 @@ import { fonts, lip, radius, space, SPORTS, themeFor, type, type Sport } from '@
 const SPORT_KEY = 'tournamentScheduler.sport';
 
 function statusOf(t: TournamentListItem): { label: string; tone: ChipTone } {
-  if (t.isStarted) return { label: 'In play', tone: 'live' };
+  if (t.status === 'Completed') return { label: 'Completed', tone: 'done' };
+  if (t.status === 'Cancelled') return { label: 'Cancelled', tone: 'done' };
+  if (t.status === 'Live' || t.isStarted) return { label: 'In play', tone: 'live' };
   if (t.hasSchedule) return { label: 'Schedule ready', tone: 'ready' };
   return { label: 'Setting up', tone: 'setup' };
 }
+
+// Live first, then what's coming, then the past — each under its own heading.
+const SECTION_ORDER = { Live: 0, Upcoming: 1, Completed: 2, Cancelled: 2 } as const;
+const SECTION_TITLE = ['Live', 'Upcoming', 'Past'];
+const sectionOf = (t: TournamentListItem) => SECTION_ORDER[t.status] ?? 1;
+
+/** "12 Oct – 20 Oct 2026", or null for tournaments from before dates existed. */
+function dateRange(t: TournamentListItem): string | null {
+  if (!t.startDate || !t.endDate) return null;
+  const day = (v: string, year: boolean) => {
+    const [y, m, d] = v.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', ...(year ? { year: 'numeric' } : {}) });
+  };
+  return t.startDate === t.endDate ? day(t.startDate, true) : `${day(t.startDate, t.startDate.slice(0, 4) !== t.endDate.slice(0, 4))} – ${day(t.endDate, true)}`;
+}
+
+// "Owner", "Scorer · Player", "Player" — what I am in it, from the server's myRoles.
+const roleOf = (t: TournamentListItem) => {
+  const parts = [t.myRoles.includes('owner') ? 'Owner' : t.myRoles.includes('scorer') ? 'Scorer' : null, t.myRoles.includes('player') ? 'Player' : null];
+  const label = parts.filter(Boolean).join(' · ');
+  return label || null;
+};
 
 export default function Home() {
   const [sport, setSport] = useState<Sport>('Football');
@@ -69,6 +94,7 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
   const insets = useSafeAreaInsets();
   const theme = useSportTheme();
   const { ready, baseUrl } = useServer();
+  const { session } = useSessionState();
 
   const fetcher = useCallback(
     // baseUrl is a dependency on purpose: a new server address means a fresh list.
@@ -82,7 +108,7 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
   const [nameError, setNameError] = useState('');
 
   const all = list.data ?? [];
-  const mine = all.filter((t) => t.sport === sport);
+  const mine = all.filter((t) => t.sport === sport).sort((a, b) => sectionOf(a) - sectionOf(b));
   const online = !!list.data && !(list.error instanceof NetworkError);
 
   const create = async () => {
@@ -92,6 +118,7 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
       return;
     }
     const res = await action.run(() =>
+      // Dates come later, with the schedule, once the teams are known.
       api.call<{ id: number; name: string }>('TOURNAMENT_CREATE', { body: { name: trimmed, sport } }),
     );
     if (!res.ok) return;
@@ -138,6 +165,13 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
           <View style={[styles.dot, { backgroundColor: online ? '#8FD16A' : theme.danger }]} />
           <Text style={[styles.serverText, { color: theme.onDark }]}>{online ? 'Online' : 'Server'}</Text>
         </PressableScale>
+        <PressableScale
+          onPress={() => router.push('/account')}
+          style={[styles.serverChip, { borderColor: theme.borderOnDark, backgroundColor: theme.deck }]}
+          accessibilityLabel={`Account, signed in as ${session?.user.name ?? 'you'}`}
+        >
+          <Icon name="account-circle-outline" size={20} color={theme.onDark} />
+        </PressableScale>
       </View>
 
       <SegmentedControl
@@ -154,8 +188,8 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
       {list.data && (
         <View style={styles.tiles}>
           <Tile value={mine.length} label="Tournaments" />
-          <Tile value={mine.filter((t) => t.isStarted).length} label="In play" />
-          <Tile value={mine.filter((t) => !t.isStarted).length} label="Setting up" />
+          <Tile value={mine.filter((t) => t.status === 'Live').length} label="In play" />
+          <Tile value={mine.filter((t) => t.status === 'Upcoming').length} label="Upcoming" />
         </View>
       )}
 
@@ -193,8 +227,25 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
         <Button label="Create tournament" icon="lightning-bolt" onPress={create} busy={action.busy} size="lg" />
       </Card>
 
+      {/* Playing rather than organising: the team's code links you to your place in it. */}
+      <PressableScale
+        onPress={() => router.push('/join')}
+        style={[styles.joinRow, { borderColor: theme.borderOnDark, backgroundColor: theme.deck }]}
+        accessibilityRole="button"
+        accessibilityLabel="Join a team with a code from its organiser"
+      >
+        <Icon name="account-group-outline" size={22} color={theme.accent} />
+        <View style={{ flex: 1 }}>
+          <Text style={[type.bodyStrong, { color: theme.onDark }]}>Join a team</Text>
+          <Text style={[type.caption, { color: theme.onDarkSoft }]}>Got a code from an organiser?</Text>
+        </View>
+        <Icon name="chevron-right" size={22} color={theme.onDarkSoft} />
+      </PressableScale>
+
       {mine.length > 0 && (
-        <Text style={[type.caption, { color: theme.onDarkSoft }]}>Tap to open · press and hold to delete</Text>
+        <Text style={[type.caption, { color: theme.onDarkSoft }]}>
+          {mine.some((t) => t.myRoles.includes('creator')) ? 'Tap to open · press and hold one you created to delete it' : 'Tap to open'}
+        </Text>
       )}
     </View>
   );
@@ -223,11 +274,20 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
             <EmptyState
               icon={sport === 'Cricket' ? 'cricket' : 'soccer'}
               title={`No ${theme.label.toLowerCase()} tournaments`}
-              message="Name one above to start. You'll add teams, draw groups and build the fixtures next."
+              message="Name one above to start, join a team with its code — or ask an organiser to add you using the email you signed in with."
             />
           ) : null
         }
-        renderItem={({ item }) => <TournamentCard item={item} onOpen={() => open(item)} onDelete={() => remove(item)} />}
+        renderItem={({ item, index }) => (
+          <>
+            {(index === 0 || sectionOf(mine[index - 1]) !== sectionOf(item)) && (
+              <Text style={[type.board, { color: theme.onDarkSoft, marginTop: index === 0 ? 0 : space.sm }]} accessibilityRole="header">
+                {SECTION_TITLE[sectionOf(item)].toUpperCase()}
+              </Text>
+            )}
+            <TournamentCard item={item} onOpen={() => open(item)} onDelete={item.myRoles.includes('creator') ? () => remove(item) : undefined} />
+          </>
+        )}
       />
     </KeyboardAvoidingView>
   );
@@ -243,21 +303,26 @@ function Tile({ value, label }: { value: number; label: string }) {
   );
 }
 
-function TournamentCard({ item, onOpen, onDelete }: { item: TournamentListItem; onOpen: () => void; onDelete: () => void }) {
+/** `onDelete` only for tournaments the signed-in person created — deleting is the creator's alone. */
+function TournamentCard({ item, onOpen, onDelete }: { item: TournamentListItem; onOpen: () => void; onDelete?: () => void }) {
   const theme = themeFor(item.sport);
   const status = statusOf(item);
   return (
     <PressableScale
       onPress={onOpen}
-      onLongPress={() => {
-        haptic.heavy();
-        onDelete();
-      }}
+      onLongPress={
+        onDelete
+          ? () => {
+              haptic.heavy();
+              onDelete();
+            }
+          : undefined
+      }
       delayLongPress={450}
       accessibilityLabel={`${item.name}, ${status.label}`}
       accessibilityHint="Opens the tournament"
-      accessibilityActions={[{ name: 'delete', label: 'Delete tournament' }]}
-      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'delete' && onDelete()}
+      accessibilityActions={onDelete ? [{ name: 'delete', label: 'Delete tournament' }] : undefined}
+      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'delete' && onDelete?.()}
       style={[styles.row, { backgroundColor: theme.cream }, lip(theme)]}
     >
       <View style={{ flex: 1, gap: space.xs }}>
@@ -268,7 +333,8 @@ function TournamentCard({ item, onOpen, onDelete }: { item: TournamentListItem; 
         <View style={styles.meta}>
           <Icon name={item.sport === 'Cricket' ? 'cricket' : 'soccer'} size={16} color={theme.muted} />
           <Text style={[type.caption, { color: theme.muted }]}>
-            {item.sport} · Created {relativeDate(item.createdAt)}
+            {dateRange(item) ?? `Created ${relativeDate(item.createdAt)}`}
+            {roleOf(item) ? ` · ${roleOf(item)}` : ''}
           </Text>
         </View>
       </View>
@@ -281,6 +347,7 @@ function TournamentCard({ item, onOpen, onDelete }: { item: TournamentListItem; 
 
 const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  joinRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56, borderRadius: radius.lg, borderWidth: 1, paddingHorizontal: space.md, paddingVertical: space.sm },
   serverChip: {
     flexDirection: 'row',
     alignItems: 'center',

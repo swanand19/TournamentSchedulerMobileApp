@@ -28,6 +28,10 @@ import { space, type } from '@/theme/theme';
 // Add or edit a player. Football asks for a shirt number and a position; cricket asks for the
 // role, how they bat and — only if they bowl — how they bowl, and names the style as it's picked
 // ("Slow left-arm orthodox"). The server has the final word on clashes (a taken shirt number).
+//
+// The optional email links the place to the player's account — now, or when they sign up. Once
+// linked, the name and cricket profile are theirs (they edit them on their Account screen), so
+// those fields are shown locked here; an owner can unlink a wrong match.
 
 type Props = {
   visible: boolean;
@@ -60,6 +64,8 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
   const wasCaptain = !!player && team.defaultCaptainPlayerId === player.id;
   const [captain, setCaptain] = useState(wasCaptain);
   const [nameError, setNameError] = useState('');
+  const [email, setEmail] = useState(player?.email ?? '');
+  const linked = !!player?.isLinked;
 
   const jerseyNum = jersey.trim() === '' ? null : Number(jersey);
   const jerseyTaken =
@@ -77,6 +83,8 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
 
     const body = {
       name: trimmed,
+      // Always sent: "" clears it and unlinks the place.
+      email: email.trim(),
       jerseyNumber: jerseyNum,
       position: isCricket ? player?.position ?? null : position.trim() || null,
       cricket: isCricket
@@ -107,6 +115,25 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
     haptic.success();
     onSaved();
     onClose();
+  };
+
+  // A wrong match: the place goes back to being just a name.
+  const unlink = async () => {
+    if (!player) return;
+    const ok = await confirm({
+      title: `Unlink ${player.name}?`,
+      message: `Their name stays on ${team.name}; it just won't be linked to ${player.email ?? 'their account'} any more.`,
+      confirmLabel: 'Unlink',
+    });
+    if (!ok) return;
+    const res = await action.run(() =>
+      api.call('PLAYER_UNLINK', { routeParams: { id: tournamentId, teamId: team.id, playerId: player.id } }),
+    );
+    if (res.ok) {
+      haptic.success();
+      onSaved();
+      onClose();
+    }
   };
 
   const remove = async () => {
@@ -153,6 +180,25 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
         autoCapitalize="words"
         returnKeyType="next"
         error={nameError}
+        editable={!linked}
+        hint={linked ? 'Their account name — they change it themselves.' : undefined}
+      />
+      <TextField
+        label="Their sign-in email (optional)"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="e.g. rahul@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="off"
+        hint={
+          linked
+            ? 'Linked to their account.'
+            : player?.email
+              ? 'Links when they sign up with this email.'
+              : 'Links this place to their account — now, or when they sign up.'
+        }
       />
       <TextField
         label="Shirt number (optional)"
@@ -181,6 +227,13 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
             autoCapitalize="characters"
           />
         </View>
+      ) : linked ? (
+        <>
+          <Text style={[type.body, { color: theme.muted }]}>
+            {`${name} keeps their own cricket profile on their account; it's used in every team they're linked to.`}
+          </Text>
+          <SwitchRow label="Team captain" hint="Pre-selected as captain when an XI is picked" value={captain} onChange={setCaptain} />
+        </>
       ) : (
         <>
           <Group label="Role">
@@ -223,6 +276,9 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
         </>
       )}
 
+      {player && (linked || player.email) && (
+        <Button label="Unlink from account" icon="link-variant-off" variant="secondary" onPress={unlink} disabled={action.busy} />
+      )}
       {player && <Button label="Remove from squad" icon="trash-can-outline" variant="danger" onPress={remove} disabled={action.busy} />}
     </Sheet>
   );

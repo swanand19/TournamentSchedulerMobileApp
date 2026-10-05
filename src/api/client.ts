@@ -1,3 +1,5 @@
+import { clearSession, sessionFor } from '@/auth/session';
+
 import { apiError, NetworkError, unreadableAnswer } from './errors';
 import { openResponse, sealRequest } from './gateway';
 import type { ServiceRequestId } from './services';
@@ -39,7 +41,8 @@ export async function request<T>(
   const query = Object.fromEntries(
     Object.entries(options.query ?? {}).filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined),
   );
-  const sealed = await sealRequest(serviceRequestId, { routeParams: options.routeParams, query, body: options.body });
+  const session = sessionFor(root);
+  const sealed = await sealRequest(serviceRequestId, { routeParams: options.routeParams, query, body: options.body }, session);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 15000);
@@ -83,7 +86,10 @@ export async function request<T>(
   }
 
   if (!res.ok || (isEnvelope(envelope) && !envelope.status.isSuccess)) {
-    throw apiError(res.status, JSON.stringify(envelope));
+    const error = apiError(res.status, JSON.stringify(envelope));
+    // Signed out on the server (elsewhere, expired, blocked): back to the sign-in screen, which says why.
+    if (res.status === 401 && session) clearSession(error.message);
+    throw error;
   }
   return (isEnvelope(envelope) ? envelope.data : envelope) as T;
 }

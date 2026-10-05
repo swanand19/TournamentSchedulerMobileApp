@@ -12,6 +12,16 @@
 export const SERVICES = [
   'HEALTH_CHECK',
 
+  // Signing in (the only ones that work signed out) and the account
+  'AUTH_OTP_SEND',
+  'AUTH_OTP_VERIFY',
+  'AUTH_LOGOUT',
+  'AUTH_LOGOUT_ALL',
+  'ACCOUNT_GET',
+  'ACCOUNT_UPDATE',
+  'ACCOUNT_DELETE_PREVIEW', // emails the code that confirms it
+  'ACCOUNT_DELETE',
+
   // Tournaments
   'TOURNAMENT_LIST', // query: sport
   'TOURNAMENT_CREATE',
@@ -21,6 +31,19 @@ export const SERVICES = [
   'TOURNAMENT_MATCHES', // id
   'TOURNAMENT_STATS', // id
   'TOURNAMENT_CRICKET_STATS', // id
+  'TOURNAMENT_UPDATE', // id
+  'TOURNAMENT_COMPLETE', // id
+
+  // Owners and scorers
+  'TOURNAMENT_MEMBER_LIST', // id
+  'TOURNAMENT_MEMBER_ADD', // id
+  'TOURNAMENT_MEMBER_REMOVE', // id, userId
+  'TOURNAMENT_LEAVE', // id
+
+  // Who is scoring a match — sport ('football' | 'cricket'), matchId
+  'SCORING_REQUEST',
+  'SCORING_RESPOND',
+  'SCORING_TAKE_OVER',
 
   // Groups and schedule
   'SCHEDULE_ACTIVE', // id
@@ -40,6 +63,12 @@ export const SERVICES = [
   'PLAYER_CREATE', // id, teamId
   'PLAYER_UPDATE', // id, teamId, playerId
   'PLAYER_DELETE', // id, teamId, playerId
+  'PLAYER_UNLINK', // id, teamId, playerId — an owner, or the player themselves
+  'TEAM_JOIN_CODE_RESET', // id, teamId
+
+  // Joining a team with its code (the person isn't in the tournament yet)
+  'TEAM_JOIN_PREVIEW',
+  'TEAM_JOIN',
 
   // Football matches — all take matchId
   'MATCH_GET',

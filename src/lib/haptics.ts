@@ -22,6 +22,10 @@ export const haptic = {
         : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
     );
   },
+  /** A scroll came to rest on a detent: the stats leaderboard settling under the tab bar. */
+  detent() {
+    safe(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+  },
   /** Something big landed: a goal, a wicket, the end of a period. */
   success() {
     safe(Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
