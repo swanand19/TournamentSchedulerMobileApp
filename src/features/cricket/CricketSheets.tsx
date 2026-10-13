@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 
 import type { CricketMatchState, CricketSquadMember, RecordBallRequest } from '@/api/types';
 import Button from '@/components/Button';
-import Chip from '@/components/Chip';
 import ErrorBanner from '@/components/ErrorBanner';
 import PlayerGrid, { type GridPlayer } from '@/components/PlayerGrid';
 import SegmentedControl from '@/components/SegmentedControl';
 import Sheet from '@/components/Sheet';
 import Stepper from '@/components/Stepper';
-import { dismissalCanTakeNonStriker, dismissalLabel, dismissalTakesFielder } from '@/lib/cricketLabels';
+import DismissalGrid, { orderDismissals } from '@/features/cricket/DismissalGrid';
+import { dismissalCanTakeNonStriker, dismissalTakesFielder } from '@/lib/cricketLabels';
 import { useSportTheme } from '@/theme/SportTheme';
-import { space, type } from '@/theme/theme';
+import { type } from '@/theme/theme';
 
 // The cricket console's pickers. The dismissal list comes from the engine's possibleDismissals —
 // so a free hit or a wide offers only what can actually happen off that ball — and the batter and
@@ -48,7 +48,8 @@ export function WicketSheet({
   const theme = useSportTheme();
   const live = state.current!;
   const dismissals = state.actions.possibleDismissals;
-  const [how, setHow] = useState<string>(dismissals[0] ?? 'Bowled');
+  const ordered = orderDismissals(dismissals);
+  const [how, setHow] = useState<string>(ordered.common[0] ?? ordered.rare[0] ?? 'Bowled');
   const [out, setOut] = useState<number | null | undefined>(live.striker?.playerId);
   const [fielder, setFielder] = useState<number | null | undefined>(undefined);
   const [directHit, setDirectHit] = useState<'direct' | 'relay'>('direct');
@@ -99,21 +100,15 @@ export function WicketSheet({
     >
       <ErrorBanner message={error} />
       <Text style={[type.label, { color: theme.onDarkSoft }]}>How out</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
-        {dismissals.map((d) => (
-          <Chip
-            key={d}
-            label={dismissalLabel(d)}
-            tone="danger"
-            selected={how === d}
-            onPress={() => {
-              setHow(d);
-              setFielder(undefined);
-              setReceiver(undefined);
-            }}
-          />
-        ))}
-      </View>
+      <DismissalGrid
+        allowed={dismissals}
+        value={how}
+        onChange={(d) => {
+          setHow(d);
+          setFielder(undefined);
+          setReceiver(undefined);
+        }}
+      />
 
       <Text style={[type.label, { color: theme.onDarkSoft }]}>Who’s out</Text>
       {eitherEnd ? (

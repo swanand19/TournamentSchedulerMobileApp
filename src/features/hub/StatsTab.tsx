@@ -79,6 +79,17 @@ function BoardChips<K extends string>({ boards, value, onChange }: { boards: { k
   );
 }
 
+// Long column names shortened for the one-line summary under a player; the server's names stay
+// as they are on the website's tables.
+const SHORT: Record<string, string> = { Batting: 'Bat', Bowling: 'Bowl', Fielding: 'Field' };
+
+/** "Bat 45  ·  Bowl 30  ·  Field 8  ·  Mat 4": a board's supporting figures, in column order. */
+function summary(parts: [string, string | number | null | undefined][], note?: string | null) {
+  return [...parts.map(([c, v]) => (v != null ? `${SHORT[c] ?? c} ${v}` : null)), note].filter(Boolean).join('  ·  ');
+}
+
+/** One player on a board: name, team, and one faint line of supporting figures that is cut short
+ *  rather than wrapped, so every row is the same height. */
 function LeaderRow({
   rank,
   name,
@@ -107,10 +118,14 @@ function LeaderRow({
         <Text style={[type.lead, { color: theme.onDark }]} numberOfLines={1}>
           {name}
         </Text>
-        <Text style={[type.caption, { color: theme.onDarkSoft }]} numberOfLines={2}>
+        <Text style={[type.caption, { color: theme.onDarkSoft }]} numberOfLines={1}>
           {team}
-          {detail ? `  ·  ${detail}` : ''}
         </Text>
+        {detail ? (
+          <Text style={[type.caption, styles.meta, { color: theme.onDarkSoft }]} numberOfLines={1}>
+            {detail}
+          </Text>
+        ) : null}
       </View>
       <View style={{ alignItems: 'flex-end' }}>
         <Text style={[styles.leaderValue, { color: top ? theme.accent : theme.onDark }]}>{value}</Text>
@@ -178,13 +193,10 @@ export function FootballStatsPage({ stats, refreshing, onRefresh }: PageProps<Fo
             team={r.teamName}
             value={r.value}
             valueLabel={board!.valueLabel}
-            detail={[
-              ...board!.detailColumns.map((c) => `${c} ${r.detail[c] ?? 0}`),
-              `${r.appearances} apps`,
+            detail={summary(
+              [...board!.detailColumns.map((c): [string, number] => [c, r.detail[c] ?? 0]), ['Apps', r.appearances]],
               board!.showPerMatch && r.perMatch != null ? `${r.perMatch.toFixed(2)} a match` : null,
-            ]
-              .filter(Boolean)
-              .join(', ')}
+            )}
           />
         ))
       )}
@@ -263,9 +275,7 @@ export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<Cri
             team={r.teamName}
             value={r.value}
             valueLabel={board!.valueLabel}
-            detail={[...board!.columns.map((c) => (r.detail[c] != null ? `${c} ${r.detail[c]}` : null)), r.note]
-              .filter(Boolean)
-              .join(', ')}
+            detail={summary(board!.columns.map((c) => [c, r.detail[c]]), r.note)}
           />
         ))
       )}
@@ -348,6 +358,7 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
     paddingHorizontal: space.lg,
   },
+  meta: { opacity: 0.8, fontVariant: ['tabular-nums'] },
   rank: { width: 24, fontFamily: fonts.display, fontSize: 22, textAlign: 'center', fontVariant: ['tabular-nums'] },
   leaderValue: { fontFamily: fonts.display, fontSize: 28, lineHeight: 32, fontVariant: ['tabular-nums'] },
   pointRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 32 },
