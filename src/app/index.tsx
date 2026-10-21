@@ -19,6 +19,7 @@ import SegmentedControl from '@/components/SegmentedControl';
 import Skeleton from '@/components/Skeleton';
 import StatusChip, { type ChipTone } from '@/components/StatusChip';
 import { useServer } from '@/config/server';
+import NotificationBell from '@/features/notifications/NotificationBell';
 import { useAction } from '@/hooks/useAction';
 import { useQuery } from '@/hooks/useQuery';
 import { confirm } from '@/lib/confirm';
@@ -165,10 +166,11 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
           <View style={[styles.dot, { backgroundColor: online ? '#8FD16A' : theme.danger }]} />
           <Text style={[styles.serverText, { color: theme.onDark }]}>{online ? 'Online' : 'Server'}</Text>
         </PressableScale>
+        <NotificationBell style={styles.serverChip} />
         <PressableScale
-          onPress={() => router.push('/account')}
+          onPress={() => router.push('/profile')}
           style={[styles.serverChip, { borderColor: theme.borderOnDark, backgroundColor: theme.deck }]}
-          accessibilityLabel={`Account, signed in as ${session?.user.name ?? 'you'}`}
+          accessibilityLabel={`Your profile, signed in as ${session?.user.name ?? 'you'}`}
         >
           <Icon name="account-circle-outline" size={20} color={theme.onDark} />
         </PressableScale>

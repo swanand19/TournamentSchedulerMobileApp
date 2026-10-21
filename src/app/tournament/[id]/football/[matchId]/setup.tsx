@@ -82,22 +82,29 @@ export default function FootballSetup() {
     }
   }, [status, router, tournamentId, matchId]);
 
-  // 409 means another match in this tournament is live — find it so the scorer can jump there.
+  // 409 means one of the teams is playing another match right now — find it so the scorer can jump there.
   const conflict = action.error instanceof ApiError && action.error.status === 409;
+  const homeId = match?.homeTeamId;
+  const awayId = match?.awayTeamId;
   useEffect(() => {
     if (!conflict) return undefined;
     let cancelled = false;
     api
       .call<MatchCard[]>('TOURNAMENT_MATCHES', { routeParams: { id: tournamentId } })
       .then((ms) => {
-        const live = ms.find((m) => m.sport === 'Football' && ['InProgress', 'Paused', 'PenaltyShootout'].includes(m.status));
+        const live = ms.find(
+          (m) =>
+            m.sport === 'Football' &&
+            ['InProgress', 'Paused', 'PenaltyShootout'].includes(m.status) &&
+            [m.homeTeamId, m.awayTeamId].some((t) => t != null && (t === homeId || t === awayId)),
+        );
         if (!cancelled) setLiveMatchId(live?.id ?? null);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [conflict, tournamentId]);
+  }, [conflict, tournamentId, homeId, awayId]);
 
   // "Adjusting state when a prop changes": seed the squad once the match arrives, and re-seed it
   // when the side size changes — until the scorer has picked players by hand.

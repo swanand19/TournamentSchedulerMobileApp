@@ -13,7 +13,9 @@ import { radius, space, type } from '@/theme/theme';
 // Who is scoring this match, and what you can do about it — drawn from the match's `scoring`
 // block, never decided here. One person scores a match at a time: others follow along, a scorer
 // can ask to take over (the active scorer gets Allow / Decline on their screen), and an owner can
-// take over outright. The live screens poll every 5 s, which is how a request arrives.
+// take over outright. The live screens poll every 5 s, which is how a request arrives. While
+// someone else scores, "Watch" opens the watcher's screen (onWatch); there the banner is shown
+// with `watching`, so it doesn't talk about switched-off buttons.
 
 type Props = {
   sport: 'football' | 'cricket';
@@ -21,6 +23,10 @@ type Props = {
   scoring: Scoring | null | undefined;
   /** After any answer: reload the match so the screen's controls follow. */
   onChanged: () => void;
+  /** Offers "Watch" while someone else is scoring. */
+  onWatch?: () => void;
+  /** Shown on the watcher's screen rather than over the scoring controls. */
+  watching?: boolean;
 };
 
 /** Whether the scoring controls must be hidden: someone else holds the match, or the tournament is closed. */
@@ -28,7 +34,7 @@ export function isScoringLocked(scoring: Scoring | null | undefined, over: boole
   return !over && !!scoring && !scoring.canScore;
 }
 
-export default function ScoringBanner({ sport, matchId, scoring, onChanged }: Props) {
+export default function ScoringBanner({ sport, matchId, scoring, onChanged, onWatch, watching }: Props) {
   const theme = useSportTheme();
   const action = useAction();
 
@@ -79,10 +85,13 @@ export default function ScoringBanner({ sport, matchId, scoring, onChanged }: Pr
       <Text style={[type.body, { color: theme.onDarkSoft }]}>
         {pending && !scoring.canRequestScoring
           ? `Waiting for ${active.name} to answer ${pending.by.name}'s request…`
-          : 'You can follow it here; the scoring buttons are off.'}
+          : watching
+            ? 'You are watching. Ask to score if you need to take over.'
+            : 'The scoring buttons are off while they score.'}
       </Text>
-      {(scoring.canRequestScoring || scoring.canTakeOverScoring) && (
+      {(scoring.canRequestScoring || scoring.canTakeOverScoring || onWatch) && (
         <View style={styles.row}>
+          {onWatch && <Button label="Watch" icon="eye-outline" variant="deck" disabled={action.busy} onPress={onWatch} style={{ flex: 1 }} />}
           {scoring.canRequestScoring && (
             <Button label="Ask to score" icon="hand-back-right-outline" busy={action.busy} onPress={() => run('SCORING_REQUEST')} style={{ flex: 1 }} />
           )}

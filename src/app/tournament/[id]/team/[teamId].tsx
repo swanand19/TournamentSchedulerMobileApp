@@ -213,10 +213,12 @@ export default function TeamScreen() {
               return (
                 <PressableScale
                   key={p.id}
-                  onPress={() => openPlayer(p)}
-                  disabled={!canEdit}
+                  // Owners edit the place (its sheet links to the profile); everyone else opens the
+                  // profile of a player who has an account.
+                  onPress={() => (canEdit ? openPlayer(p) : router.push({ pathname: '/profile', params: { playerId: String(p.id) } }))}
+                  disabled={!canEdit && !p.isLinked}
                   accessibilityLabel={`${p.jerseyNumber != null ? `Number ${p.jerseyNumber}, ` : ''}${p.name}${captain ? ', captain' : ''}`}
-                  accessibilityHint={canEdit ? "Edit player" : undefined}
+                  accessibilityHint={canEdit ? "Edit player" : p.isLinked ? "Opens their profile" : undefined}
                   style={[styles.row, { backgroundColor: theme.cream }, lip(theme), captain && { borderWidth: 2, borderColor: theme.accent }]}
                 >
                   <JerseyBadge number={p.jerseyNumber} highlight={captain} />
@@ -240,7 +242,7 @@ export default function TeamScreen() {
                     </View>
                     <Text style={[type.caption, { color: theme.muted }]} numberOfLines={1}>
                       {isCricket ? describeCricketer(p.cricket) || 'Role not set' : p.position || 'No position set'}
-                      {canEdit && p.email && !p.isLinked ? ' · waiting for sign-up' : ''}
+                      {canEdit && (p.email || p.phone) && !p.isLinked ? ' · waiting for sign-up' : ''}
                     </Text>
                   </View>
                   {tag && (

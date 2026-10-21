@@ -11,6 +11,8 @@ export type Account = {
   userId: number;
   name: string;
   email: string | null;
+  /** E.164, e.g. "+919876543210". An account has an email, a number or both. */
+  phone: string | null;
   roleId: number;
   roleName: string | null;
   memberSince: string;
@@ -18,11 +20,24 @@ export type Account = {
   cricket: CricketProfile | null;
   /** Admin accounts are removed by another admin, not from the app. */
   canDelete: boolean;
+  /** The server keeps one way to sign in, and an admin's email. */
+  canRemoveEmail: boolean;
+  canRemovePhone: boolean;
 };
 
-export type SendOtpResponse = { email: string; expiresInSeconds: number; resendAfterSeconds: number };
+/** What the sign-in screen offers. Mobile numbers stay off until the server can send texts. */
+export type AuthOptions = { phone: boolean; defaultCountryCode: string };
 
-/** "NeedsName": the code is right but the email is new — send the same code again with a name. */
+export type SendOtpResponse = {
+  /** The email or number the code went to, as the server stores it. */
+  sentTo: string;
+  channel: 'Email' | 'Sms';
+  email: string | null;
+  expiresInSeconds: number;
+  resendAfterSeconds: number;
+};
+
+/** "NeedsName": the code is right but the email or number is new — send the same code again with a name. */
 export type VerifyOtpResponse = {
   outcome: 'SignedIn' | 'NeedsName';
   isNewUser: boolean;
@@ -89,13 +104,31 @@ export type Tournament = {
 export type TournamentMember = {
   userId: number;
   name: string;
-  /** Only owners see emails. */
+  /** Only owners see emails and numbers. */
   email: string | null;
+  phone: string | null;
   role: 'Creator' | 'Owner' | 'Scorer';
   isCreator: boolean;
   isMe: boolean;
   canRemove: boolean;
 };
+
+/** Someone asked for by an email or number with no account yet; they get the role on signing up. */
+export type TournamentInvite = {
+  inviteId: number;
+  /** The email or E.164 number it went to. */
+  contact: string;
+  channel: 'Email' | 'Sms';
+  role: 'Owner' | 'Scorer';
+  invitedBy: string;
+  sentAt: string;
+  expiresAt: string;
+  /** It no longer gives the role; sending it again renews it. */
+  isExpired: boolean;
+};
+
+/** People & settings: members, open invites (owners only), and what the last change did. */
+export type TournamentPeople = { members: TournamentMember[]; invites: TournamentInvite[]; notice: string | null };
 
 export type Person = { userId: number; name: string };
 
@@ -137,6 +170,8 @@ export type Player = {
   isMe: boolean;
   /** Owners only: the email that links (or will link) it to an account. */
   email: string | null;
+  /** Owners only: the mobile number that links (or will link) it, E.164. */
+  phone: string | null;
   cricket: CricketProfile | null;
 };
 
@@ -608,6 +643,12 @@ export type CricketActions = {
   availableBatters: CricketSquadMember[];
   availableBowlers: CricketSquadMember[];
   possibleDismissals: string[];
+  /** Corrections: the batters at the crease may be swapped for anyone in the XI yet to bat (their whole stay
+   *  moves); this over's bowler for anyone allowed to bowl it. Empty / null when nothing can be corrected. */
+  replaceableBatters: CricketSquadMember[];
+  batterReplacements: CricketSquadMember[];
+  replaceableBowler: CricketSquadMember | null;
+  bowlerReplacements: CricketSquadMember[];
 };
 
 export type CricketMatchState = {
@@ -907,3 +948,191 @@ export type CricketStats = {
   };
   notes: string[];
 };
+
+// ---------------------------------------------------------------------------------------------
+// Profiles and careers (Models/Profiles/ProfileModels.cs). Figures arrive formatted, with the
+// server's wording; completed matches only.
+
+/** One figure: "Runs" "312" "off 251 balls". */
+export type ProfileStat = { key: string; label: string; value: string; sub: string | null };
+
+export type SportCard = { sport: Sport; matches: number; tournaments: number; headline: ProfileStat[] };
+
+export type Profile = {
+  userId: number;
+  name: string;
+  isMe: boolean;
+  memberSince: string;
+  /** Your own profile only. */
+  email: string | null;
+  phone: string | null;
+  tournamentsRun: number;
+  sports: SportCard[];
+};
+
+export type StatGroup = { key: string; title: string; stats: ProfileStat[] };
+
+export type CareerTeam = {
+  teamId: number;
+  teamName: string;
+  tournamentId: number;
+  tournamentName: string;
+  tournamentStatus: TournamentStatus;
+  matches: number;
+  isCaptain: boolean;
+  /** The viewer may open this tournament (they own, score or play in it). */
+  canOpen: boolean;
+};
+
+export type CareerTournament = {
+  tournamentId: number;
+  name: string;
+  status: TournamentStatus;
+  startDate: string | null;
+  endDate: string | null;
+  teamId: number;
+  teamName: string;
+  matches: number;
+  canOpen: boolean;
+  highlights: ProfileStat[];
+};
+
+export type Honour = {
+  kind: 'PlayerOfMatch' | 'TournamentMvp' | 'TopScorer' | 'MostAssists' | string;
+  title: string;
+  detail: string;
+  tournamentId: number;
+  tournamentName: string;
+  matchId: number | null;
+  context: string | null;
+  date: string | null;
+};
+
+export type Career = {
+  userId: number;
+  name: string;
+  isMe: boolean;
+  sport: Sport;
+  basis: string;
+  matches: number;
+  statGroups: StatGroup[];
+  teams: CareerTeam[];
+  tournaments: CareerTournament[];
+  honourStats: ProfileStat[];
+  honours: Honour[];
+};
+
+// --- The inbox (phase 6D) --------------------------------------------------
+
+export type NotificationKind =
+  | 'ScoringRequested'
+  | 'ScoringAllowed'
+  | 'ScoringDeclined'
+  | 'ScoringTakenOver'
+  | 'AddedToTournament'
+  | 'InviteAccepted'
+  | 'LinkedToTeam'
+  | 'AllMatchesPlayed'
+  | 'EndDateReminder';
+
+/** One line in your inbox. The words come from the server; the ids say where tapping it goes. */
+export type AppNotification = {
+  notificationId: number;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  tournamentId: number | null;
+  sport: 'Football' | 'Cricket' | null;
+  matchId: number | null;
+  createdAt: string;
+  isRead: boolean;
+};
+
+/** A page of the inbox, newest first; ask again with `before` = the last id while `hasMore`. */
+export type NotificationPage = { items: AppNotification[]; unreadCount: number; hasMore: boolean };
+
+export type UnreadCount = { unreadCount: number };
+
+// --- Watching a match (Round 2) ---------------------------------------------
+
+/** Before the first ball or kick, under way, or over. */
+export type WatchPhase = 'Preview' | 'Live' | 'Finished';
+
+export type WatchMarkKind = 'Goal' | 'YellowCard' | 'RedCard' | 'SubbedOn' | 'SubbedOff';
+
+export type WatchPlayer = {
+  playerId: number;
+  name: string;
+  jerseyNumber: number | null;
+  /** A football position or a cricket role. */
+  role: string | null;
+  isCaptain: boolean;
+  isWicketKeeper: boolean;
+  battingOrder: number | null;
+  /** Football: goals, cards and substitutions, in match order. */
+  marks: { kind: WatchMarkKind; minute: string }[];
+};
+
+export type WatchSide = {
+  teamId: number | null;
+  name: string;
+  /** "Squad", "Playing XI" or "Starting line-up". */
+  heading: string;
+  players: WatchPlayer[];
+  bench: WatchPlayer[];
+};
+
+/** The match as a watcher sees it: header lines and both sides. The score comes from the sport's own match answer. */
+export type WatchMatch = {
+  matchId: number;
+  sport: 'Football' | 'Cricket';
+  tournamentId: number;
+  tournamentName: string;
+  groupName: string;
+  matchNumber: number;
+  phase: WatchPhase;
+  formatLine: string | null;
+  tossLine: string | null;
+  resultLine: string | null;
+  home: WatchSide;
+  away: WatchSide;
+};
+
+export type ActivityKind =
+  | 'Dot'
+  | 'Run'
+  | 'Extra'
+  | 'Four'
+  | 'Six'
+  | 'Wicket'
+  | 'Milestone'
+  | 'OverEnd'
+  | 'Innings'
+  | 'Toss'
+  | 'Goal'
+  | 'YellowCard'
+  | 'SecondYellow'
+  | 'RedCard'
+  | 'Substitution'
+  | 'Period'
+  | 'Clock'
+  | 'Penalty'
+  | 'Result'
+  | 'Note';
+
+/** One line of match activity, worded by the server. `id` counts up through the match. */
+export type ActivityItem = {
+  id: number;
+  kind: ActivityKind;
+  /** "13.4" or "67'". */
+  marker: string | null;
+  /** The ball as a scorer writes it ("4", "W", "wd"), or the score after a goal ("2–1"). */
+  chip: string | null;
+  text: string;
+  detail: string | null;
+  teamId: number | null;
+  inningsNumber: number | null;
+};
+
+/** Newest first; ask again with `before` = the last id while `hasMore`. */
+export type ActivityPage = { items: ActivityItem[]; hasMore: boolean };

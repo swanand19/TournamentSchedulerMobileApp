@@ -26,6 +26,34 @@ export function relativeDate(value: string | null | undefined): string {
   return date.toLocaleDateString();
 }
 
+// Month names spelt out here rather than through Intl, whose locale data varies between phones.
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** "March 2026", from a UTC timestamp. */
+export function monthYear(value: string | null | undefined): string {
+  const date = parseUtc(value);
+  return date ? `${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}` : '';
+}
+
+/** "9 Aug 2026", from a UTC timestamp. */
+export function shortDate(value: string | null | undefined): string {
+  const date = parseUtc(value);
+  return date ? `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()].slice(0, 3)} ${date.getUTCFullYear()}` : '';
+}
+
+/** "1 – 30 Jun 2026", "5 Sep – 25 Oct 2026", from two calendar dates ("2026-06-01"). */
+export function dateRange(start: string | null | undefined, end: string | null | undefined): string {
+  const parse = (d: string | null | undefined) => (d ? /^(\d{4})-(\d{2})-(\d{2})/.exec(d) : null);
+  const a = parse(start);
+  const b = parse(end);
+  if (!a || !b) return '';
+  const month = (m: string) => MONTHS[Number(m) - 1].slice(0, 3);
+  const day = (d: string) => String(Number(d));
+  if (a[1] !== b[1]) return `${day(a[3])} ${month(a[2])} ${a[1]} – ${day(b[3])} ${month(b[2])} ${b[1]}`;
+  if (a[2] !== b[2]) return `${day(a[3])} ${month(a[2])} – ${day(b[3])} ${month(b[2])} ${b[1]}`;
+  return `${day(a[3])} – ${day(b[3])} ${month(b[2])} ${b[1]}`;
+}
+
 /** mm:ss with a minutes column that can pass 99. */
 export function stopwatch(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -59,3 +87,10 @@ export function initials(name: string): string {
 
 /** A → 0, B → 1… for grouping, and back. */
 export const groupLabel = (i: number) => String.fromCharCode(65 + i);
+
+/** A stored mobile number for reading: "+919876543210" → "+91 98765 43210"; others as stored. */
+export function formatPhone(e164: string | null | undefined): string {
+  if (!e164) return '';
+  const india = /^\+91(\d{5})(\d{5})$/.exec(e164);
+  return india ? `+91 ${india[1]} ${india[2]}` : e164;
+}

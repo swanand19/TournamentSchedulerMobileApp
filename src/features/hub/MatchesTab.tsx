@@ -15,6 +15,7 @@ import { LiveMatchCard, MatchRow } from '@/features/matches/MatchCards';
 import { openMatch } from '@/features/matches/openMatch';
 import { phaseOf, type MatchPhase } from '@/features/matches/status';
 import { useQuery } from '@/hooks/useQuery';
+import { useTournament } from '@/hooks/useTournament';
 import { plural } from '@/lib/format';
 import { useSportTheme } from '@/theme/SportTheme';
 import { space, type } from '@/theme/theme';
@@ -31,6 +32,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 ];
 
 export default function MatchesTab({ tournamentId, active }: { tournamentId: number; active: boolean }) {
+  const { access } = useTournament();
   const router = useRouter();
   const theme = useSportTheme();
   const [filter, setFilter] = useState<Filter>('all');
@@ -57,7 +59,7 @@ export default function MatchesTab({ tournamentId, active }: { tournamentId: num
   const groups = [...new Set(shown.map((m) => m.groupName))];
   const pinLive = filter === 'all' || filter === 'live';
 
-  const open = (m: MatchCard) => openMatch(router, tournamentId, m);
+  const open = (m: MatchCard) => openMatch(router, tournamentId, m, access.canScore);
 
   return (
     <HubPage onRefresh={matches.refresh} refreshing={matches.refreshing}>

@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
@@ -10,6 +11,7 @@ import EmptyState from '@/components/EmptyState';
 import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
 import Sheet from '@/components/Sheet';
+import PressableScale from '@/components/PressableScale';
 import HubPage, { AboveSticky, StickyBand } from '@/features/hub/HubPage';
 import { useSportTheme } from '@/theme/SportTheme';
 import { fonts, radius, space, type } from '@/theme/theme';
@@ -89,7 +91,7 @@ function summary(parts: [string, string | number | null | undefined][], note?: s
 }
 
 /** One player on a board: name, team, and one faint line of supporting figures that is cut short
- *  rather than wrapped, so every row is the same height. */
+ *  rather than wrapped, so every row is the same height. Tapping it opens the player's profile. */
 function LeaderRow({
   rank,
   name,
@@ -97,6 +99,7 @@ function LeaderRow({
   value,
   valueLabel,
   detail,
+  playerId,
 }: {
   rank: number;
   name: string;
@@ -104,13 +107,17 @@ function LeaderRow({
   value: string | number;
   valueLabel: string;
   detail?: string;
+  playerId: number;
 }) {
   const theme = useSportTheme();
+  const router = useRouter();
   const top = rank === 1;
   return (
-    <View
+    <PressableScale
+      onPress={() => router.push({ pathname: '/profile', params: { playerId: String(playerId) } })}
       style={[styles.leader, { backgroundColor: theme.deck, borderColor: top ? theme.accentSoft : theme.borderOnDark }]}
-      accessible
+      accessibilityRole="button"
+      accessibilityHint="Opens their profile"
       accessibilityLabel={`Rank ${rank}, ${name}, ${team}, ${value} ${valueLabel}${detail ? `, ${detail}` : ''}`}
     >
       <Text style={[styles.rank, { color: top ? theme.accent : theme.onDarkSoft }]}>{rank}</Text>
@@ -131,7 +138,7 @@ function LeaderRow({
         <Text style={[styles.leaderValue, { color: top ? theme.accent : theme.onDark }]}>{value}</Text>
         <Text style={[type.caption, { color: theme.onDarkSoft }]}>{valueLabel.toLowerCase()}</Text>
       </View>
-    </View>
+    </PressableScale>
   );
 }
 
@@ -188,6 +195,7 @@ export function FootballStatsPage({ stats, refreshing, onRefresh }: PageProps<Fo
         rows.map((r) => (
           <LeaderRow
             key={`${board!.key}-${r.playerId}`}
+            playerId={r.playerId}
             rank={r.rank}
             name={`${r.jerseyNumber != null ? `#${r.jerseyNumber} ` : ''}${r.playerName}`}
             team={r.teamName}
@@ -270,6 +278,7 @@ export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<Cri
         rows.map((r) => (
           <LeaderRow
             key={`${board!.key}-${r.playerId}-${r.rank}`}
+            playerId={r.playerId}
             rank={r.rank}
             name={r.playerName}
             team={r.teamName}

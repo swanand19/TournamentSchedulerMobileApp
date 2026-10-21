@@ -1,19 +1,16 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
-import type { FootballMatch, MatchEvent, RecordEventResponse } from '@/api/types';
-import Bump from '@/components/Bump';
+import type { RecordEventResponse } from '@/api/types';
 import Button from '@/components/Button';
-import { Deck } from '@/components/Card';
-import Icon from '@/components/Icon';
+import Icon, { type IconName } from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import ScoringBanner, { isScoringLocked } from '@/components/ScoringBanner';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import Skeleton from '@/components/Skeleton';
-import StatusChip from '@/components/StatusChip';
 import {
   CardSheet,
   EndMatchSheet,
@@ -22,9 +19,10 @@ import {
   StoppageSheet,
   SubSheet,
 } from '@/features/football/FootballSheets';
-import MatchClock, { elapsedSeconds } from '@/features/football/MatchClock';
+import { elapsedSeconds } from '@/features/football/MatchClock';
+import Scoreboard from '@/features/football/Scoreboard';
 import Timeline from '@/features/football/Timeline';
-import { playerIndex, useFootballMatch } from '@/features/football/useFootballMatch';
+import { useFootballMatch } from '@/features/football/useFootballMatch';
 import { useAction } from '@/hooks/useAction';
 import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
@@ -171,7 +169,13 @@ export default function FootballLive() {
   return (
     <Screen footer={footer} onRefresh={data.refresh} refreshing={data.refreshing} error={action.error ?? data.error} onRetry={data.refresh}>
       <Scoreboard match={match} events={events} />
-      <ScoringBanner sport="football" matchId={matchId} scoring={match.scoring} onChanged={data.reload} />
+      <ScoringBanner
+        sport="football"
+        matchId={matchId}
+        scoring={match.scoring}
+        onChanged={data.reload}
+        onWatch={() => router.push({ pathname: '/tournament/[id]/football/[matchId]/watch', params })}
+      />
 
       {live && (
         <View style={{ gap: space.sm }}>
@@ -192,26 +196,20 @@ export default function FootballLive() {
             <Button label="Full time" icon="flag-checkered" variant="success" size="lg" busy={action.busy} onPress={fullTime} />
           )}
 
-          <View style={styles.row}>
+          <View style={[styles.controls, { backgroundColor: theme.deckRaised, borderColor: theme.borderOnDark }]}>
             {match.canEndPeriod &&
               (match.status === 'Paused' ? (
-                <Button label="Resume" icon="play" variant="deck" busy={action.busy} onPress={() => act(() => api.call('MATCH_CLOCK_RESUME', { routeParams: { matchId } }))} style={{ flex: 1 }} />
+                <ClockControl first label="Resume" icon="play" busy={action.busy} onPress={() => act(() => api.call('MATCH_CLOCK_RESUME', { routeParams: { matchId } }))} />
               ) : (
-                <Button label="Pause" icon="pause" variant="deck" busy={action.busy} onPress={() => act(() => api.call('MATCH_CLOCK_PAUSE', { routeParams: { matchId } }))} style={{ flex: 1 }} />
+                <ClockControl first label="Pause" icon="pause" busy={action.busy} onPress={() => act(() => api.call('MATCH_CLOCK_PAUSE', { routeParams: { matchId } }))} />
               ))}
             {match.canEndPeriod && match.stoppageRemainingThisPeriod > 0 && (
-              <Button label="+ Time" icon="timer-plus-outline" variant="deck" onPress={() => open('stoppage')} style={{ flex: 1 }} />
+              <ClockControl label="Add time" icon="timer-plus-outline" onPress={() => open('stoppage')} />
             )}
             {match.canEndPeriod && (
-              <Button label="End half" icon="whistle" variant="deck" onPress={endPeriod} style={{ flex: 1 }} accessibilityLabel={`End the ${periodShort}`} />
+              <ClockControl label="End half" icon="whistle" onPress={endPeriod} accessibilityLabel={`End the ${periodShort}`} />
             )}
-            <PressableScale
-              onPress={() => open('end')}
-              accessibilityLabel="More: end match early"
-              style={[styles.more, { backgroundColor: theme.deckRaised, borderColor: theme.borderOnDark }]}
-            >
-              <Icon name="dots-vertical" size={24} color={theme.onDark} />
-            </PressableScale>
+            <ClockControl icon="dots-vertical" onPress={() => open('end')} accessibilityLabel="More: end match early" narrow first={!match.canEndPeriod} />
           </View>
         </View>
       )}
@@ -243,108 +241,52 @@ export default function FootballLive() {
   );
 }
 
-function Scoreboard({ match, events }: { match: FootballMatch; events: MatchEvent[] }) {
+/**
+ * One segment of the clock bar: icon over a one-line word, so the word gets the segment's whole
+ * width (side by side, "Pause" broke across two lines on a ~400dp phone). Every segment but the
+ * first draws a hairline on its left as the divider.
+ */
+function ClockControl({
+  label,
+  icon,
+  onPress,
+  busy,
+  narrow,
+  first,
+  accessibilityLabel,
+}: {
+  label?: string;
+  icon: IconName;
+  onPress: () => void;
+  busy?: boolean;
+  narrow?: boolean;
+  first?: boolean;
+  accessibilityLabel?: string;
+}) {
   const theme = useSportTheme();
-  const players = playerIndex(match);
-  const subsUsed = (teamId: number | null) => events.filter((e) => e.eventType === 'SubstitutionIn' && e.teamId === teamId).length;
-
-  // "M. Silva 24', 59'" under each side.
-  const scorers = (teamId: number | null) => {
-    const byPlayer = new Map<string, string[]>();
-    events
-      .filter((e) => e.eventType === 'Goal' && e.teamId === teamId)
-      .forEach((e) => {
-        const who = e.playerId ? players.get(e.playerId)?.name ?? 'Unknown' : 'OG';
-        byPlayer.set(who, [...(byPlayer.get(who) ?? []), e.stoppageMinute ? `${e.minuteOfMatch}+${e.stoppageMinute}'` : `${e.minuteOfMatch}'`]);
-      });
-    return [...byPlayer.entries()].map(([who, mins]) => `${who} ${mins.join(', ')}`);
-  };
-
-  const state: { label: string; tone: 'live' | 'setup' | 'ready' | 'done' } =
-    match.status === 'Completed'
-      ? { label: match.forfeitWinnerTeamId ? 'Awarded' : 'Full time', tone: 'ready' }
-      : match.status === 'PenaltyShootout'
-        ? { label: 'Penalties', tone: 'live' }
-        : match.periodState === 'Ended'
-          ? { label: match.awaitingResolution ? 'Full time — settle result' : match.currentHalf === 1 ? 'Half-time' : 'Break', tone: 'setup' }
-          : match.status === 'Paused'
-            ? { label: 'Play stopped', tone: 'setup' }
-            : { label: 'Live', tone: 'live' };
-
-  const pens = match.penaltyHomeScore != null && match.penaltyAwayScore != null;
-
   return (
-    <Deck>
-      <View style={styles.boardTop}>
-        <View style={{ flex: 1, gap: space.xs }}>
-          <Text style={[type.board, { color: theme.accent }]}>{match.currentPeriodLabel.toUpperCase()}</Text>
-          <StatusChip label={state.label} tone={state.tone} onDark />
-          <Text style={[type.caption, { color: theme.onDarkSoft }]}>
-            Group {match.groupName} · Match {match.matchNumber}
-          </Text>
-        </View>
-        {match.status !== 'Completed' && <MatchClock match={match} />}
-      </View>
-
-      <View style={styles.teams} accessible accessibilityLabel={`${match.homeTeamName} ${match.homeScore}, ${match.awayTeamName} ${match.awayScore}`} accessibilityLiveRegion="polite">
-        <View style={styles.teamCol}>
-          <Text style={[styles.teamName, { color: theme.onDark }]} numberOfLines={2}>
-            {match.homeTeamName.toUpperCase()}
-          </Text>
-          <Text style={[type.label, { color: theme.onDarkSoft }]}>
-            HOME · SUBS {subsUsed(match.homeTeamId)}/{match.maxSubstitutions ?? 0}
-          </Text>
-        </View>
-        <View style={[styles.score, { backgroundColor: theme.page }]}>
-          <Bump value={match.homeScore} style={[type.scoreLarge, { color: theme.accent }]} />
-          <Text style={[type.score, { color: theme.onDarkSoft }]}>:</Text>
-          <Bump value={match.awayScore} style={[type.scoreLarge, { color: theme.onDark }]} />
-        </View>
-        <View style={[styles.teamCol, { alignItems: 'flex-end' }]}>
-          <Text style={[styles.teamName, { color: theme.onDark, textAlign: 'right' }]} numberOfLines={2}>
-            {match.awayTeamName.toUpperCase()}
-          </Text>
-          <Text style={[type.label, { color: theme.onDarkSoft }]}>
-            AWAY · SUBS {subsUsed(match.awayTeamId)}/{match.maxSubstitutions ?? 0}
-          </Text>
-        </View>
-      </View>
-
-      {pens && (
-        <Text style={[type.bodyStrong, { color: theme.accent, textAlign: 'center' }]}>
-          Penalties {match.penaltyHomeScore}–{match.penaltyAwayScore}
+    <PressableScale
+      onPress={onPress}
+      disabled={busy}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{ busy: !!busy }}
+      style={[styles.control, narrow && styles.controlNarrow, !first && { borderLeftWidth: StyleSheet.hairlineWidth, borderColor: theme.borderOnDark }]}
+    >
+      {busy ? <ActivityIndicator color={theme.onDark} /> : <Icon name={icon} size={22} color={theme.onDark} />}
+      {label ? (
+        <Text style={[styles.controlLabel, { color: theme.onDarkSoft }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+          {label}
         </Text>
-      )}
-
-      {(scorers(match.homeTeamId).length > 0 || scorers(match.awayTeamId).length > 0) && (
-        <View style={styles.scorers}>
-          <View style={{ flex: 1, gap: 2 }}>
-            {scorers(match.homeTeamId).map((s) => (
-              <Text key={s} style={[type.caption, { color: theme.onDarkSoft }]}>
-                ⚽ {s}
-              </Text>
-            ))}
-          </View>
-          <View style={{ flex: 1, gap: 2, alignItems: 'flex-end' }}>
-            {scorers(match.awayTeamId).map((s) => (
-              <Text key={s} style={[type.caption, { color: theme.onDarkSoft, textAlign: 'right' }]}>
-                {s} ⚽
-              </Text>
-            ))}
-          </View>
-        </View>
-      )}
-    </Deck>
+      ) : null}
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: space.sm },
-  more: { width: 52, minHeight: 48, borderRadius: radius.xl, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
-  boardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
-  teams: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  teamCol: { flex: 1, gap: 4 },
-  teamName: { fontFamily: fonts.display, fontSize: 24, lineHeight: 28 },
-  score: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: radius.lg, paddingHorizontal: space.md },
-  scorers: { flexDirection: 'row', gap: space.md },
+  controls: { flexDirection: 'row', borderRadius: radius.xl, borderWidth: 1.5, overflow: 'hidden' },
+  control: { flex: 1, minHeight: 64, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: space.xs },
+  controlNarrow: { flex: 0, width: 56 },
+  controlLabel: { fontFamily: fonts.bodySemiBold, fontSize: 13, lineHeight: 16, letterSpacing: 0.2 },
 });

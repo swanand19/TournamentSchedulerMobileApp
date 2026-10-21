@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -12,6 +13,7 @@ import SwitchRow from '@/components/SwitchRow';
 import TextField from '@/components/TextField';
 import { LINES } from '@/features/teams/positions';
 import { useAction } from '@/hooks/useAction';
+import { useAuthOptions } from '@/hooks/useAuthOptions';
 import {
   BATTING_STYLES,
   BOWLING_ARMS,
@@ -21,6 +23,7 @@ import {
   roleBowls,
 } from '@/lib/cricketLabels';
 import { confirm } from '@/lib/confirm';
+import { formatPhone } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSportTheme } from '@/theme/SportTheme';
 import { space, type } from '@/theme/theme';
@@ -29,8 +32,8 @@ import { space, type } from '@/theme/theme';
 // role, how they bat and — only if they bowl — how they bowl, and names the style as it's picked
 // ("Slow left-arm orthodox"). The server has the final word on clashes (a taken shirt number).
 //
-// The optional email links the place to the player's account — now, or when they sign up. Once
-// linked, the name and cricket profile are theirs (they edit them on their Account screen), so
+// The optional email (and, once the server can text codes, mobile number) links the place to the
+// player's account — now, or when they sign up with it. Once linked, the name and cricket profile are theirs (they edit them on their Account screen), so
 // those fields are shown locked here; an owner can unlink a wrong match.
 
 type Props = {
@@ -50,6 +53,7 @@ type Props = {
  */
 export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, team, player, sport }: Props) {
   const theme = useSportTheme();
+  const router = useRouter();
   const action = useAction();
   const isCricket = sport === 'Cricket';
 
@@ -65,6 +69,9 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
   const [captain, setCaptain] = useState(wasCaptain);
   const [nameError, setNameError] = useState('');
   const [email, setEmail] = useState(player?.email ?? '');
+  const options = useAuthOptions();
+  const showPhone = options.phone || !!player?.phone;
+  const [phone, setPhone] = useState(formatPhone(player?.phone));
   const linked = !!player?.isLinked;
 
   const jerseyNum = jersey.trim() === '' ? null : Number(jersey);
@@ -83,8 +90,10 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
 
     const body = {
       name: trimmed,
-      // Always sent: "" clears it and unlinks the place.
+      // Always sent: "" clears it (and unlinks the place unless the number still matches).
       email: email.trim(),
+      // Only while the field is shown; otherwise the number is left as it is.
+      phone: showPhone ? phone.trim() : undefined,
       jerseyNumber: jerseyNum,
       position: isCricket ? player?.position ?? null : position.trim() || null,
       cricket: isCricket
@@ -122,7 +131,7 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
     if (!player) return;
     const ok = await confirm({
       title: `Unlink ${player.name}?`,
-      message: `Their name stays on ${team.name}; it just won't be linked to ${player.email ?? 'their account'} any more.`,
+      message: `Their name stays on ${team.name}; it just won't be linked to ${player.email ?? (formatPhone(player.phone) || 'their account')} any more.`,
       confirmLabel: 'Unlink',
     });
     if (!ok) return;
@@ -200,6 +209,23 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
               : 'Links this place to their account — now, or when they sign up.'
         }
       />
+      {showPhone && (
+        <TextField
+          label="Their mobile number (optional)"
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="e.g. 98765 43210"
+          keyboardType="phone-pad"
+          autoComplete="off"
+          hint={
+            linked
+              ? 'Either the email or the number keeps them linked.'
+              : player?.phone
+                ? 'Links when they sign in with this number.'
+                : 'Or their number: links when they sign in with it.'
+          }
+        />
+      )}
       <TextField
         label="Shirt number (optional)"
         value={jersey}
@@ -276,7 +302,18 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
         </>
       )}
 
-      {player && (linked || player.email) && (
+      {player?.isLinked && (
+        <Button
+          label="View profile"
+          icon="account-details-outline"
+          variant="secondary"
+          onPress={() => {
+            onClose();
+            router.push({ pathname: '/profile', params: { playerId: String(player.id) } });
+          }}
+        />
+      )}
+      {player && (linked || player.email || player.phone) && (
         <Button label="Unlink from account" icon="link-variant-off" variant="secondary" onPress={unlink} disabled={action.busy} />
       )}
       {player && <Button label="Remove from squad" icon="trash-can-outline" variant="danger" onPress={remove} disabled={action.busy} />}

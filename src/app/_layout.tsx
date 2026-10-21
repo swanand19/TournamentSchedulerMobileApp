@@ -84,7 +84,11 @@ function AppStack({ reduced }: { reduced: boolean }) {
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="account" options={{ title: 'Account' }} />
+        {/* Profiles colour their own headers: neutral for the base profile, the sport for a career. */}
+        <Stack.Screen name="profile/index" options={{ title: 'Profile', headerBackButtonDisplayMode: 'minimal' }} />
+        <Stack.Screen name="profile/[sport]" options={{ title: '', headerBackButtonDisplayMode: 'minimal' }} />
         <Stack.Screen name="join" options={{ title: 'Join a team' }} />
+        <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
         {/* A tournament has its own stack (and its own sport colours) — see tournament/[id]/_layout. */}
         <Stack.Screen name="tournament/[id]" options={{ headerShown: false }} />
       </Stack.Protected>

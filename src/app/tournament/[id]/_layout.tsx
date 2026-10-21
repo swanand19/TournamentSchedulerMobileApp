@@ -56,6 +56,8 @@ function TournamentStack() {
       <Stack.Screen name="cricket/[matchId]/setup" options={{ title: 'Match setup' }} />
       <Stack.Screen name="cricket/[matchId]/live" options={{ title: 'Live scorer' }} />
       <Stack.Screen name="cricket/[matchId]/scorecard" options={{ title: 'Scorecard' }} />
+      <Stack.Screen name="football/[matchId]/watch" options={{ title: '' }} />
+      <Stack.Screen name="cricket/[matchId]/watch" options={{ title: '' }} />
     </Stack>
   );
 }

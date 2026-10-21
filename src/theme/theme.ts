@@ -48,6 +48,11 @@ const shared = {
   field: '#FFFFFF',
   fieldBorder: '#C9D0C6',
   placeholderInk: '#7C857D',
+  /** The ground under screens that belong to no sport (the base profile): the deep green of a
+   *  floodlit night, between the two sports' decks. */
+  night: '#101B17',
+  /** A red card, as drawn on a stat tile (red is reserved for red cards and wickets). */
+  redCard: '#E24B4A',
   /** Behind a sheet: dark enough that the pitch recedes, light enough to stay oriented. */
   scrim: 'rgba(8,16,12,0.72)',
 };

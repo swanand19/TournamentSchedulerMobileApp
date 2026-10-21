@@ -250,6 +250,91 @@ export function PickPlayerSheet({
   );
 }
 
+/**
+ * A player picked by mistake: who was recorded, then who it really was. A batter's whole stay in
+ * this innings moves across; for the bowler, only this over. The engine says who may be chosen.
+ */
+export function ReplacePlayerSheet({
+  visible,
+  onClose,
+  onConfirm,
+  state,
+  busy,
+  error,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: (playerId: number, replacementId: number) => void;
+  state: CricketMatchState;
+  busy: boolean;
+  error?: string;
+}) {
+  const theme = useSportTheme();
+  const a = state.actions;
+  const wrongOnes = [
+    ...a.replaceableBatters.map((p) => ({ ...p, bowler: false })),
+    ...(a.replaceableBowler ? [{ ...a.replaceableBowler, bowler: true }] : []),
+  ];
+  const [wrongId, setWrongId] = useState<number | null>(wrongOnes.length === 1 ? wrongOnes[0].playerId : null);
+  const [rightId, setRightId] = useState<number | null>(null);
+  const wrong = wrongOnes.find((p) => p.playerId === wrongId);
+  const choices = !wrong ? [] : wrong.bowler ? a.bowlerReplacements : a.batterReplacements;
+  const right = choices.find((p) => p.playerId === rightId);
+
+  return (
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      dark
+      title="Correct a player"
+      subtitle="Picked the wrong name? Nothing that happened changes — only who it's credited to."
+      footer={
+        <>
+          <Button label="Cancel" variant="deck" onPress={onClose} style={{ flex: 1 }} />
+          <Button
+            label={right ? `Make it ${right.playerName}` : 'Correct'}
+            icon="account-convert"
+            disabled={!wrong || !right}
+            busy={busy}
+            onPress={() => wrong && right && onConfirm(wrong.playerId, right.playerId)}
+            style={{ flex: 2 }}
+          />
+        </>
+      }
+    >
+      <ErrorBanner message={error} />
+      <Text style={[type.label, { color: theme.onDarkSoft }]}>Recorded by mistake</Text>
+      <PlayerGrid
+        dark
+        label="Recorded by mistake"
+        players={wrongOnes.map((p) => ({ id: p.playerId, name: p.playerName, sub: p.bowler ? 'Bowling this over' : 'Batting' }))}
+        selected={wrongId}
+        onSelect={(id) => {
+          setWrongId(id);
+          setRightId(null);
+        }}
+      />
+      {wrong && (
+        <>
+          <Text style={[type.label, { color: theme.onDarkSoft }]}>It was really</Text>
+          {choices.length === 0 ? (
+            <Text style={[type.body, { color: theme.onDarkSoft }]}>
+              {wrong.bowler ? 'Nobody else may bowl this over.' : 'Everyone else in the XI has batted already.'}
+            </Text>
+          ) : (
+            <PlayerGrid dark label="It was really" players={choices.map((p) => member(p))} selected={rightId} onSelect={setRightId} />
+          )}
+          <Text style={[type.caption, { color: theme.onDarkSoft }]}>
+            {wrong.bowler
+              ? `This over moves to the player you choose. Earlier overs stay with whoever bowled them.`
+              : `${wrong.playerName}'s whole innings so far moves to the player you choose.`}
+          </Text>
+        </>
+      )}
+    </Sheet>
+  );
+}
+
 export function ReduceOversSheet({
   visible,
   onClose,
@@ -295,7 +380,7 @@ export function ReduceOversSheet({
   );
 }
 
-export type MoreAction = 'scorecard' | 'reduce' | 'declare' | 'endInnings' | 'signOff' | 'noResult' | 'penalty' | 'followOn' | 'superOver';
+export type MoreAction = 'scorecard' | 'reduce' | 'declare' | 'endInnings' | 'signOff' | 'noResult' | 'penalty' | 'followOn' | 'superOver' | 'replace';
 
 /** Everything the scorer does rarely, in one menu — each only when the engine allows it. */
 export function MoreSheet({
@@ -315,6 +400,7 @@ export function MoreSheet({
     { key: 'scorecard', label: 'Full scorecard', icon: 'table-large', show: true },
     { key: 'penalty', label: '+5 penalty runs', icon: 'plus-box-outline', show: a.canRecordBall && state.rules.penaltyRunsAllowed },
     { key: 'reduce', label: 'Reduce overs (rain)', icon: 'weather-pouring', show: a.canReduceOvers },
+    { key: 'replace', label: 'Correct a player', icon: 'account-convert', show: a.canRecordBall && (a.replaceableBatters.length > 0 || !!a.replaceableBowler) },
     { key: 'followOn', label: 'Enforce the follow-on', icon: 'repeat', show: a.canEnforceFollowOn },
     { key: 'superOver', label: 'Start a super over', icon: 'bullseye-arrow', show: a.canStartSuperOver },
     { key: 'declare', label: 'Declare the innings', icon: 'flag-outline', show: a.canDeclare },

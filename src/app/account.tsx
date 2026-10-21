@@ -10,6 +10,7 @@ import type {
   BowlingType,
   CricketRole,
   LogoutAllResponse,
+  SendOtpResponse,
 } from '@/api/types';
 import { clearSession, updateSessionUser } from '@/auth/session';
 import Button from '@/components/Button';
@@ -21,16 +22,18 @@ import Skeleton from '@/components/Skeleton';
 import Stepper from '@/components/Stepper';
 import TextField from '@/components/TextField';
 import { useAction } from '@/hooks/useAction';
+import { useAuthOptions } from '@/hooks/useAuthOptions';
 import { useQuery } from '@/hooks/useQuery';
 import { BATTING_STYLES, BOWLING_ARMS, BOWLING_TYPES, bowlingStyleLabel, CRICKET_ROLES, roleBowls } from '@/lib/cricketLabels';
 import { confirm } from '@/lib/confirm';
-import { plural } from '@/lib/format';
+import { formatPhone, plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { footballTheme as theme, space, type } from '@/theme/theme';
 
 // The signed-in person's account: their name and cricket profile (both copied to every team place
-// linked to them), email, signing out — of this phone, or of every device at once (for a lost
-// phone) — and deleting the account, confirmed with a code emailed to them.
+// linked to them), the email and mobile number they sign in with, signing out — of this phone, or
+// of every device at once (for a lost phone) — and deleting the account, confirmed with a code sent
+// to them.
 
 export default function AccountScreen() {
   const fetcher = useCallback(() => api.call<Account>('ACCOUNT_GET'), []);
@@ -93,10 +96,11 @@ export default function AccountScreen() {
             />
             <Button label="Save name" onPress={save} busy={action.busy} disabled={!changed} variant="secondary" />
             <View style={styles.facts}>
-              <Fact label="Email" value={account.data.email ?? '—'} />
               <Fact label="Member since" value={new Date(/Z$|[+-]\d\d:\d\d$/.test(account.data.memberSince) ? account.data.memberSince : `${account.data.memberSince}Z`).toLocaleDateString()} />
             </View>
           </Card>
+
+          <SignInMethods account={account.data} onSaved={account.setData} />
 
           <CricketProfileCard account={account.data} onSaved={account.setData} />
 
@@ -109,6 +113,147 @@ export default function AccountScreen() {
         </>
       )}
     </Screen>
+  );
+}
+
+type Kind = 'Email' | 'Phone';
+
+/**
+ * How they sign in: an email, a mobile number or both. Adding or changing one sends a code to the
+ * new address, and only the code saves it. Remove is offered only where the server allows it (an
+ * account keeps one way in; an admin keeps their email). The number row appears once the server
+ * can text codes, or when the account already has one.
+ */
+function SignInMethods({ account, onSaved }: { account: Account; onSaved: (a: Account) => void }) {
+  const options = useAuthOptions();
+  const action = useAction();
+  const [editing, setEditing] = useState<Kind | null>(null);
+  const [value, setValue] = useState('');
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+
+  const close = () => {
+    setEditing(null);
+    setValue('');
+    setSentTo(null);
+    setCode('');
+    action.clearError();
+  };
+
+  const open = (kind: Kind) => {
+    close();
+    setEditing(kind);
+  };
+
+  const send = async () => {
+    const res = await action.run(() => api.call<SendOtpResponse>('ACCOUNT_CONTACT_SEND', { body: { contact: value.trim() } }));
+    if (!res.ok) return;
+    setSentTo(res.value.sentTo);
+    setCode('');
+  };
+
+  const confirmCode = async () => {
+    const res = await action.run(() => api.call<Account>('ACCOUNT_CONTACT_VERIFY', { body: { contact: sentTo, otp: code } }));
+    if (!res.ok) return;
+    haptic.success();
+    onSaved(res.value);
+    updateSessionUser({ email: res.value.email, phone: res.value.phone });
+    close();
+  };
+
+  const remove = async (kind: Kind) => {
+    const what = kind === 'Email' ? 'email' : 'mobile number';
+    const ok = await confirm({
+      title: `Remove your ${what}?`,
+      message: `You won't be able to sign in with ${kind === 'Email' ? account.email : formatPhone(account.phone)} any more.`,
+      confirmLabel: 'Remove',
+      destructive: true,
+    });
+    if (!ok) return;
+    const res = await action.run(() => api.call<Account>('ACCOUNT_CONTACT_REMOVE', { body: { kind } }));
+    if (!res.ok) return;
+    onSaved(res.value);
+    updateSessionUser({ email: res.value.email, phone: res.value.phone });
+  };
+
+  const rows: { kind: Kind; label: string; value: string | null; canRemove: boolean }[] = [
+    { kind: 'Email', label: 'Email', value: account.email, canRemove: account.canRemoveEmail },
+    ...(options.phone || account.phone
+      ? [{ kind: 'Phone' as const, label: 'Mobile number', value: account.phone ? formatPhone(account.phone) : null, canRemove: account.canRemovePhone }]
+      : []),
+  ];
+
+  return (
+    <Card>
+      <Text style={[type.headline, { color: theme.ink }]}>How you sign in</Text>
+      <Text style={[type.caption, { color: theme.muted }]}>
+        {rows.length > 1 ? 'A code goes to either one. Only you see them.' : 'Your sign-in codes go here. Only you see it.'}
+      </Text>
+      {editing == null ? <ErrorBanner message={action.error?.message} /> : null}
+      {rows.map((row) => (
+        <View key={row.kind} style={{ gap: space.sm }}>
+          <View style={styles.methodRow}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={[type.label, { color: theme.muted }]}>{row.label}</Text>
+              <Text style={[type.body, { color: row.value ? theme.ink : theme.muted }]} selectable>
+                {row.value ?? 'Not added'}
+              </Text>
+            </View>
+            {editing !== row.kind && (
+              <View style={styles.methodActions}>
+                {row.canRemove && <Button label="Remove" variant="secondary" size="sm" onPress={() => remove(row.kind)} disabled={action.busy} />}
+                <Button label={row.value ? 'Change' : 'Add'} variant="secondary" size="sm" onPress={() => open(row.kind)} disabled={action.busy} />
+              </View>
+            )}
+          </View>
+
+          {editing === row.kind && (
+            <View style={{ gap: space.sm }}>
+              <ErrorBanner message={action.error?.message} />
+              {sentTo == null ? (
+                <>
+                  <TextField
+                    label={row.kind === 'Email' ? 'New email' : 'New mobile number'}
+                    value={value}
+                    onChangeText={setValue}
+                    placeholder={row.kind === 'Email' ? 'you@example.com' : '98765 43210'}
+                    keyboardType={row.kind === 'Email' ? 'email-address' : 'phone-pad'}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete={row.kind === 'Email' ? 'email' : 'tel'}
+                    returnKeyType="send"
+                    onSubmitEditing={send}
+                    editable={!action.busy}
+                    autoFocus
+                    hint={row.kind === 'Email' ? "We'll email it a code." : `We'll text it a code. Without a country code it's taken as ${options.defaultCountryCode}.`}
+                  />
+                  <Button label="Send code" icon={row.kind === 'Email' ? 'email-fast-outline' : 'send-outline'} onPress={send} busy={action.busy} disabled={!value.trim()} />
+                </>
+              ) : (
+                <>
+                  <TextField
+                    label={`Code sent to ${row.kind === 'Email' ? sentTo : formatPhone(sentTo)}`}
+                    value={code}
+                    onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+                    keyboardType="number-pad"
+                    textContentType="oneTimeCode"
+                    autoComplete={row.kind === 'Email' ? 'one-time-code' : 'sms-otp'}
+                    maxLength={6}
+                    placeholder="6-digit code"
+                    returnKeyType="done"
+                    onSubmitEditing={() => code.length === 6 && confirmCode()}
+                    editable={!action.busy}
+                    autoFocus
+                  />
+                  <Button label={row.value ? `Change ${row.kind === 'Email' ? 'email' : 'number'}` : `Add ${row.kind === 'Email' ? 'email' : 'number'}`} icon="check" onPress={confirmCode} busy={action.busy} disabled={code.length !== 6} />
+                </>
+              )}
+              <Button label="Cancel" variant="secondary" onPress={close} disabled={action.busy} />
+            </View>
+          )}
+        </View>
+      ))}
+    </Card>
   );
 }
 
@@ -193,7 +338,7 @@ function CricketProfileCard({ account, onSaved }: { account: Account; onSaved: (
 }
 
 /**
- * Two steps: "Delete account…" shows what will happen and emails a code; the code confirms it.
+ * Two steps: "Delete account…" shows what will happen and sends a code; the code confirms it.
  * Every session ends with it, so the phone goes back to sign-in by itself.
  */
 function DeleteAccount() {
@@ -239,7 +384,7 @@ function DeleteAccount() {
     ...preview.tournamentsHandedOver.map((t) => `Hands ${t.name} to ${t.newCreator}.`),
     ...(preview.tournamentsLeft > 0 ? [`Takes you off ${plural(preview.tournamentsLeft, 'other tournament')}.`] : []),
     ...(preview.squadPlaces > 0 ? [`Unlinks you from ${plural(preview.squadPlaces, 'team')} (your name stays on past scorecards).`] : []),
-    'Removes your name, email and cricket profile, and signs you out everywhere.',
+    'Removes your name, email, mobile number and cricket profile, and signs you out everywhere.',
   ];
 
   return (
@@ -292,4 +437,6 @@ const styles = StyleSheet.create({
   facts: { gap: space.sm, marginTop: space.xs },
   fact: { gap: 2 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  methodRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  methodActions: { flexDirection: 'row', gap: space.xs },
 });

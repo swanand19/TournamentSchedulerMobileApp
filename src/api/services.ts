@@ -13,14 +13,32 @@ export const SERVICES = [
   'HEALTH_CHECK',
 
   // Signing in (the only ones that work signed out) and the account
-  'AUTH_OTP_SEND',
+  'AUTH_OPTIONS', // whether mobile numbers are on
+  'AUTH_OTP_SEND', // body: contact (email or mobile number)
   'AUTH_OTP_VERIFY',
   'AUTH_LOGOUT',
   'AUTH_LOGOUT_ALL',
   'ACCOUNT_GET',
   'ACCOUNT_UPDATE',
-  'ACCOUNT_DELETE_PREVIEW', // emails the code that confirms it
+  'ACCOUNT_CONTACT_SEND', // a code to an email or number being added
+  'ACCOUNT_CONTACT_VERIFY',
+  'ACCOUNT_CONTACT_REMOVE', // body: kind (Email | Phone)
+  'ACCOUNT_DELETE_PREVIEW', // sends the code that confirms it
   'ACCOUNT_DELETE',
+
+  // Profiles and careers (query: userId | playerId; none = me)
+  'PROFILE_GET',
+  'PROFILE_CAREER', // query: sport
+
+  // Your inbox (phase 6D)
+  'NOTIFICATION_LIST', // query: before, take
+  'NOTIFICATION_UNREAD',
+  'NOTIFICATION_READ', // notificationId
+  'NOTIFICATION_READ_ALL',
+
+  // Watching a match (Round 2; routeParams: sport = football | cricket, matchId)
+  'WATCH_MATCH', // the sides: squads before the start, line-ups after
+  'WATCH_ACTIVITY', // query: before, take — what happened, newest first
 
   // Tournaments
   'TOURNAMENT_LIST', // query: sport
@@ -38,6 +56,8 @@ export const SERVICES = [
   'TOURNAMENT_MEMBER_LIST', // id
   'TOURNAMENT_MEMBER_ADD', // id
   'TOURNAMENT_MEMBER_REMOVE', // id, userId
+  'TOURNAMENT_INVITE_RESEND', // id, inviteId
+  'TOURNAMENT_INVITE_CANCEL', // id, inviteId
   'TOURNAMENT_LEAVE', // id
 
   // Who is scoring a match — sport ('football' | 'cricket'), matchId
@@ -95,6 +115,7 @@ export const SERVICES = [
   'CRICKET_BALL_UNDO',
   'CRICKET_BATTER_SET',
   'CRICKET_BOWLER_SET',
+  'CRICKET_PLAYER_REPLACE', // matchId; { playerId, replacementId }
   'CRICKET_INNINGS_END',
   'CRICKET_REDUCE_OVERS',
   'CRICKET_FOLLOW_ON',

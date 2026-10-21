@@ -13,7 +13,7 @@ import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import Skeleton from '@/components/Skeleton';
 import { CreaseCard, CricketScoreboard, DlsStrip, OverStrip } from '@/features/cricket/ConsoleParts';
-import { MoreSheet, PickPlayerSheet, ReduceOversSheet, WicketSheet, type MoreAction, type WicketDetails } from '@/features/cricket/CricketSheets';
+import { MoreSheet, PickPlayerSheet, ReduceOversSheet, ReplacePlayerSheet, WicketSheet, type MoreAction, type WicketDetails } from '@/features/cricket/CricketSheets';
 import MatchAwards from '@/features/cricket/MatchAwards';
 import RunPad, { type Extra, type RunsFrom } from '@/features/cricket/RunPad';
 import StartInnings from '@/features/cricket/StartInnings';
@@ -30,7 +30,7 @@ import { radius, space, type } from '@/theme/theme';
 // legal next — so this screen never decides a rule: it draws the scoreboard, the keypad when a
 // ball can be bowled, and a blocking picker when the match needs a new batter or bowler.
 
-type Open = { kind: 'wicket' | 'more' | 'reduce' | null; open: boolean; key: number };
+type Open = { kind: 'wicket' | 'more' | 'reduce' | 'replace' | null; open: boolean; key: number };
 
 export default function CricketLive() {
   const router = useRouter();
@@ -129,6 +129,9 @@ export default function CricketLive() {
       case 'reduce':
         setTimeout(() => openSheet('reduce'), 250); // after the menu has left
         return;
+      case 'replace':
+        setTimeout(() => openSheet('replace'), 250);
+        return;
       case 'followOn':
         await act(() => call('CRICKET_FOLLOW_ON'), haptic.success);
         return;
@@ -217,7 +220,13 @@ export default function CricketLive() {
       />
       <Screen footer={footer} onRefresh={match.refresh} refreshing={match.refreshing} error={action.error ?? match.error} onRetry={match.refresh}>
         <CricketScoreboard state={state} />
-        <ScoringBanner sport="cricket" matchId={matchId} scoring={state.scoring} onChanged={match.reload} />
+        <ScoringBanner
+          sport="cricket"
+          matchId={matchId}
+          scoring={state.scoring}
+          onChanged={match.reload}
+          onWatch={() => router.push({ pathname: '/tournament/[id]/cricket/[matchId]/watch', params: { id: String(tournamentId), matchId: String(matchId) } })}
+        />
         {/* The batters come straight after the score: the scorer checks them every ball, and the
             keypad covers whatever sits lower on a short phone. */}
         {live && <CreaseCard live={live} />}
@@ -283,6 +292,20 @@ export default function CricketLive() {
           error={errorText}
           onConfirm={async (overs) => {
             if (await act(() => call('CRICKET_REDUCE_OVERS', { newOversLimit: overs }), haptic.success)) closeSheet();
+          }}
+        />
+      )}
+
+      {live && !locked && sheet.kind === 'replace' && (
+        <ReplacePlayerSheet
+          key={sheet.key}
+          visible={sheet.open}
+          onClose={closeSheet}
+          state={state}
+          busy={action.busy}
+          error={errorText}
+          onConfirm={async (playerId, replacementId) => {
+            if (await act(() => call('CRICKET_PLAYER_REPLACE', { playerId, replacementId }), haptic.success)) closeSheet();
           }}
         />
       )}

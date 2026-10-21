@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
-import type { Tournament, TournamentMember } from '@/api/types';
+import type { Tournament, TournamentInvite, TournamentMember, TournamentPeople } from '@/api/types';
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
 import DateField, { formatDay, todayValue } from '@/components/DateField';
@@ -13,16 +13,19 @@ import SegmentedControl from '@/components/SegmentedControl';
 import Skeleton from '@/components/Skeleton';
 import TextField from '@/components/TextField';
 import { useAction } from '@/hooks/useAction';
+import { useAuthOptions } from '@/hooks/useAuthOptions';
 import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
+import { formatPhone, shortDate } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSportTheme } from '@/theme/SportTheme';
-import { space, type } from '@/theme/theme';
+import { radius, space, type } from '@/theme/theme';
 
-// A tournament's people and settings: its name and dates, completing it, its owners and scorers,
-// and leaving. What each person may do comes from the tournament's `access` — the server decides;
-// this screen only shows what it allows.
+// A tournament's people and settings: its name and dates, completing it, its owners and scorers
+// (added by email or mobile number; someone with no account yet gets an invite, listed here for
+// owners to send again or cancel), and leaving. What each person may do comes from the
+// tournament's `access` — the server decides; this screen only shows what it allows.
 
 const STATUS_TEXT: Record<string, string> = {
   Upcoming: 'Not started yet.',
@@ -41,15 +44,18 @@ export default function PeopleScreen() {
   const access = t.access;
   const action = useAction();
 
-  const membersFetcher = useCallback(() => api.call<TournamentMember[]>('TOURNAMENT_MEMBER_LIST', { routeParams: { id: t.id } }), [t.id]);
+  const membersFetcher = useCallback(() => api.call<TournamentPeople>('TOURNAMENT_MEMBER_LIST', { routeParams: { id: t.id } }), [t.id]);
   const members = useQuery(membersFetcher);
 
   // What's typed, or — until something is — what's saved.
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [startDraft, setStartDraft] = useState<string | null>(null);
   const [endDraft, setEndDraft] = useState<string | null>(null);
-  const [email, setEmail] = useState('');
+  const [contact, setContact] = useState('');
   const [role, setRole] = useState<Role>('Scorer');
+  // What the last add, send or cancel did, in the server's words.
+  const [notice, setNotice] = useState<string | null>(null);
+  const options = useAuthOptions();
 
   if (!tournament) return <Screen error={t.query.error} onRetry={t.query.refresh}><Skeleton rows={3} height={120} /></Screen>;
 
@@ -85,21 +91,46 @@ export default function PeopleScreen() {
     }
   };
 
+  const show = (people: TournamentPeople) => {
+    members.setData(people);
+    setNotice(people.notice);
+  };
+
   const add = async () => {
+    setNotice(null);
     const res = await action.run(() =>
-      api.call<TournamentMember[]>('TOURNAMENT_MEMBER_ADD', { routeParams: { id: t.id }, body: { email: email.trim(), role } }),
+      api.call<TournamentPeople>('TOURNAMENT_MEMBER_ADD', { routeParams: { id: t.id }, body: { contact: contact.trim(), role } }),
     );
     if (!res.ok) return;
     haptic.success();
-    members.setData(res.value);
-    setEmail('');
+    show(res.value);
+    setContact('');
   };
 
   const remove = async (m: TournamentMember) => {
     const ok = await confirm({ title: `Remove ${m.name}?`, message: 'They lose access to this tournament.', confirmLabel: 'Remove', destructive: true });
     if (!ok) return;
-    const res = await action.run(() => api.call<TournamentMember[]>('TOURNAMENT_MEMBER_REMOVE', { routeParams: { id: t.id, userId: m.userId } }));
-    if (res.ok) members.setData(res.value);
+    const res = await action.run(() => api.call<TournamentPeople>('TOURNAMENT_MEMBER_REMOVE', { routeParams: { id: t.id, userId: m.userId } }));
+    if (res.ok) show(res.value);
+  };
+
+  const resend = async (i: TournamentInvite) => {
+    setNotice(null);
+    const res = await action.run(() => api.call<TournamentPeople>('TOURNAMENT_INVITE_RESEND', { routeParams: { id: t.id, inviteId: i.inviteId } }));
+    if (res.ok) show(res.value);
+  };
+
+  const cancelInvite = async (i: TournamentInvite) => {
+    const ok = await confirm({
+      title: 'Cancel this invite?',
+      message: `Signing up with ${shown(i)} won't add them any more.`,
+      confirmLabel: 'Cancel invite',
+      cancelLabel: 'Keep it',
+      destructive: true,
+    });
+    if (!ok) return;
+    const res = await action.run(() => api.call<TournamentPeople>('TOURNAMENT_INVITE_CANCEL', { routeParams: { id: t.id, inviteId: i.inviteId } }));
+    if (res.ok) show(res.value);
   };
 
   const leave = async () => {
@@ -154,14 +185,16 @@ export default function PeopleScreen() {
         {!members.data ? (
           members.error ? null : <Skeleton rows={2} height={48} />
         ) : (
-          members.data.map((m) => (
+          members.data.members.map((m) => (
             <View key={m.userId} style={[styles.member, { borderTopColor: theme.cardDivider }]}>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={[type.bodyStrong, { color: theme.ink }]}>
                   {m.name}
                   {m.isMe ? <Text style={[type.body, { color: theme.muted }]}> (you)</Text> : null}
                 </Text>
-                {m.email ? <Text style={[type.caption, { color: theme.muted }]}>{m.email}</Text> : null}
+                {m.email || m.phone ? (
+                  <Text style={[type.caption, { color: theme.muted }]}>{[m.email, formatPhone(m.phone)].filter(Boolean).join(' · ')}</Text>
+                ) : null}
                 <Text style={[type.label, { color: theme.muted }]}>{m.role === 'Creator' ? 'CREATOR · OWNER' : m.role.toUpperCase()}</Text>
               </View>
               {m.canRemove && <Button label="Remove" size="sm" variant="secondary" disabled={action.busy} onPress={() => remove(m)} />}
@@ -169,17 +202,46 @@ export default function PeopleScreen() {
           ))
         )}
 
+        {members.data && members.data.invites.length > 0 && (
+          <View style={{ gap: space.sm, marginTop: space.sm }}>
+            <Text style={[type.label, { color: theme.muted }]}>INVITED · NO ACCOUNT YET</Text>
+            {members.data.invites.map((i) => (
+              <View key={i.inviteId} style={[styles.invite, { borderTopColor: theme.cardDivider }]}>
+                <View style={{ gap: 2 }}>
+                  <Text style={[type.bodyStrong, { color: theme.ink }]} numberOfLines={1}>
+                    {shown(i)}
+                  </Text>
+                  <Text style={[type.caption, { color: i.isExpired ? theme.warnInk : theme.muted }]}>
+                    {i.role} · {i.isExpired ? `expired ${shortDate(i.expiresAt)}` : `sent ${shortDate(i.sentAt)}, works until ${shortDate(i.expiresAt)}`}
+                  </Text>
+                </View>
+                <View style={styles.inviteActions}>
+                  <Button label="Cancel" size="sm" variant="secondary" disabled={action.busy} onPress={() => cancelInvite(i)} />
+                  <Button label="Send again" size="sm" variant="secondary" disabled={action.busy} onPress={() => resend(i)} />
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {notice ? (
+          <Text style={[type.body, styles.notice, { color: theme.ink, backgroundColor: theme.tint }]} accessibilityLiveRegion="polite">
+            {notice}
+          </Text>
+        ) : null}
+
         {access.canManageMembers && (
           <View style={{ gap: space.sm, marginTop: space.sm }}>
             <TextField
-              label="Add someone by the email they signed in with"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="friend@example.com"
+              label={options.phone ? 'Add someone by email or mobile number' : 'Add someone by email'}
+              value={contact}
+              onChangeText={setContact}
+              placeholder={options.phone ? 'friend@example.com or 98765 43210' : 'friend@example.com'}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               editable={!action.busy}
+              hint="No account yet? We'll send them an invite, and they join as soon as they sign up."
             />
             <SegmentedControl
               accessibilityLabel="Role"
@@ -187,7 +249,7 @@ export default function PeopleScreen() {
               value={role}
               onChange={(r) => setRole(r as Role)}
             />
-            <Button label="Add" icon="account-plus-outline" busy={action.busy} disabled={!email.trim()} onPress={add} />
+            <Button label="Add" icon="account-plus-outline" busy={action.busy} disabled={!contact.trim()} onPress={add} />
           </View>
         )}
       </Card>
@@ -200,4 +262,12 @@ export default function PeopleScreen() {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: space.sm },
   member: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: space.sm },
+  invite: { gap: space.xs, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: space.sm },
+  inviteActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: space.xs },
+  notice: { borderRadius: radius.md, paddingHorizontal: space.md, paddingVertical: space.sm, marginTop: space.sm },
 });
+
+/** An invite's email, or its number in groups. */
+function shown(i: TournamentInvite) {
+  return i.channel === 'Sms' ? formatPhone(i.contact) : i.contact;
+}

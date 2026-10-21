@@ -15,14 +15,17 @@ import PressableScale from '@/components/PressableScale';
 import TextField from '@/components/TextField';
 import { useServer } from '@/config/server';
 import { useAction } from '@/hooks/useAction';
+import { useAuthOptions } from '@/hooks/useAuthOptions';
+import { formatPhone } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { fonts, footballTheme as theme, radius, space, type } from '@/theme/theme';
 
-// Sign in and sign up are one flow: email → the 6-digit code we email → (new emails only) a name.
-// There is no password. The server decides everything — whether the email is new, how many tries
-// are left, how long to wait for another code — and its messages are shown as they come.
+// Sign in and sign up are one flow: email or mobile number → the 6-digit code we send → (new ones
+// only) a name. There is no password. The server decides everything — whether it's an email or a
+// number, whether it's new, how many tries are left, how long to wait for another code — and its
+// messages are shown as they come. Mobile numbers are offered only once the server can text codes.
 
-type Step = 'email' | 'code' | 'name';
+type Step = 'contact' | 'code' | 'name';
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -30,9 +33,12 @@ export default function SignInScreen() {
   const { ready, baseUrl } = useServer();
   const { signedOutReason } = useSessionState();
   const action = useAction();
+  const options = useAuthOptions();
 
-  const [step, setStep] = useState<Step>('email');
-  const [email, setEmail] = useState('');
+  const [step, setStep] = useState<Step>('contact');
+  // What was typed; once a code is sent, the email or number as the server stored it.
+  const [contact, setContact] = useState('');
+  const [channel, setChannel] = useState<SendOtpResponse['channel']>('Email');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [resendAt, setResendAt] = useState(0);
@@ -46,9 +52,10 @@ export default function SignInScreen() {
   }, [step, now, resendAt]);
 
   const sendCode = async () => {
-    const res = await action.run(() => api.call<SendOtpResponse>('AUTH_OTP_SEND', { body: { email: email.trim() } }));
+    const res = await action.run(() => api.call<SendOtpResponse>('AUTH_OTP_SEND', { body: { contact: contact.trim() } }));
     if (!res.ok) return;
-    setEmail(res.value.email);
+    setContact(res.value.sentTo);
+    setChannel(res.value.channel);
     setCode('');
     setResendAt(Date.now() + res.value.resendAfterSeconds * 1000);
     setNow(Date.now());
@@ -58,7 +65,7 @@ export default function SignInScreen() {
   const verify = async (withName?: string) => {
     const res = await action.run(() =>
       api.call<VerifyOtpResponse>('AUTH_OTP_VERIFY', {
-        body: { email, otp: code.replace(/\s/g, ''), name: withName ?? null },
+        body: { contact, otp: code.replace(/\s/g, ''), name: withName ?? null },
       }),
     );
     if (!res.ok) return;
@@ -78,8 +85,10 @@ export default function SignInScreen() {
     });
   };
 
+  const texted = channel === 'Sms';
+  const shown = texted ? formatPhone(contact) : contact;
   const waitSeconds = Math.max(0, Math.ceil((resendAt - now) / 1000));
-  const error = action.error?.message ?? (step === 'email' ? signedOutReason : '');
+  const error = action.error?.message ?? (step === 'contact' ? signedOutReason : '');
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -111,55 +120,59 @@ export default function SignInScreen() {
         />
 
         <Card>
-          {step === 'email' && (
+          {step === 'contact' && (
             <>
               <TextField
-                label="Your email"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="you@example.com"
+                label={options.phone ? 'Email or mobile number' : 'Your email'}
+                value={contact}
+                onChangeText={setContact}
+                placeholder={options.phone ? 'you@example.com or 98765 43210' : 'you@example.com'}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
-                autoComplete="email"
-                textContentType="emailAddress"
+                autoComplete={options.phone ? 'username' : 'email'}
+                textContentType={options.phone ? 'username' : 'emailAddress'}
                 returnKeyType="send"
                 onSubmitEditing={sendCode}
                 editable={!action.busy}
-                hint="We'll email you a 6-digit code. New here? The same code creates your account."
+                hint={
+                  options.phone
+                    ? "We'll send a 6-digit code by email or text message. New here? The same code creates your account."
+                    : "We'll email you a 6-digit code. New here? The same code creates your account."
+                }
               />
-              <Button label="Send code" icon="email-fast-outline" onPress={sendCode} busy={action.busy} disabled={!ready} size="lg" />
+              <Button label="Send code" icon={options.phone ? 'send-outline' : 'email-fast-outline'} onPress={sendCode} busy={action.busy} disabled={!ready} size="lg" />
             </>
           )}
 
           {step === 'code' && (
             <>
               <TextField
-                label={`Code sent to ${email}`}
+                label={`Code sent to ${shown}`}
                 value={code}
                 onChangeText={(v) => setCode(v.replace(/[^\d\s]/g, ''))}
                 placeholder="123456"
                 keyboardType="number-pad"
-                autoComplete="one-time-code"
+                autoComplete={texted ? 'sms-otp' : 'one-time-code'}
                 textContentType="oneTimeCode"
                 maxLength={7}
                 returnKeyType="done"
                 onSubmitEditing={() => verify()}
                 editable={!action.busy}
                 autoFocus
-                hint="It works for 5 minutes. Check your spam folder if it hasn't arrived."
+                hint={texted ? 'It works for 5 minutes. A text can take a minute to arrive.' : "It works for 5 minutes. Check your spam folder if it hasn't arrived."}
               />
               <Button label="Sign in" icon="login" onPress={() => verify()} busy={action.busy} size="lg" />
               <View style={styles.links}>
                 <PressableScale
                   onPress={() => {
                     action.clearError();
-                    setStep('email');
+                    setStep('contact');
                   }}
                   disabled={action.busy}
                   style={styles.link}
                 >
-                  <Text style={[type.bodyStrong, { color: theme.deep }]}>Different email</Text>
+                  <Text style={[type.bodyStrong, { color: theme.deep }]}>{texted ? 'Different number' : 'Different email'}</Text>
                 </PressableScale>
                 <PressableScale onPress={sendCode} disabled={action.busy || waitSeconds > 0} style={styles.link}>
                   <Text style={[type.bodyStrong, { color: waitSeconds > 0 ? theme.muted : theme.deep }]}>
@@ -185,7 +198,7 @@ export default function SignInScreen() {
                 onSubmitEditing={() => verify(name.trim())}
                 editable={!action.busy}
                 autoFocus
-                hint={`${email} is new here — this creates your account.`}
+                hint={`${shown} is new here — this creates your account.`}
               />
               <Button label="Create account" icon="account-plus-outline" onPress={() => verify(name.trim())} busy={action.busy} size="lg" />
             </>
