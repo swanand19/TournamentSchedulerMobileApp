@@ -39,6 +39,14 @@ export const SERVICES = [
   // Watching a match (Round 2; routeParams: sport = football | cricket, matchId)
   'WATCH_MATCH', // the sides: squads before the start, line-ups after
   'WATCH_ACTIVITY', // query: before, take — what happened, newest first
+  'KNOCKOUT_GET', // id — the knockout stage (everyone)
+  'KNOCKOUT_PRESETS', // id — owners: formats that fit the groups
+  'KNOCKOUT_APPLY', // id; { preset, thirdPlace, startDate?, endDate? }
+  'KNOCKOUT_CLEAR', // id
+  'KNOCKOUT_FIXTURE_ADD', // id; { round, label, home, away }
+  'KNOCKOUT_FIXTURE_UPDATE', // id, fixtureId
+  'KNOCKOUT_FIXTURE_DELETE', // id, fixtureId
+  'KNOCKOUT_TEAM_SET', // id, fixtureId; { side, teamId }
 
   // Tournaments
   'TOURNAMENT_LIST', // query: sport
@@ -80,6 +88,7 @@ export const SERVICES = [
   'TEAM_CREATE', // id
   'TEAM_UPDATE', // id, teamId
   'TEAM_DELETE', // id, teamId
+  'PLAYER_CONTACT_LOOKUP', // id, teamId; { contact } — who an email or number belongs to
   'PLAYER_CREATE', // id, teamId
   'PLAYER_UPDATE', // id, teamId, playerId
   'PLAYER_DELETE', // id, teamId, playerId

@@ -184,13 +184,22 @@ function StartedHub() {
         options={{
           title: name,
           headerRight: () => (
-            <PressableScale
-              onPress={() => router.push({ pathname: '/tournament/[id]/people', params: { id: String(id) } })}
-              accessibilityLabel="People and settings"
-              style={styles.headerBtn}
-            >
-              <Icon name="account-group-outline" size={24} color={theme.accent} />
-            </PressableScale>
+            <View style={styles.headerRow}>
+              <PressableScale
+                onPress={() => router.push({ pathname: '/tournament/[id]/knockout', params: { id: String(id) } })}
+                accessibilityLabel="Knockout stage"
+                style={styles.headerBtn}
+              >
+                <Icon name="tournament" size={24} color={theme.accent} />
+              </PressableScale>
+              <PressableScale
+                onPress={() => router.push({ pathname: '/tournament/[id]/people', params: { id: String(id) } })}
+                accessibilityLabel="People and settings"
+                style={styles.headerBtn}
+              >
+                <Icon name="account-group-outline" size={24} color={theme.accent} />
+              </PressableScale>
+            </View>
           ),
         }}
       />
@@ -223,6 +232,7 @@ function StartedHub() {
 const styles = StyleSheet.create({
   tabBar: { paddingHorizontal: space.lg, paddingBottom: space.md, paddingTop: space.xs, borderBottomWidth: StyleSheet.hairlineWidth, gap: space.sm },
   headerBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md },
+  headerRow: { flexDirection: 'row' },
   prompt: { borderWidth: 1, borderRadius: radius.lg, padding: space.md, gap: space.sm },
   promptRow: { flexDirection: 'row', gap: space.sm },
 });

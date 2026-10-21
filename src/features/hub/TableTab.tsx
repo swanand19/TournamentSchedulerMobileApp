@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { CricketStats, FootballStats, TeamStandingRow } from '@/api/types';
 import { Deck } from '@/components/Card';
 import EmptyState from '@/components/EmptyState';
+import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import SectionHeader from '@/components/SectionHeader';
 import { haptic } from '@/lib/haptics';
@@ -19,15 +20,38 @@ export function FootballTable({ stats }: { stats: FootballStats }) {
   const theme = useSportTheme();
   const groups = [...new Set(stats.standings.map((r) => r.groupName))].sort();
   if (stats.standings.length === 0) {
-    return <EmptyState icon="table-large" title="No table yet" message="The table fills in as matches finish." />;
+    return (
+      <View style={{ gap: space.lg }}>
+        <Champion name={stats.championName} />
+        <EmptyState icon="table-large" title="No table yet" message="The table fills in as matches finish." />
+      </View>
+    );
   }
   return (
     <View style={{ gap: space.lg }}>
+      <Champion name={stats.championName} />
       {groups.map((g) => (
         <FootballGroup key={g} name={g} rows={stats.standings.filter((r) => r.groupName === g)} />
       ))}
       <Text style={[type.caption, { color: theme.onDarkSoft }]}>{stats.basis}</Text>
     </View>
+  );
+}
+
+/** The tournament's champions, once its final is won. */
+function Champion({ name }: { name?: string | null }) {
+  const theme = useSportTheme();
+  if (!name) return null;
+  return (
+    <Deck accessibilityLabel={`${name} won the final`}>
+      <View style={styles.champion}>
+        <Icon name="trophy" size={28} color={theme.accent} />
+        <View style={{ flex: 1 }}>
+          <Text style={[type.heading, { color: theme.onDark }]}>{name}</Text>
+          <Text style={[type.caption, { color: theme.onDarkSoft }]}>Champions — they won the final.</Text>
+        </View>
+      </View>
+    </Deck>
   );
 }
 
@@ -85,10 +109,16 @@ function FootballGroup({ name, rows }: { name: string; rows: TeamStandingRow[] }
 export function CricketTable({ stats }: { stats: CricketStats }) {
   const theme = useSportTheme();
   if (stats.pointsTable.every((g) => g.rows.length === 0)) {
-    return <EmptyState icon="table-large" title="No table yet" message="The points table fills in as matches finish." />;
+    return (
+      <View style={{ gap: space.lg }}>
+        <Champion name={stats.championName} />
+        <EmptyState icon="table-large" title="No table yet" message="The points table fills in as matches finish." />
+      </View>
+    );
   }
   return (
     <View style={{ gap: space.lg }}>
+      <Champion name={stats.championName} />
       {stats.pointsTable.map((g) => (
         <Deck key={g.groupName} style={{ padding: 0, gap: 0, overflow: 'hidden' }}>
           <View style={{ padding: space.lg, paddingBottom: space.sm }}>
@@ -177,6 +207,7 @@ function Detail({ label, value }: { label: string; value: string | number }) {
 }
 
 const styles = StyleSheet.create({
+  champion: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   head: { paddingHorizontal: space.lg, paddingVertical: space.sm },
   row: { paddingHorizontal: space.lg, paddingVertical: space.md, borderTopWidth: 1, gap: space.sm },
   line: { flexDirection: 'row', alignItems: 'center', gap: 2 },

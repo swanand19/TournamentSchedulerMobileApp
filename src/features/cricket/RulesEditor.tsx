@@ -20,7 +20,8 @@ const TIES: { value: TieResolution; label: string }[] = [
 const BALLS: BallType[] = ['Leather', 'Tennis', 'Tape', 'Other'];
 const PITCHES: PitchType[] = ['Turf', 'Matting', 'Astroturf', 'Concrete', 'Other'];
 
-export default function RulesEditor({ rules, onChange }: { rules: CricketRules; onChange: (r: CricketRules) => void }) {
+/** `knockout`: the match must send a side through, so a tie can't stand and there's no draw (the server enforces it too). */
+export default function RulesEditor({ rules, onChange, knockout = false }: { rules: CricketRules; onChange: (r: CricketRules) => void; knockout?: boolean }) {
   const theme = useSportTheme();
   const set = <K extends keyof CricketRules>(key: K, value: CricketRules[K]) => onChange({ ...rules, [key]: value });
   const timed = rules.format === 'MultiInningsTimed';
@@ -63,11 +64,11 @@ export default function RulesEditor({ rules, onChange }: { rules: CricketRules; 
       <Heading text="Result" />
       <Text style={[type.label, { color: theme.muted }]}>If the scores are level</Text>
       <View style={styles.wrap}>
-        {TIES.map((t) => (
+        {TIES.filter((t) => !knockout || t.value !== 'AllowTie').map((t) => (
           <Chip key={t.value} label={t.label} onCard selected={rules.tieResolution === t.value} onPress={() => set('tieResolution', t.value)} />
         ))}
       </View>
-      {timed && <SwitchRow label="Draw allowed" value={rules.drawAllowed} onChange={(v) => set('drawAllowed', v)} />}
+      {timed && !knockout && <SwitchRow label="Draw allowed" value={rules.drawAllowed} onChange={(v) => set('drawAllowed', v)} />}
       {rules.inningsPerSide > 1 && (
         <Stepper
           label="Follow-on margin"

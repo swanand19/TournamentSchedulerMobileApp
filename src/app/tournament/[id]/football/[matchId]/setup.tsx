@@ -140,7 +140,7 @@ export default function FootballSetup() {
       minPlayersPerSide: minPlayers,
       minutesPerHalf: minutes,
       extraTimeAllowed: extraTime,
-      drawAllowed: draw,
+      drawAllowed: draw && !match.isKnockout,
       maxSubstitutions: maxSubs,
       rollingSubsAllowed: rolling,
       extraTimeMinutesPerHalf: extraTime ? etMinutes : null,
@@ -186,7 +186,7 @@ export default function FootballSetup() {
 
       <Deck>
         <Text style={[type.board, { color: theme.accent }]}>
-          GROUP {match.groupName} · MATCH {match.matchNumber}
+          {match.roundLabel ? match.roundLabel.toUpperCase() : `GROUP ${match.groupName}`} · MATCH {match.matchNumber}
         </Text>
         <View style={styles.versus}>
           <View style={styles.side}>
@@ -214,15 +214,22 @@ export default function FootballSetup() {
         <Stepper label="Minutes per half" value={minutes} min={1} max={60} onChange={(n) => { setMinutes(n); setEtMinutes((e) => Math.min(e, n)); }} />
         <Stepper label="Max substitutions" value={maxSubs} min={0} max={20} onChange={setMaxSubs} />
         <SwitchRow label="Rolling substitutions" hint="Players taken off can come back on" value={rolling} onChange={setRolling} />
-        <SwitchRow
-          label="Draw allowed"
-          hint="Turn off for a knockout tie"
-          value={draw}
-          onChange={(v) => {
-            setDraw(v);
-            if (v) setExtraTime(false); // a draw and extra time can't both apply
-          }}
-        />
+        {match.isKnockout ? (
+          // The server refuses a draw in a knockout match, so it isn't offered.
+          <Text style={[type.body, { color: theme.muted }]}>
+            {match.roundLabel ?? 'A knockout match'} needs a winner: level scores go to extra time (if on), then penalties.
+          </Text>
+        ) : (
+          <SwitchRow
+            label="Draw allowed"
+            hint="Turn off for a knockout tie"
+            value={draw}
+            onChange={(v) => {
+              setDraw(v);
+              if (v) setExtraTime(false); // a draw and extra time can't both apply
+            }}
+          />
+        )}
         <SwitchRow
           label="Extra time"
           hint="If level at full time, then penalties"

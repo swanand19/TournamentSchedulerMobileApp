@@ -28,7 +28,7 @@ export function LiveMatchCard({ match, onOpen }: { match: MatchCard; onOpen: () 
       <View style={styles.topRow}>
         <StatusChip label={line.label} tone="live" />
         <Text style={[type.label, { color: theme.onDarkSoft }]}>
-          Match {match.matchNumber}, group {match.groupName}
+          Match {match.matchNumber}, {match.roundLabel ?? `group ${match.groupName}`}
         </Text>
       </View>
 
@@ -100,7 +100,7 @@ export function MatchRow({ match, onOpen }: { match: MatchCard; onOpen: () => vo
       ]}
     >
       <View style={styles.topRow}>
-        <Text style={[type.label, { color: soft }]}>Match {match.matchNumber}</Text>
+        <Text style={[type.label, { color: soft }]}>Match {match.matchNumber}{match.roundLabel ? ` · ${match.roundLabel}` : ''}</Text>
         <StatusChip label={line.label} tone={line.tone} onDark={!onCream} />
       </View>
 

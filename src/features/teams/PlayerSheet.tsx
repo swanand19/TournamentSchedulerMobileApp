@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
-import type { BattingStyle, BowlingArm, BowlingType, CricketRole, Player, Team } from '@/api/types';
+import type { BattingStyle, BowlingArm, BowlingType, CricketRole, Player, PlayerLookup, Team } from '@/api/types';
 import Button from '@/components/Button';
 import Chip from '@/components/Chip';
 import ErrorBanner from '@/components/ErrorBanner';
@@ -26,11 +26,15 @@ import { confirm } from '@/lib/confirm';
 import { formatPhone } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useSportTheme } from '@/theme/SportTheme';
-import { space, type } from '@/theme/theme';
+import { radius, space, type } from '@/theme/theme';
 
 // Add or edit a player. Football asks for a shirt number and a position; cricket asks for the
 // role, how they bat and — only if they bowl — how they bowl, and names the style as it's picked
-// ("Slow left-arm orthodox"). The server has the final word on clashes (a taken shirt number).
+// ("Slow left-arm orthodox"). Team-mates may share a shirt number; the sheet just says who else wears it.
+//
+// Adding starts from the player's email or number: if an account uses it, the sheet shows the
+// person and adds them without a name (their account's name is used). Otherwise, or with
+// "Add someone without an email or number", it's the full form.
 //
 // The optional email (and, once the server can text codes, mobile number) links the place to the
 // player's account — now, or when they sign up with it. Once linked, the name and cricket profile are theirs (they edit them on their Account screen), so
@@ -74,13 +78,75 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
   const [phone, setPhone] = useState(formatPhone(player?.phone));
   const linked = !!player?.isLinked;
 
+  // Adding: find (email or number) → account (the person found) or form (no account / by name).
+  const [step, setStep] = useState<'find' | 'account' | 'form'>(player ? 'form' : 'find');
+  const [contact, setContact] = useState('');
+  const [found, setFound] = useState<PlayerLookup | null>(null);
+  const [notFoundNote, setNotFoundNote] = useState('');
+
   const jerseyNum = jersey.trim() === '' ? null : Number(jersey);
-  const jerseyTaken =
-    jerseyNum != null && team.players.some((p) => p.jerseyNumber === jerseyNum && p.id !== player?.id);
+  const alsoWearing =
+    jerseyNum == null ? [] : team.players.filter((p) => p.jerseyNumber === jerseyNum && p.id !== player?.id).map((p) => p.name);
   const jerseyInvalid = jersey.trim() !== '' && (!Number.isInteger(jerseyNum) || (jerseyNum ?? 0) < 0 || (jerseyNum ?? 0) > 999);
   const bowls = roleBowls(role);
 
+  const lookUp = async () => {
+    const res = await action.run(() =>
+      api.call<PlayerLookup>('PLAYER_CONTACT_LOOKUP', {
+        routeParams: { id: tournamentId, teamId: team.id },
+        body: { contact: contact.trim() },
+      }),
+    );
+    if (!res.ok) return;
+    const result = res.value;
+    if (result.found) {
+      setFound(result);
+      setStep('account');
+      return;
+    }
+    // Nobody yet: the full form, with the email or number already in its field.
+    if (result.kind === 'Email') setEmail(result.contact);
+    else setPhone(formatPhone(result.contact));
+    setNotFoundNote(
+      `No account uses ${result.display} yet. Add their name; they'll be linked when they sign up.` +
+        (result.waitingIn ? ` (A place in ${result.waitingIn} is already waiting on it.)` : ''),
+    );
+    setStep('form');
+  };
+
+  const startOver = () => {
+    action.clearError();
+    setFound(null);
+    setNotFoundNote('');
+    setStep('find');
+  };
+
+  const addFound = async () => {
+    if (!found || found.playsFor || jerseyInvalid) return;
+    const body = {
+      [found.kind === 'Email' ? 'email' : 'phone']: found.contact,
+      jerseyNumber: jerseyNum,
+      position: isCricket ? null : position.trim() || null,
+    };
+    const res = await action.run(async () => {
+      const saved = await api.call<Player>('PLAYER_CREATE', { routeParams: { id: tournamentId, teamId: team.id }, body });
+      if (isCricket && captain) {
+        await api.call('TEAM_UPDATE', {
+          routeParams: { id: tournamentId, teamId: team.id },
+          body: { name: team.name, defaultCaptainPlayerId: saved.id, setCaptain: true },
+        });
+      }
+      return saved;
+    });
+    if (!res.ok) return;
+    haptic.success();
+    onSaved();
+    onClose();
+  };
+
   const save = async () => {
+    if (step === 'find') return lookUp();
+    if (step === 'account') return addFound();
     const trimmed = name.trim();
     if (!trimmed) {
       setNameError('Every player needs a name.');
@@ -164,6 +230,40 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
     }
   };
 
+  const shirtField = (
+    <TextField
+      label="Shirt number (optional)"
+      value={jersey}
+      onChangeText={(v) => setJersey(v.replace(/[^0-9]/g, ''))}
+      placeholder="e.g. 9"
+      keyboardType="number-pad"
+      maxLength={3}
+      error={jerseyInvalid ? 'Use a whole number.' : undefined}
+      hint={alsoWearing.length > 0 ? `Also worn by ${alsoWearing.join(', ')}` : undefined}
+    />
+  );
+
+  const positionFields = (
+    <View style={{ gap: space.sm }}>
+      <Text style={[type.label, { color: theme.muted }]}>Position</Text>
+      <View style={styles.wrap}>
+        {LINES.map((l) => (
+          <Chip key={l.key} label={l.key} onCard selected={position.trim().toUpperCase() === l.key} onPress={() => setPosition(l.key)} accessibilityLabel={l.label} />
+        ))}
+      </View>
+      <TextField
+        label="Or type a position"
+        value={position}
+        onChangeText={setPosition}
+        placeholder="e.g. Left wing, CB"
+        autoCapitalize="characters"
+      />
+    </View>
+  );
+
+  const primaryLabel =
+    step === 'find' ? 'Find' : step === 'account' ? `Add to ${team.name}` : player ? 'Save changes' : 'Add to squad';
+
   return (
     <Sheet
       visible={visible}
@@ -173,132 +273,160 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
       footer={
         <>
           <Button label="Cancel" variant="secondary" onPress={onClose} style={{ flex: 1 }} />
-          <Button label={player ? 'Save changes' : 'Add to squad'} icon="check" onPress={save} busy={action.busy} style={{ flex: 2 }} />
+          <Button
+            label={primaryLabel}
+            icon={step === 'find' ? 'account-search-outline' : 'check'}
+            onPress={save}
+            busy={action.busy}
+            disabled={(step === 'find' && contact.trim() === '') || (step === 'account' && !!found?.playsFor)}
+            style={{ flex: 2 }}
+          />
         </>
       }
     >
       <ErrorBanner message={action.error?.message} />
-      <TextField
-        label="Player name"
-        value={name}
-        onChangeText={(v) => {
-          setName(v);
-          if (nameError) setNameError('');
-        }}
-        placeholder="e.g. J. Henderson"
-        autoCapitalize="words"
-        returnKeyType="next"
-        error={nameError}
-        editable={!linked}
-        hint={linked ? 'Their account name — they change it themselves.' : undefined}
-      />
-      <TextField
-        label="Their sign-in email (optional)"
-        value={email}
-        onChangeText={setEmail}
-        placeholder="e.g. rahul@example.com"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="off"
-        hint={
-          linked
-            ? 'Linked to their account.'
-            : player?.email
-              ? 'Links when they sign up with this email.'
-              : 'Links this place to their account — now, or when they sign up.'
-        }
-      />
-      {showPhone && (
-        <TextField
-          label="Their mobile number (optional)"
-          value={phone}
-          onChangeText={setPhone}
-          placeholder="e.g. 98765 43210"
-          keyboardType="phone-pad"
-          autoComplete="off"
-          hint={
-            linked
-              ? 'Either the email or the number keeps them linked.'
-              : player?.phone
-                ? 'Links when they sign in with this number.'
-                : 'Or their number: links when they sign in with it.'
-          }
-        />
-      )}
-      <TextField
-        label="Shirt number (optional)"
-        value={jersey}
-        onChangeText={(v) => setJersey(v.replace(/[^0-9]/g, ''))}
-        placeholder="e.g. 9"
-        keyboardType="number-pad"
-        maxLength={3}
-        error={jerseyInvalid ? 'Use a whole number.' : jerseyTaken ? `Number ${jerseyNum} is already taken on this team.` : undefined}
-        hint={jerseyNum != null && !jerseyTaken ? `Number ${jerseyNum} is free` : undefined}
-      />
-
-      {!isCricket ? (
-        <View style={{ gap: space.sm }}>
-          <Text style={[type.label, { color: theme.muted }]}>Position</Text>
-          <View style={styles.wrap}>
-            {LINES.map((l) => (
-              <Chip key={l.key} label={l.key} onCard selected={position.trim().toUpperCase() === l.key} onPress={() => setPosition(l.key)} accessibilityLabel={l.label} />
-            ))}
-          </View>
-          <TextField
-            label="Or type a position"
-            value={position}
-            onChangeText={setPosition}
-            placeholder="e.g. Left wing, CB"
-            autoCapitalize="characters"
-          />
-        </View>
-      ) : linked ? (
+      {step === 'find' ? (
         <>
-          <Text style={[type.body, { color: theme.muted }]}>
-            {`${name} keeps their own cricket profile on their account; it's used in every team they're linked to.`}
-          </Text>
-          <SwitchRow label="Team captain" hint="Pre-selected as captain when an XI is picked" value={captain} onChange={setCaptain} />
+          <TextField
+            label={options.phone ? 'Their email or mobile number' : 'Their sign-in email'}
+            value={contact}
+            onChangeText={setContact}
+            placeholder={options.phone ? 'e.g. rahul@example.com or 98765 43210' : 'e.g. rahul@example.com'}
+            keyboardType={options.phone ? 'default' : 'email-address'}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="off"
+            returnKeyType="search"
+            onSubmitEditing={lookUp}
+            hint="If they have an account, you'll see their name and can add them straight away."
+          />
+          <Button label="Add someone without an email or number" variant="ghost" onPress={() => setStep('form')} />
+        </>
+      ) : step === 'account' && found ? (
+        <>
+          <View style={[styles.found, { backgroundColor: theme.chip }]} accessibilityRole="summary">
+            <Text style={[type.bodyStrong, { color: theme.ink }]}>{found.name}</Text>
+            <Text style={[type.caption, { color: theme.muted }]}>
+              {found.playsFor
+                ? `Already plays for ${found.playsFor} in this tournament, so they can't join another team.`
+                : `Has an account (${found.display}). Their own name${isCricket ? ' and cricket profile are' : ' is'} used.`}
+            </Text>
+          </View>
+          <Button label="Use another email or number" variant="ghost" onPress={startOver} />
+          {!found.playsFor && (
+            <>
+              {shirtField}
+              {isCricket ? (
+                <SwitchRow label="Team captain" hint="Pre-selected as captain when an XI is picked" value={captain} onChange={setCaptain} />
+              ) : (
+                positionFields
+              )}
+            </>
+          )}
         </>
       ) : (
         <>
-          <Group label="Role">
-            {CRICKET_ROLES.map((r) => (
-              <Chip key={r.value} label={r.label} onCard selected={role === r.value} onPress={() => setRole(r.value)} />
-            ))}
-          </Group>
-          <Group label="Bats">
-            {BATTING_STYLES.map((b) => (
-              <Chip key={b.value} label={b.label} onCard selected={bat === b.value} onPress={() => setBat(bat === b.value ? null : b.value)} />
-            ))}
-          </Group>
-          {bowls && (
+          {notFoundNote !== '' && <Text style={[type.body, { color: theme.muted }]}>{notFoundNote}</Text>}
+          <TextField
+            label="Player name"
+            value={name}
+            onChangeText={(v) => {
+              setName(v);
+              if (nameError) setNameError('');
+            }}
+            placeholder="e.g. J. Henderson"
+            autoCapitalize="words"
+            returnKeyType="next"
+            error={nameError}
+            editable={!linked}
+            hint={linked ? 'Their account name — they change it themselves.' : undefined}
+          />
+          <TextField
+            label="Their sign-in email (optional)"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="e.g. rahul@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="off"
+            hint={
+              linked
+                ? 'Linked to their account.'
+                : player?.email
+                  ? 'Links when they sign up with this email.'
+                  : 'Links this place to their account — now, or when they sign up.'
+            }
+          />
+          {showPhone && (
+            <TextField
+              label="Their mobile number (optional)"
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="e.g. 98765 43210"
+              keyboardType="phone-pad"
+              autoComplete="off"
+              hint={
+                linked
+                  ? 'Either the email or the number keeps them linked.'
+                  : player?.phone
+                    ? 'Links when they sign in with this number.'
+                    : 'Or their number: links when they sign in with it.'
+              }
+            />
+          )}
+          {shirtField}
+
+          {!isCricket ? (
+            positionFields
+          ) : linked ? (
             <>
-              <Group label="Bowling arm">
-                {BOWLING_ARMS.map((a) => (
-                  <Chip key={a.value} label={a.label} onCard selected={arm === a.value} onPress={() => setArm(a.value)} />
-                ))}
-              </Group>
-              <Group label="Bowling type">
-                {BOWLING_TYPES.map((b) => (
-                  <Chip key={b.value} label={b.label} onCard selected={bowl === b.value} onPress={() => setBowl(b.value)} />
-                ))}
-              </Group>
-              <Text style={[type.bodyStrong, { color: arm && bowl ? theme.successInk : theme.muted }]}>
-                {bowlingStyleLabel(arm, bowl) ?? 'Pick an arm and a type to name the style.'}
+              <Text style={[type.body, { color: theme.muted }]}>
+                {`${name} keeps their own cricket profile on their account; it's used in every team they're linked to.`}
               </Text>
+              <SwitchRow label="Team captain" hint="Pre-selected as captain when an XI is picked" value={captain} onChange={setCaptain} />
+            </>
+          ) : (
+            <>
+              <Group label="Role">
+                {CRICKET_ROLES.map((r) => (
+                  <Chip key={r.value} label={r.label} onCard selected={role === r.value} onPress={() => setRole(r.value)} />
+                ))}
+              </Group>
+              <Group label="Bats">
+                {BATTING_STYLES.map((b) => (
+                  <Chip key={b.value} label={b.label} onCard selected={bat === b.value} onPress={() => setBat(bat === b.value ? null : b.value)} />
+                ))}
+              </Group>
+              {bowls && (
+                <>
+                  <Group label="Bowling arm">
+                    {BOWLING_ARMS.map((a) => (
+                      <Chip key={a.value} label={a.label} onCard selected={arm === a.value} onPress={() => setArm(a.value)} />
+                    ))}
+                  </Group>
+                  <Group label="Bowling type">
+                    {BOWLING_TYPES.map((b) => (
+                      <Chip key={b.value} label={b.label} onCard selected={bowl === b.value} onPress={() => setBowl(b.value)} />
+                    ))}
+                  </Group>
+                  <Text style={[type.bodyStrong, { color: arm && bowl ? theme.successInk : theme.muted }]}>
+                    {bowlingStyleLabel(arm, bowl) ?? 'Pick an arm and a type to name the style.'}
+                  </Text>
+                </>
+              )}
+              <Stepper
+                label="Usual batting position"
+                hint="Pre-fills the batting order when an XI is picked"
+                value={order}
+                min={0}
+                max={11}
+                display={order === 0 ? 'Any' : String(order)}
+                onChange={setOrder}
+              />
+              <SwitchRow label="Team captain" hint="Pre-selected as captain when an XI is picked" value={captain} onChange={setCaptain} />
             </>
           )}
-          <Stepper
-            label="Usual batting position"
-            hint="Pre-fills the batting order when an XI is picked"
-            value={order}
-            min={0}
-            max={11}
-            display={order === 0 ? 'Any' : String(order)}
-            onChange={setOrder}
-          />
-          <SwitchRow label="Team captain" hint="Pre-selected as captain when an XI is picked" value={captain} onChange={setCaptain} />
         </>
       )}
 
@@ -333,4 +461,5 @@ function Group({ label, children }: { label: string; children: ReactNode }) {
 
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  found: { borderRadius: radius.lg, padding: space.lg, gap: space.xs },
 });

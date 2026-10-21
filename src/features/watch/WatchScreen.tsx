@@ -94,7 +94,7 @@ function PreviewBoard({ w }: { w: WatchMatch }) {
     <Deck>
       <View style={styles.boardTop}>
         <Text style={[type.eyebrow, { color: theme.accent, flex: 1 }]} numberOfLines={2}>
-          {w.tournamentName} · Group {w.groupName} · Match {w.matchNumber}
+          {w.tournamentName} · {w.roundLabel ?? `Group ${w.groupName}`} · Match {w.matchNumber}
         </Text>
         <StatusChip label="Not started" tone="setup" onDark />
       </View>

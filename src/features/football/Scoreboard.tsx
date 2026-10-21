@@ -49,7 +49,7 @@ export default function Scoreboard({ match, events }: { match: FootballMatch; ev
           <Text style={[type.board, { color: theme.accent }]}>{match.currentPeriodLabel.toUpperCase()}</Text>
           <StatusChip label={state.label} tone={state.tone} onDark />
           <Text style={[type.caption, { color: theme.onDarkSoft }]}>
-            Group {match.groupName} · Match {match.matchNumber}
+            {match.roundLabel ?? `Group ${match.groupName}`} · Match {match.matchNumber}
           </Text>
         </View>
         {match.status !== 'Completed' && <MatchClock match={match} />}

@@ -185,6 +185,23 @@ export type Team = {
   players: Player[];
 };
 
+/** PLAYER_CONTACT_LOOKUP: who an email or number belongs to, before adding them to a team. */
+export type PlayerLookup = {
+  /** Which PLAYER_CREATE field to send `contact` in. */
+  kind: 'Email' | 'Phone';
+  /** As stored: lower-case email, or E.164. */
+  contact: string;
+  /** For the screen: "+91 98765 43210", or the email. */
+  display: string;
+  /** An account uses it: the player can be added without a name. */
+  found: boolean;
+  name: string | null;
+  /** The team they already play for in this tournament (they can't be in two). */
+  playsFor: string | null;
+  /** A place in this tournament already waiting on this email or number. */
+  waitingIn: string | null;
+};
+
 // Joining a team with its code (Models/Accounts/PlayerAccountModels.cs)
 
 export type JoinPlace = { playerId: number; name: string; detail: string | null };
@@ -278,10 +295,16 @@ export type ScheduleHistoryItem = {
 export type FootballMatchStatus = 'NotStarted' | 'InProgress' | 'Paused' | 'Completed' | 'PenaltyShootout';
 export type PeriodState = 'NotStarted' | 'InPlay' | 'Stopped' | 'Ended';
 
+export type MatchStage = 'Group' | 'Knockout';
+
 export type FootballMatchCard = {
   id: number;
   sport: 'Football';
   groupName: string;
+  /** "Knockout" for a knockout match (groupName is then empty); older servers send nothing. */
+  stage?: MatchStage;
+  /** "Semi-final 1"; null in a group. */
+  roundLabel?: string | null;
   matchNumber: number;
   homeTeamName: string;
   awayTeamName: string;
@@ -304,6 +327,8 @@ export type CricketMatchCard = {
   id: number;
   sport: 'Cricket';
   groupName: string;
+  stage?: MatchStage;
+  roundLabel?: string | null;
   matchNumber: number;
   homeTeamName: string;
   awayTeamName: string;
@@ -340,6 +365,9 @@ export type FootballMatch = {
   scoring: Scoring | null;
   tournamentId: number;
   groupName: string;
+  /** A knockout match must have a winner: no draws (the setup doesn't offer one). */
+  isKnockout?: boolean;
+  roundLabel?: string | null;
   matchNumber: number;
   homeTeamId: number | null;
   awayTeamId: number | null;
@@ -483,6 +511,9 @@ export type CricketRules = {
 
 export type CricketSetupOptions = {
   id: number;
+  /** A knockout match: no "allow a tie", no draw — it must send a side through. */
+  isKnockout?: boolean;
+  roundLabel?: string | null;
   homeTeamId: number | null;
   awayTeamId: number | null;
   homeTeamName: string;
@@ -637,6 +668,8 @@ export type CricketActions = {
   canEnforceFollowOn: boolean;
   canStartSuperOver: boolean;
   canComplete: boolean;
+  /** "No result" may be recorded — never in a knockout match (award it instead). Older servers: absent. */
+  canRecordNoResult?: boolean;
   canReduceOvers: boolean;
   nextBattingTeamId: number | null;
   nextBowlingTeamId: number | null;
@@ -656,6 +689,8 @@ export type CricketMatchState = {
   scoring: Scoring | null;
   tournamentId: number;
   groupName: string;
+  isKnockout?: boolean;
+  roundLabel?: string | null;
   matchNumber: number;
   homeTeamId: number | null;
   awayTeamId: number | null;
@@ -838,6 +873,9 @@ export type FootballStats = {
   tournamentId: number;
   tournamentName: string;
   basis: string;
+  /** The Final's winner, once it has one. */
+  championTeamId?: number | null;
+  championName?: string | null;
   summary: {
     totalMatches: number;
     matchesCompleted: number;
@@ -906,6 +944,8 @@ export type CricketStats = {
   tournamentId: number;
   tournamentName: string;
   basis: string;
+  championTeamId?: number | null;
+  championName?: string | null;
   summary: {
     totalMatches: number;
     matchesCompleted: number;
@@ -1089,6 +1129,8 @@ export type WatchMatch = {
   tournamentId: number;
   tournamentName: string;
   groupName: string;
+  /** "Semi-final 1" for a knockout match, shown instead of the group. */
+  roundLabel?: string | null;
   matchNumber: number;
   phase: WatchPhase;
   formatLine: string | null;
@@ -1136,3 +1178,65 @@ export type ActivityItem = {
 
 /** Newest first; ask again with `before` = the last id while `hasMore`. */
 export type ActivityPage = { items: ActivityItem[]; hasMore: boolean };
+
+// ---------------------------------------------------------------------------------------------
+// Knockouts (Models/Knockouts/KnockoutModels.cs, 2026-10-21)
+
+export type KnockoutRound =
+  | 'Eliminator' | 'Qualifier' | 'RoundOf16' | 'QuarterFinal' | 'SemiFinal' | 'ThirdPlace' | 'Final' | 'Other';
+
+export type KnockoutSlotKind = 'Team' | 'GroupPlace' | 'WinnerOf' | 'LoserOf';
+
+/** Where a side comes from: a team, a place in a group, or the winner / loser of an earlier knockout match (by its order). */
+export type KnockoutSlot = {
+  kind: KnockoutSlotKind;
+  teamId: number | null;
+  groupName: string | null;
+  place: number | null;
+  fromOrder: number | null;
+};
+
+export type KnockoutSide = {
+  /** The team, once known. */
+  teamId: number | null;
+  teamName: string | null;
+  /** "Group A winner", "Winner of Semi-final 1", or the team's name. */
+  source: string;
+  slot: KnockoutSlot;
+  /** An owner put this team here by hand. */
+  setByOwner: boolean;
+};
+
+export type KnockoutFixture = {
+  id: number;
+  order: number;
+  round: KnockoutRound;
+  label: string;
+  home: KnockoutSide;
+  away: KnockoutSide;
+  /** The playable match, once the tournament has started. */
+  matchId: number | null;
+  matchNumber: number | null;
+  status: string | null;
+  resultLine: string | null;
+  winnerTeamId: number | null;
+  /** Hasn't started: its sides may change and it may be deleted. */
+  canChange: boolean;
+};
+
+export type KnockoutStage = {
+  fixtures: KnockoutFixture[];
+  groups: { groupName: string; teams: number; finished: boolean }[];
+  /** A knockout match has started: presets can no longer replace the stage. */
+  started: boolean;
+  championTeamId: number | null;
+  championName: string | null;
+};
+
+export type KnockoutPreset = {
+  id: string;
+  name: string;
+  description: string;
+  offersThirdPlace: boolean;
+  fixtures: { round: KnockoutRound; label: string; home: string; away: string }[];
+};

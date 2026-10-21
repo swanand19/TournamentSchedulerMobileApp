@@ -165,6 +165,19 @@ export default function CricketLive() {
         if (await confirm({ title: 'No result?', message: 'The match is recorded as abandoned — a point each.', confirmLabel: 'Record no result', destructive: true })) {
           await act(() => call('CRICKET_COMPLETE', { noResult: true }), haptic.heavy);
         }
+        return;
+      case 'awardHome':
+      case 'awardAway': {
+        const teamId = m === 'awardHome' ? state.homeTeamId : state.awayTeamId;
+        const name = m === 'awardHome' ? state.homeTeamName : state.awayTeamName;
+        const ok = await confirm({
+          title: `Award it to ${name}?`,
+          message: `${state.roundLabel ?? 'This knockout match'} can't end without a side going through. ${name} go through.`,
+          confirmLabel: `Award to ${name}`,
+          destructive: true,
+        });
+        if (ok) await act(() => call('CRICKET_COMPLETE', { awardWinnerTeamId: teamId }), haptic.heavy);
+      }
     }
   };
 

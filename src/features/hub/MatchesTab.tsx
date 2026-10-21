@@ -5,6 +5,7 @@ import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
 
 import { api } from '@/api/client';
 import type { MatchCard } from '@/api/types';
+import Button from '@/components/Button';
 import Chip from '@/components/Chip';
 import EmptyState from '@/components/EmptyState';
 import ErrorBanner from '@/components/ErrorBanner';
@@ -56,10 +57,16 @@ export default function MatchesTab({ tournamentId, active }: { tournamentId: num
   const all = matches.data;
   const live = all.filter((m) => phaseOf(m) === 'live');
   const shown = filter === 'all' ? all : all.filter((m) => phaseOf(m) === filter);
-  const groups = [...new Set(shown.map((m) => m.groupName))];
+  const groups = [...new Set(shown.filter((m) => m.stage !== 'Knockout').map((m) => m.groupName))];
+  const knockouts = shown.filter((m) => m.stage === 'Knockout' && !(pinLive && phaseOf(m) === 'live'));
   const pinLive = filter === 'all' || filter === 'live';
 
-  const open = (m: MatchCard) => openMatch(router, tournamentId, m, access.canScore);
+  const openKnockouts = () => router.push({ pathname: '/tournament/[id]/knockout', params: { id: String(tournamentId) } });
+  // A knockout match still waiting for its teams can't be set up: the bracket says what it's waiting for.
+  const open = (m: MatchCard) =>
+    access.canScore && m.status === 'NotStarted' && (m.homeTeamId == null || m.awayTeamId == null)
+      ? openKnockouts()
+      : openMatch(router, tournamentId, m, access.canScore);
 
   return (
     <HubPage onRefresh={matches.refresh} refreshing={matches.refreshing}>
@@ -103,6 +110,18 @@ export default function MatchesTab({ tournamentId, active }: { tournamentId: num
           </View>
         );
       })}
+
+      {knockouts.length > 0 && (
+        <View style={{ gap: space.sm }}>
+          <SectionHeader
+            title="Knockouts"
+            right={<Button label="Bracket" icon="tournament" size="sm" variant="ghost" onPress={openKnockouts} />}
+          />
+          {knockouts.map((m) => (
+            <MatchRow key={m.id} match={m} onOpen={() => open(m)} />
+          ))}
+        </View>
+      )}
     </HubPage>
   );
 }

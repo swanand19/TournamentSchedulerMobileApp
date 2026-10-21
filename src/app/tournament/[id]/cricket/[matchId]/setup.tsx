@@ -159,7 +159,7 @@ export default function CricketSetup() {
     >
       <Deck>
         <Text style={[type.board, { color: theme.accent }]}>
-          GROUP {loaded.state.groupName} · MATCH {loaded.state.matchNumber}
+          {loaded.state.roundLabel ? loaded.state.roundLabel.toUpperCase() : `GROUP ${loaded.state.groupName}`} · MATCH {loaded.state.matchNumber}
         </Text>
         <Text style={[type.title, { color: theme.onDark }]}>
           {o.homeTeamName.toUpperCase()} <Text style={{ color: theme.accent }}>VS</Text> {o.awayTeamName.toUpperCase()}
@@ -216,6 +216,7 @@ export default function CricketSetup() {
         {editing && (
           <RulesEditor
             rules={rules}
+            knockout={!!o.isKnockout}
             onChange={(r) => {
               setRules(r);
               setPreset('Custom');

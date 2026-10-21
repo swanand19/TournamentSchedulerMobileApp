@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
 import { ApiError } from '@/api/errors';
-import type { SavedSchedule } from '@/api/types';
+import type { KnockoutStage, SavedSchedule } from '@/api/types';
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
 import ErrorBanner from '@/components/ErrorBanner';
@@ -23,8 +23,9 @@ import { haptic } from '@/lib/haptics';
 import { useSportTheme } from '@/theme/SportTheme';
 import { fonts, radius, space, type } from '@/theme/theme';
 
-// Before kick-off: a three-step checklist — teams, schedule, start — each saying where it stands
-// and offering its one action, then the fixtures that will be created.
+// Before kick-off: a checklist — teams, schedule, the knockout stage (optional), start — each saying
+// where it stands and offering its one action, then the fixtures that will be created. A tournament
+// can skip the groups and be knockouts only.
 
 export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
   const router = useRouter();
@@ -42,8 +43,10 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
     }
   }, [id]);
   const schedule = useQuery(fetchSchedule);
+  const knockoutFetcher = useCallback(() => api.call<KnockoutStage>('KNOCKOUT_GET', { routeParams: { id } }), [id]);
+  const knockout = useQuery(knockoutFetcher);
 
-  if (teams.loading || schedule.loading) return <Skeleton rows={3} height={140} />;
+  if (teams.loading || schedule.loading || knockout.loading) return <Skeleton rows={3} height={140} />;
 
   const teamCount = teams.data?.length ?? 0;
   const playerCount = teams.data?.reduce((n, t) => n + t.players.length, 0) ?? 0;
@@ -51,15 +54,21 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
   const rounds = s ? new Set(s.groups.flatMap((g) => g.fixtures.map((f) => f.round))).size : 0;
   const teamsDone = teamCount >= 2;
   const scheduleDone = !!s;
-  const readyCount = (teamsDone ? 1 : 0) + (scheduleDone ? 1 : 0);
+  const knockoutMatches = knockout.data?.fixtures.length ?? 0;
+  // Either is enough to start: groups, a knockout stage, or both.
+  const fixturesDone = scheduleDone || knockoutMatches > 0;
+  const totalMatches = (s?.totalMatches ?? 0) + knockoutMatches;
+  const readyCount = (teamsDone ? 1 : 0) + (fixturesDone ? 1 : 0);
 
   const params = { id: String(id) };
 
   const start = async () => {
-    if (!s) return;
+    if (!fixturesDone) return;
     const ok = await confirm({
       title: 'Start the tournament?',
-      message: `This creates ${plural(s.totalMatches, 'match', 'matches')} from the active schedule and locks it. The schedule can't be changed afterwards.`,
+      message: s
+        ? `This creates ${plural(totalMatches, 'match', 'matches')} and locks the schedule. The schedule can't be changed afterwards; the knockout stage still can, until its matches start.`
+        : `This creates the ${plural(totalMatches, 'knockout match', 'knockout matches')}.`,
       confirmLabel: 'Start',
     });
     if (!ok) return;
@@ -73,11 +82,12 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
   return (
     <View style={{ gap: space.lg }}>
       <ErrorBanner
-        message={(action.error ?? teams.error ?? schedule.error)?.message}
+        message={(action.error ?? teams.error ?? schedule.error ?? knockout.error)?.message}
         actionLabel={action.error ? undefined : 'Try again'}
         onAction={() => {
           teams.refresh();
           schedule.refresh();
+          knockout.refresh();
         }}
       />
 
@@ -91,7 +101,7 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
       <SectionHeader
         eyebrow="Setup checklist"
         title="Preparation"
-        right={<StatusChip label={`${readyCount} of 3 ready`} tone={readyCount === 2 ? 'ready' : 'setup'} onDark />}
+        right={<StatusChip label={`${readyCount} of 2 ready`} tone={readyCount === 2 ? 'ready' : 'setup'} onDark />}
       />
 
       <Step
@@ -117,7 +127,7 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
         body={
           s
             ? `${plural(s.groups.length, 'group')} · ${plural(s.totalMatches, 'match', 'matches')} across ${plural(rounds, 'round')} · ${s.matchesPerTeam} per team.`
-            : 'Draw the groups and generate round-robin fixtures.'
+            : 'Draw the groups and generate round-robin fixtures. Knockouts only? Skip this and set up the knockout stage.'
         }
       >
         <View style={styles.btnRow}>
@@ -143,10 +153,30 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
 
       <Step
         n={3}
+        done={knockoutMatches > 0}
+        title="Knockout stage"
+        status={knockoutMatches > 0 ? { label: plural(knockoutMatches, 'match', 'matches'), tone: 'ready' } : { label: 'Optional', tone: 'done' }}
+        body={
+          knockoutMatches > 0
+            ? 'Sides fill in by themselves as groups and matches finish. You can change it until its matches start.'
+            : 'Semi-finals, a final, IPL playoffs — or a straight knockout of every team. Set it up now or later.'
+        }
+      >
+        <Button
+          label={knockoutMatches > 0 ? 'Open' : 'Set up knockouts'}
+          icon="tournament"
+          variant="secondary"
+          disabled={!teamsDone}
+          onPress={() => router.push({ pathname: '/tournament/[id]/knockout', params })}
+        />
+      </Step>
+
+      <Step
+        n={4}
         done={false}
         title="Start tournament"
-        status={scheduleDone ? { label: 'Ready to start', tone: 'accent' } : { label: 'Waiting', tone: 'done' }}
-        body="Creates every match from the active schedule so they can be scored live."
+        status={fixturesDone ? { label: 'Ready to start', tone: 'accent' } : { label: 'Waiting', tone: 'done' }}
+        body="Creates every match so they can be scored live."
       >
         <Button
           label="Start tournament"
@@ -154,7 +184,7 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
           size="lg"
           onPress={start}
           busy={action.busy}
-          disabled={!scheduleDone || !teamsDone}
+          disabled={!fixturesDone || !teamsDone}
         />
         <View style={styles.lockNote}>
           <Icon name="lock-outline" size={14} color={theme.muted} />

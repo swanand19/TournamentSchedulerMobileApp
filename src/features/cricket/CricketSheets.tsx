@@ -380,7 +380,9 @@ export function ReduceOversSheet({
   );
 }
 
-export type MoreAction = 'scorecard' | 'reduce' | 'declare' | 'endInnings' | 'signOff' | 'noResult' | 'penalty' | 'followOn' | 'superOver' | 'replace';
+export type MoreAction =
+  | 'scorecard' | 'reduce' | 'declare' | 'endInnings' | 'signOff' | 'noResult' | 'awardHome' | 'awardAway'
+  | 'penalty' | 'followOn' | 'superOver' | 'replace';
 
 /** Everything the scorer does rarely, in one menu — each only when the engine allows it. */
 export function MoreSheet({
@@ -406,7 +408,10 @@ export function MoreSheet({
     { key: 'declare', label: 'Declare the innings', icon: 'flag-outline', show: a.canDeclare },
     { key: 'endInnings', label: 'End innings / stop play', icon: 'stop-circle-outline', show: a.canEndInnings, danger: true },
     { key: 'signOff', label: 'Sign off the match', icon: 'flag-checkered', show: a.canComplete },
-    { key: 'noResult', label: 'Record no result', icon: 'weather-lightning-rainy', show: a.canComplete, danger: true },
+    { key: 'noResult', label: 'Record no result', icon: 'weather-lightning-rainy', show: a.canComplete && a.canRecordNoResult !== false, danger: true },
+    // A knockout match can't end without a side going through: one that can't be finished is awarded.
+    { key: 'awardHome', label: `Award to ${state.homeTeamName}`, icon: 'trophy-outline', show: a.canComplete && a.canRecordNoResult === false, danger: true },
+    { key: 'awardAway', label: `Award to ${state.awayTeamName}`, icon: 'trophy-outline', show: a.canComplete && a.canRecordNoResult === false, danger: true },
   ];
   return (
     <Sheet visible={visible} onClose={onClose} dark title="Match actions">

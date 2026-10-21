@@ -37,6 +37,7 @@ function TournamentStack() {
     >
       <Stack.Screen name="index" options={{ title: '' }} />
       <Stack.Screen name="people" options={{ title: 'People & settings' }} />
+      <Stack.Screen name="knockout" options={{ title: 'Knockouts' }} />
       <Stack.Screen name="teams" options={{ title: 'Teams' }} />
       <Stack.Screen name="team/[teamId]" options={{ title: 'Squad' }} />
       <Stack.Screen name="schedule" options={{ title: 'Build the schedule' }} />
