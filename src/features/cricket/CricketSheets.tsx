@@ -6,12 +6,13 @@ import Button from '@/components/Button';
 import ErrorBanner from '@/components/ErrorBanner';
 import PlayerGrid, { type GridPlayer } from '@/components/PlayerGrid';
 import SegmentedControl from '@/components/SegmentedControl';
+import GlassMenu from '@/components/GlassMenu';
+import type { IconName } from '@/components/Icon';
 import Sheet from '@/components/Sheet';
 import Stepper from '@/components/Stepper';
 import DismissalGrid, { orderDismissals } from '@/features/cricket/DismissalGrid';
 import { dismissalCanTakeNonStriker, dismissalTakesFielder } from '@/lib/cricketLabels';
-import { useSportTheme } from '@/theme/SportTheme';
-import { type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
 
 // The cricket console's pickers. The dismissal list comes from the engine's possibleDismissals —
 // so a free hit or a wide offers only what can actually happen off that ball — and the batter and
@@ -45,6 +46,7 @@ export function WicketSheet({
   /** "Wide" / "No ball" when a modifier is on, so the scorer sees what ball this is. */
   extraLabel?: string;
 }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const live = state.current!;
   const dismissals = state.actions.possibleDismissals;
@@ -197,6 +199,7 @@ export function PickPlayerSheet({
   /** Next batter only: the batter still in, and whether the newcomer faces by default. */
   strike?: { survivorName: string; newOnStrike: boolean };
 }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const [chosen, setChosen] = useState<number | null | undefined>(undefined);
   const [facing, setFacing] = useState<'new' | 'survivor'>(strike?.newOnStrike === false ? 'survivor' : 'new');
@@ -269,6 +272,7 @@ export function ReplacePlayerSheet({
   busy: boolean;
   error?: string;
 }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const a = state.actions;
   const wrongOnes = [
@@ -350,6 +354,7 @@ export function ReduceOversSheet({
   busy: boolean;
   error?: string;
 }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const live = state.current!;
   const limit = live.oversLimit ?? 20;
@@ -396,9 +401,10 @@ export function MoreSheet({
   state: CricketMatchState;
   onAction: (a: MoreAction) => void;
 }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const a = state.actions;
-  const items: { key: MoreAction; label: string; icon: Parameters<typeof Button>[0]['icon']; show: boolean; danger?: boolean }[] = [
+  const items: { key: MoreAction; label: string; icon: IconName; show: boolean; danger?: boolean }[] = [
     { key: 'scorecard', label: 'Full scorecard', icon: 'table-large', show: true },
     { key: 'penalty', label: '+5 penalty runs', icon: 'plus-box-outline', show: a.canRecordBall && state.rules.penaltyRunsAllowed },
     { key: 'reduce', label: 'Reduce overs (rain)', icon: 'weather-pouring', show: a.canReduceOvers },
@@ -413,6 +419,20 @@ export function MoreSheet({
     { key: 'awardHome', label: `Award to ${state.homeTeamName}`, icon: 'trophy-outline', show: a.canComplete && a.canRecordNoResult === false, danger: true },
     { key: 'awardAway', label: `Award to ${state.awayTeamName}`, icon: 'trophy-outline', show: a.canComplete && a.canRecordNoResult === false, danger: true },
   ];
+  const note = 'Only the actions the laws allow right now are shown.';
+  // Glass: a menu that springs from the ⋯ button rather than a sheet from the bottom edge.
+  if (theme.mode === 'dark') {
+    return (
+      <GlassMenu
+        visible={visible}
+        onClose={onClose}
+        title="Match actions"
+        items={items.filter((i) => i.show).map((i) => ({ key: i.key, label: i.label, icon: i.icon, apart: i.danger }))}
+        onPick={onAction}
+        footnote={note}
+      />
+    );
+  }
   return (
     <Sheet visible={visible} onClose={onClose} dark title="Match actions">
       {items
@@ -420,7 +440,7 @@ export function MoreSheet({
         .map((i) => (
           <Button key={i.key} label={i.label} icon={i.icon} variant={i.danger ? 'ghost' : 'deck'} onPress={() => onAction(i.key)} />
         ))}
-      <Text style={[type.caption, { color: theme.onDarkSoft }]}>Only the actions the laws allow right now are shown.</Text>
+      <Text style={[type.caption, { color: theme.onDarkSoft }]}>{note}</Text>
     </Sheet>
   );
 }

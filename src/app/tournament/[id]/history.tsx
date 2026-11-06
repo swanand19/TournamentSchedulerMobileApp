@@ -13,13 +13,14 @@ import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
 import { parseUtc, plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
 // The last five approved schedules, as a native form sheet. Any of them can be made the active one
 // until the tournament starts. (Android form sheets can't show a header, so the title is content.)
 
 export default function ScheduleHistory() {
+  const { type } = useTypography();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const theme = useSportTheme();
@@ -45,7 +46,7 @@ export default function ScheduleHistory() {
   return (
     <ScrollView style={{ backgroundColor: theme.cream }} contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + space.xl }]}>
       <Text accessibilityRole="header" style={[type.heading, { color: theme.ink }]}>
-        SCHEDULE HISTORY
+        Schedule history
       </Text>
       <Text style={[type.body, { color: theme.muted }]}>
         {isStarted

@@ -7,7 +7,7 @@ import type { CricketActions, CricketMatchAwards, CricketMatchState, CricketScor
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
 import Icon from '@/components/Icon';
-import PressableScale from '@/components/PressableScale';
+import HeaderButton from '@/components/HeaderButton';
 import ScoringBanner, { isScoringLocked } from '@/components/ScoringBanner';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
@@ -23,8 +23,8 @@ import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
 // The cricket scoring console. Every call answers with the whole match state — including what's
 // legal next — so this screen never decides a rule: it draws the scoreboard, the keypad when a
@@ -33,6 +33,7 @@ import { radius, space, type } from '@/theme/theme';
 type Open = { kind: 'wicket' | 'more' | 'reduce' | 'replace' | null; open: boolean; key: number };
 
 export default function CricketLive() {
+  const { type } = useTypography();
   const router = useRouter();
   const theme = useSportTheme();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
@@ -221,17 +222,21 @@ export default function CricketLive() {
           title: `${state.homeTeamName} v ${state.awayTeamName}`,
           headerRight: () =>
             locked ? (
-              <PressableScale onPress={() => more('scorecard')} accessibilityLabel="Scorecard" style={styles.headerBtn}>
-                <Icon name="table-large" size={24} color={theme.accent} />
-              </PressableScale>
+              <HeaderButton icon="table-large" label="Scorecard" onPress={() => more('scorecard')} />
             ) : (
-              <PressableScale onPress={() => openSheet('more')} accessibilityLabel="Match actions" style={styles.headerBtn}>
-                <Icon name="dots-vertical" size={24} color={theme.accent} />
-              </PressableScale>
+              <HeaderButton icon="dots-horizontal" label="Match actions" onPress={() => openSheet('more')} />
             ),
         }}
       />
-      <Screen footer={footer} onRefresh={match.refresh} refreshing={match.refreshing} error={action.error ?? match.error} onRetry={match.refresh}>
+      <Screen
+        footer={footer}
+        // The run pad is keys, so the glass theme draws its glass pad around them.
+        pad={!finished && a.canRecordBall}
+        onRefresh={match.refresh}
+        refreshing={match.refreshing}
+        error={action.error ?? match.error}
+        onRetry={match.refresh}
+      >
         <CricketScoreboard state={state} />
         <ScoringBanner
           sport="cricket"
@@ -369,6 +374,5 @@ function allOff(actions: CricketActions): CricketActions {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: space.sm },
-  headerBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md },
-  modNote: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderRadius: radius.md, borderWidth: 1.5, padding: space.sm },
+  modNote: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderRadius: radius.xl, borderWidth: 1.5, padding: space.sm, paddingHorizontal: space.md },
 });

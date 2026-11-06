@@ -14,8 +14,8 @@ import { SkeletonBlock } from '@/components/Skeleton';
 import { useAction } from '@/hooks/useAction';
 import { useQuery } from '@/hooks/useQuery';
 import { relativeDate } from '@/lib/format';
-import { useSportTheme } from '@/theme/SportTheme';
-import { lip, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { lip, radius, space } from '@/theme/theme';
 
 // The inbox (phase 6D): what happened that concerns you — scoring handovers, being added to a
 // tournament or a team, invites taken up, a tournament ready to complete or reaching its end date.
@@ -116,6 +116,7 @@ export default function NotificationsScreen() {
 }
 
 function Row({ item, read, onPress }: { item: AppNotification; read: boolean; onPress: () => void }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const opens = item.tournamentId != null;
   return (

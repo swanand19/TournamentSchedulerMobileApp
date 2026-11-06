@@ -10,8 +10,8 @@ import PressableScale from '@/components/PressableScale';
 import SectionHeader from '@/components/SectionHeader';
 import Sheet from '@/components/Sheet';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
 // The top of every innings: the openers and the bowler for the first over. Three slots, each
 // picked on its own screen-height sheet, one after another — the list is only ever one team's XI,
@@ -35,6 +35,7 @@ type Props = {
 };
 
 export default function StartInnings({ state, busy, onStart }: Props) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const battingId = state.actions.nextBattingTeamId;
   const bowlingId = state.actions.nextBowlingTeamId;

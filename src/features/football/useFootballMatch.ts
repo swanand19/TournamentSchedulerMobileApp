@@ -18,7 +18,8 @@ export function useFootballMatch(matchId: number, { pollMs }: { pollMs?: number 
     ]);
     return { match, events };
   }, [matchId]);
-  return useQuery(fetcher, { pollMs });
+  // A polled screen is a live one: it also reloads the moment the live line says the match changed.
+  return useQuery(fetcher, { pollMs, live: pollMs ? { kind: 'match', sport: 'football', matchId } : null });
 }
 
 /** Every player on either side, by id — events carry ids, the timeline shows names. */

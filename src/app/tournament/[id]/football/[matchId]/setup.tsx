@@ -21,8 +21,8 @@ import { useFootballMatch } from '@/features/football/useFootballMatch';
 import { useAction } from '@/hooks/useAction';
 import { useTournament } from '@/hooks/useTournament';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // Rules and line-ups for one football match. Kicking off sends both and starts the clock in one
 // call, so nothing can be half set up. The defaults are the website's (small-sided amateur game);
@@ -51,8 +51,11 @@ function defaultSquad(match: FootballMatch, starters: number): Record<number, Pi
 }
 
 export default function FootballSetup() {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const theme = useSportTheme();
+  const glass = theme.mode === 'dark';
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { id: tournamentId } = useTournament();
   const data = useFootballMatch(Number(matchId));
@@ -185,22 +188,24 @@ export default function FootballSetup() {
       />
 
       <Deck>
-        <Text style={[type.board, { color: theme.accent }]}>
-          {match.roundLabel ? match.roundLabel.toUpperCase() : `GROUP ${match.groupName}`} · MATCH {match.matchNumber}
+        <Text style={[type.board, { color: glass ? theme.onDarkSoft : theme.accent, textAlign: glass ? 'center' : 'left' }]}>
+          {glass
+            ? `${match.roundLabel ?? `Group ${match.groupName}`}, match ${match.matchNumber}`
+            : `${match.roundLabel ?? `Group ${match.groupName}`} · Match ${match.matchNumber}`}
         </Text>
         <View style={styles.versus}>
           <View style={styles.side}>
             <TeamBadge name={match.homeTeamName} size={48} home />
             <Text style={[styles.teamName, { color: theme.onDark }]} numberOfLines={2}>
-              {match.homeTeamName.toUpperCase()}
+              {match.homeTeamName}
             </Text>
             <Text style={[type.label, { color: theme.onDarkSoft }]}>Home</Text>
           </View>
-          <Text style={[type.heading, { color: theme.accent }]}>VS</Text>
+          <Text style={[type.heading, { color: glass ? theme.onDarkSoft : theme.accent }]}>{glass ? 'v' : 'VS'}</Text>
           <View style={styles.side}>
             <TeamBadge name={match.awayTeamName} size={48} />
             <Text style={[styles.teamName, { color: theme.onDark }]} numberOfLines={2}>
-              {match.awayTeamName.toUpperCase()}
+              {match.awayTeamName}
             </Text>
             <Text style={[type.label, { color: theme.onDarkSoft }]}>Away</Text>
           </View>
@@ -264,7 +269,8 @@ export default function FootballSetup() {
         [...(current.team?.players ?? [])].sort(byShirt).map((p) => {
           const pick = squad[p.id] ?? 'Bench';
           return (
-            <View key={p.id} style={[styles.playerRow, { backgroundColor: theme.deck, borderColor: pick === 'Starting' ? theme.accentSoft : theme.borderOnDark }]}>
+            // Glass: a frosted row without an edge; light: the white row's hairline.
+            <View key={p.id} style={[styles.playerRow, { backgroundColor: theme.deck, borderColor: glass ? 'transparent' : pick === 'Starting' ? theme.accentSoft : theme.borderOnDark }, glass && styles.glassRow]}>
               <JerseyBadge number={p.jerseyNumber} size={40} highlight={pick === 'Starting'} />
               <View style={{ flex: 1 }}>
                 <Text style={[type.bodyStrong, { color: pick === 'Unavailable' ? theme.onDarkSoft : theme.onDark }]} numberOfLines={1}>
@@ -272,10 +278,22 @@ export default function FootballSetup() {
                 </Text>
                 {p.position ? <Text style={[type.caption, { color: theme.onDarkSoft }]}>{p.position}</Text> : null}
               </View>
-              <View style={[styles.picks, { backgroundColor: theme.page }]} accessibilityRole="radiogroup" accessibilityLabel={`${p.name} squad status`}>
+              <View style={[styles.picks, { backgroundColor: glass ? 'rgba(255,255,255,0.07)' : theme.page }]} accessibilityRole="radiogroup" accessibilityLabel={`${p.name} squad status`}>
                 {PICKS.map((o) => {
                   const on = pick === o.key;
-                  const bg = !on ? 'transparent' : o.key === 'Starting' ? theme.successSolid : o.key === 'Unavailable' ? theme.dangerSolid : theme.deckRaised;
+                  // Glass: the starters in the sport's colour, "Out" a plain fill (red is for red cards).
+                  const bg = !on
+                    ? 'transparent'
+                    : o.key === 'Starting'
+                      ? glass
+                        ? theme.accent
+                        : theme.successSolid
+                      : o.key === 'Unavailable'
+                        ? glass
+                          ? 'rgba(255,255,255,0.20)'
+                          : theme.dangerSolid
+                        : theme.deckRaised;
+                  const ink = on && glass && o.key === 'Starting' ? theme.accentInk : on ? '#FFFFFF' : theme.onDarkSoft;
                   return (
                     <PressableScale
                       key={o.key}
@@ -286,7 +304,7 @@ export default function FootballSetup() {
                       hitSlop={4}
                       style={[styles.pick, { backgroundColor: bg }]}
                     >
-                      <Text style={[styles.pickText, { color: on ? '#FFFFFF' : theme.onDarkSoft }]}>{o.label.toUpperCase()}</Text>
+                      <Text style={[styles.pickText, { color: ink }]}>{o.label}</Text>
                     </PressableScale>
                   );
                 })}
@@ -299,11 +317,12 @@ export default function FootballSetup() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   versus: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   side: { flex: 1, alignItems: 'center', gap: space.xs },
   teamName: { fontFamily: fonts.display, fontSize: 22, lineHeight: 26, textAlign: 'center' },
   playerRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.lg, borderWidth: 1, padding: space.sm, paddingLeft: space.md },
+  glassRow: { borderRadius: 20, borderCurve: 'continuous' },
   picks: { flexDirection: 'row', borderRadius: radius.md, padding: 3, gap: 2 },
   pick: { minWidth: 54, minHeight: 44, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
   pickText: { fontFamily: fonts.bodyBold, fontSize: 11, letterSpacing: 0.4 },

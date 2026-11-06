@@ -4,14 +4,16 @@ import type { CricketAward, CricketMatchAwards } from '@/api/types';
 import { Deck } from '@/components/Card';
 import Icon, { type IconName } from '@/components/Icon';
 import SectionHeader from '@/components/SectionHeader';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // A finished match's honours, under the result: player of the match (the most fantasy points on
 // the winning side) as the headline, then the best batter, bowler and fielder of the day. The
 // server decides every one of them on the same points as the tournament's MVP race.
 
 export default function MatchAwards({ awards }: { awards: CricketMatchAwards }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const potm = awards.playerOfMatch;
   const rows: { key: string; label: string; icon: IconName; award: CricketAward | null }[] = [
@@ -33,11 +35,11 @@ export default function MatchAwards({ awards }: { awards: CricketMatchAwards }) 
         >
           <View style={styles.headRow}>
             <Icon name="trophy" size={18} color={theme.accent} />
-            <Text style={[type.board, { color: theme.accent, flex: 1 }]}>PLAYER OF THE MATCH</Text>
+            <Text style={[type.board, { color: theme.accent, flex: 1 }]}>{'Player of the match'}</Text>
             <Points value={potm.points} />
           </View>
           <Text style={[styles.potmName, { color: theme.onDark }]} numberOfLines={1} adjustsFontSizeToFit>
-            {potm.playerName.toUpperCase()}
+            {potm.playerName}
           </Text>
           <Text style={[type.bodyStrong, { color: theme.onDarkSoft }]}>
             {potm.teamName} · {potm.summary}
@@ -72,6 +74,7 @@ export default function MatchAwards({ awards }: { awards: CricketMatchAwards }) 
 }
 
 function Points({ value }: { value: number }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   return (
     <View style={{ alignItems: 'flex-end' }}>
@@ -81,7 +84,7 @@ function Points({ value }: { value: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   headRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   potmName: { fontFamily: fonts.display, fontSize: 30, lineHeight: 36 },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.lg, borderWidth: 1, padding: space.md },

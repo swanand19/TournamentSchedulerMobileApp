@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Share, StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
 import type { Tournament, TournamentInvite, TournamentMember, TournamentPeople } from '@/api/types';
@@ -10,6 +10,7 @@ import DateField, { formatDay, todayValue } from '@/components/DateField';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
+import SwitchRow from '@/components/SwitchRow';
 import Skeleton from '@/components/Skeleton';
 import TextField from '@/components/TextField';
 import { useAction } from '@/hooks/useAction';
@@ -19,8 +20,8 @@ import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { formatPhone, shortDate } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
 // A tournament's people and settings: its name and dates, completing it, its owners and scorers
 // (added by email or mobile number; someone with no account yet gets an invite, listed here for
@@ -37,6 +38,7 @@ const STATUS_TEXT: Record<string, string> = {
 type Role = 'Scorer' | 'Owner';
 
 export default function PeopleScreen() {
+  const { type } = useTypography();
   const router = useRouter();
   const theme = useSportTheme();
   const t = useTournament();
@@ -145,6 +147,30 @@ export default function PeopleScreen() {
     if (res.ok) router.dismissTo('/');
   };
 
+  // Public live scores (6E): the owners' switch and the one link it has for good; followers stop following.
+  const switchPublic = async (on: boolean) => {
+    const res = await action.run(() => api.call<Tournament>('TOURNAMENT_PUBLIC_SET', { routeParams: { id: t.id }, body: { isPublic: on } }));
+    if (res.ok) t.query.setData(res.value);
+  };
+
+  const shareLink = () => {
+    const share = tournament.share;
+    if (!share) return;
+    Share.share({
+      message: share.url
+        ? `Follow ${tournament.name} live: ${share.url}`
+        : `Follow ${tournament.name} live in Tournament Scheduler: Home → Find a tournament, code ${share.code}.`,
+    });
+  };
+
+  const unfollow = async () => {
+    const res = await action.run(() => api.call('FOLLOW_REMOVE', { routeParams: { tournamentId: t.id } }));
+    if (!res.ok) return;
+    // Someone who also plays in it stays; a follower and nothing more is done with it.
+    if (access.canLeave) t.query.refresh();
+    else router.dismissTo('/');
+  };
+
   return (
     <Screen error={action.error ?? members.error} onRetry={members.refresh} onRefresh={members.refresh} refreshing={members.refreshing}>
       {/* --- The tournament itself --- */}
@@ -178,6 +204,36 @@ export default function PeopleScreen() {
         )}
       </Card>
 
+      {/* --- Public live scores (6E) --- */}
+      {(access.canManageMembers || tournament.share) && (
+        <Card>
+          <SectionHeader onCard title="Public live scores" />
+          {access.canManageMembers && (
+            <SwitchRow
+              label="Anyone can find and watch this tournament"
+              hint="Scores, tables, stats and knockouts in a browser, no account needed. People find it by name or link and can follow it. No emails or numbers are shown."
+              value={tournament.isPublic}
+              onChange={switchPublic}
+              disabled={action.busy}
+            />
+          )}
+          {tournament.share && (
+            <View style={{ gap: space.sm }}>
+              <Text style={[type.caption, { color: theme.muted }]}>
+                {tournament.share.url ? 'The link' : 'The code (open the website’s /live/ address with it)'}
+              </Text>
+              <Text selectable style={[type.bodyStrong, styles.link, { color: theme.ink, backgroundColor: theme.chip }]}>
+                {tournament.share.url ?? tournament.share.code}
+              </Text>
+              <Button label="Share" icon="share-variant" variant="secondary" onPress={shareLink} />
+              <Text style={[type.caption, { color: theme.muted }]}>
+                Code {tournament.share.code}. Friends with the app find it on Home → Find a tournament.
+              </Text>
+            </View>
+          )}
+        </Card>
+      )}
+
       {/* --- People --- */}
       <Card>
         <SectionHeader onCard title="Owners and scorers" />
@@ -195,7 +251,7 @@ export default function PeopleScreen() {
                 {m.email || m.phone ? (
                   <Text style={[type.caption, { color: theme.muted }]}>{[m.email, formatPhone(m.phone)].filter(Boolean).join(' · ')}</Text>
                 ) : null}
-                <Text style={[type.label, { color: theme.muted }]}>{m.role === 'Creator' ? 'CREATOR · OWNER' : m.role.toUpperCase()}</Text>
+                <Text style={[type.label, { color: theme.muted }]}>{m.role === 'Creator' ? 'Creator · owner' : m.role}</Text>
               </View>
               {m.canRemove && <Button label="Remove" size="sm" variant="secondary" disabled={action.busy} onPress={() => remove(m)} />}
             </View>
@@ -204,7 +260,7 @@ export default function PeopleScreen() {
 
         {members.data && members.data.invites.length > 0 && (
           <View style={{ gap: space.sm, marginTop: space.sm }}>
-            <Text style={[type.label, { color: theme.muted }]}>INVITED · NO ACCOUNT YET</Text>
+            <Text style={[type.label, { color: theme.muted }]}>{'Invited · no account yet'}</Text>
             {members.data.invites.map((i) => (
               <View key={i.inviteId} style={[styles.invite, { borderTopColor: theme.cardDivider }]}>
                 <View style={{ gap: 2 }}>
@@ -255,6 +311,7 @@ export default function PeopleScreen() {
       </Card>
 
       {access.canLeave && <Button label="Leave this tournament" variant="ghost" disabled={action.busy} onPress={leave} />}
+      {access.isFollowing && <Button label="Stop following" variant="ghost" disabled={action.busy} onPress={unfollow} />}
     </Screen>
   );
 }
@@ -265,6 +322,7 @@ const styles = StyleSheet.create({
   invite: { gap: space.xs, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: space.sm },
   inviteActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: space.xs },
   notice: { borderRadius: radius.md, paddingHorizontal: space.md, paddingVertical: space.sm, marginTop: space.sm },
+  link: { borderRadius: radius.md, paddingHorizontal: space.md, paddingVertical: space.sm },
 });
 
 /** An invite's email, or its number in groups. */

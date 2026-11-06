@@ -4,8 +4,8 @@ import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // A labelled date for cream cards: the platform's own picker (Android's calendar dialog, iOS's
 // inline calendar), and a plain YYYY-MM-DD field in the web preview. The value is always a
@@ -36,6 +36,8 @@ export function todayValue(addDays = 0): string {
 }
 
 export default function DateField({ label, value, onChange, disabled }: Props) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const id = useId();
   const [iosOpen, setIosOpen] = useState(false);
@@ -50,7 +52,7 @@ export default function DateField({ label, value, onChange, disabled }: Props) {
           placeholder="YYYY-MM-DD"
           editable={!disabled}
           accessibilityLabelledBy={id}
-          style={[styles.field, { backgroundColor: theme.field, borderColor: theme.fieldBorder, color: theme.ink }]}
+          style={[styles.field, { backgroundColor: theme.field, borderColor: theme.fieldBorder, color: theme.ink }, theme.mode === 'light' && styles.underline]}
         />
       </View>
     );
@@ -78,9 +80,12 @@ export default function DateField({ label, value, onChange, disabled }: Props) {
         disabled={disabled}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${formatDay(value)}. Change`}
-        style={[styles.field, styles.row, { backgroundColor: theme.field, borderColor: theme.fieldBorder }]}
+        style={[styles.field, styles.row, { backgroundColor: theme.field, borderColor: theme.fieldBorder }, theme.mode === 'light' && styles.underline]}
       >
-        <Text style={[styles.text, { color: theme.ink }]}>{formatDay(value)}</Text>
+        {/* One line, shrunk a little if it must: in dark's padded half-width boxes a wrapped date pushed the icon out. */}
+        <Text style={[styles.text, { color: theme.ink }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+          {formatDay(value)}
+        </Text>
         <Icon name="calendar-month-outline" size={20} color={theme.muted} />
       </PressableScale>
       {Platform.OS === 'ios' && iosOpen && (
@@ -97,8 +102,10 @@ export default function DateField({ label, value, onChange, disabled }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   field: { minHeight: 52, borderWidth: 1.5, borderRadius: radius.md, paddingHorizontal: space.md, justifyContent: 'center' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  text: { fontFamily: fonts.bodyMedium, fontSize: 16 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+  text: { flexShrink: 1, fontFamily: fonts.bodyMedium, fontSize: 16 },
+  /** Light: just the line to write on, like TextField. */
+  underline: { minHeight: 48, borderWidth: 0, borderBottomWidth: 1, borderRadius: 0, paddingHorizontal: 0, backgroundColor: 'transparent' },
 });

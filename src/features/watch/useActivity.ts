@@ -4,8 +4,8 @@ import { api } from '@/api/client';
 import type { ActivityItem, ActivityPage } from '@/api/types';
 import { useQuery } from '@/hooks/useQuery';
 
-// A match's activity, newest first. The newest page is polled (that's how a ball or a goal
-// arrives); older pages are fetched on demand with `before` and kept. Ids count up through the
+// A match's activity, newest first. The newest page is reloaded when the live line says the match
+// changed, and polled (that's how a ball or a goal arrives without the line); older pages are fetched on demand with `before` and kept. Ids count up through the
 // match, so the two join without a gap: anything older than the newest page's oldest line comes
 // from the pages already loaded.
 
@@ -16,7 +16,7 @@ export function useActivity(sport: 'football' | 'cricket', matchId: number, { po
     () => api.call<ActivityPage>('WATCH_ACTIVITY', { routeParams: { sport, matchId }, query: { take: PAGE } }),
     [sport, matchId],
   );
-  const latest = useQuery(fetcher, { pollMs, enabled });
+  const latest = useQuery(fetcher, { pollMs, enabled, live: pollMs ? { kind: 'match', sport, matchId } : null });
   const [older, setOlder] = useState<{ items: ActivityItem[]; hasMore: boolean }>({ items: [], hasMore: true });
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreError, setMoreError] = useState<Error | null>(null);

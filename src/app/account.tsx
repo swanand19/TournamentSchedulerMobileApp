@@ -28,7 +28,10 @@ import { BATTING_STYLES, BOWLING_ARMS, BOWLING_TYPES, bowlingStyleLabel, CRICKET
 import { confirm } from '@/lib/confirm';
 import { formatPhone, plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { footballTheme as theme, space, type } from '@/theme/theme';
+import { resetAppearance } from '@/theme/appearance';
+// Only card text colours (ink, muted), which read the same on the dark and light themes' cards.
+import { useTypography } from '@/theme/SportTheme';
+import { footballTheme as theme, space } from '@/theme/theme';
 
 // The signed-in person's account: their name and cricket profile (both copied to every team place
 // linked to them), the email and mobile number they sign in with, signing out — of this phone, or
@@ -56,9 +59,13 @@ export default function AccountScreen() {
     setSaved(true);
   };
 
-  // Signed out on the phone even if the server can't be told: the button must always work.
+  // Signed out on the phone even if the server can't be told: the button must always work. Signing
+  // out also forgets this phone's appearance choice, so the next person starts from the default.
   const signOut = async () => {
-    await action.run(() => api.call('AUTH_LOGOUT')).finally(() => clearSession());
+    await action.run(() => api.call('AUTH_LOGOUT')).finally(() => {
+      clearSession();
+      resetAppearance();
+    });
   };
 
   const signOutEverywhere = async () => {
@@ -70,7 +77,10 @@ export default function AccountScreen() {
     });
     if (!ok) return;
     const res = await action.run(() => api.call<LogoutAllResponse>('AUTH_LOGOUT_ALL'));
-    if (res.ok) clearSession();
+    if (res.ok) {
+      clearSession();
+      resetAppearance();
+    }
   };
 
   return (
@@ -125,6 +135,7 @@ type Kind = 'Email' | 'Phone';
  * can text codes, or when the account already has one.
  */
 function SignInMethods({ account, onSaved }: { account: Account; onSaved: (a: Account) => void }) {
+  const { type } = useTypography();
   const options = useAuthOptions();
   const action = useAction();
   const [editing, setEditing] = useState<Kind | null>(null);
@@ -259,6 +270,7 @@ function SignInMethods({ account, onSaved }: { account: Account; onSaved: (a: Ac
 
 /** Their own cricket profile: used in every cricket team they're linked to. Saved on its own. */
 function CricketProfileCard({ account, onSaved }: { account: Account; onSaved: (a: Account) => void }) {
+  const { type } = useTypography();
   const action = useAction();
   const c = account.cricket;
   const [role, setRole] = useState<CricketRole>(c?.primaryRole ?? 'Batter');
@@ -342,6 +354,7 @@ function CricketProfileCard({ account, onSaved }: { account: Account; onSaved: (
  * Every session ends with it, so the phone goes back to sign-in by itself.
  */
 function DeleteAccount() {
+  const { type } = useTypography();
   const action = useAction();
   const [preview, setPreview] = useState<AccountDeletionPreview | null>(null);
   const [code, setCode] = useState('');
@@ -366,6 +379,7 @@ function DeleteAccount() {
     if (!res.ok) return;
     haptic.heavy();
     clearSession();
+    resetAppearance();
   };
 
   if (!preview) {
@@ -414,6 +428,7 @@ function DeleteAccount() {
 }
 
 function Group({ label, children }: { label: string; children: ReactNode }) {
+  const { type } = useTypography();
   return (
     <View style={{ gap: space.sm }}>
       <Text style={[type.label, { color: theme.muted }]}>{label}</Text>
@@ -423,6 +438,7 @@ function Group({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function Fact({ label, value }: { label: string; value: string }) {
+  const { type } = useTypography();
   return (
     <View style={styles.fact}>
       <Text style={[type.label, { color: theme.muted }]}>{label}</Text>

@@ -6,8 +6,8 @@ import { Card, Deck } from '@/components/Card';
 import Chip from '@/components/Chip';
 import EmptyState from '@/components/EmptyState';
 import SectionHeader from '@/components/SectionHeader';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // A scorecard's innings, one at a time behind chips: batting, extras and total, fall of wickets,
 // bowling. Shared by the scorer's Scorecard screen and the watcher's swipe page.
@@ -37,7 +37,11 @@ export default function ScorecardBody({ card }: { card: CricketScorecard }) {
 }
 
 function Innings({ card }: { card: InningsCard }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
+  // Light ("B · Scorecard"): open tables flush with the screen, no bands or tinted rows, quiet words.
+  const light = theme.mode === 'light';
   const batted = card.batting.filter((b) => b.hasBatted);
   const yetToBat = card.batting.filter((b) => !b.hasBatted);
 
@@ -54,7 +58,7 @@ function Innings({ card }: { card: InningsCard }) {
           return (
             <View
               key={b.playerId}
-              style={[styles.tr, { borderTopColor: theme.cardDivider }, atCrease && { backgroundColor: theme.tint }]}
+              style={[styles.tr, light && styles.lightTr, { borderTopColor: theme.cardDivider }, atCrease && !light && { backgroundColor: theme.tint }]}
               accessible
               accessibilityLabel={`${b.playerName}, ${b.dismissalText}, ${b.runs} off ${b.ballsFaced}`}
             >
@@ -78,7 +82,7 @@ function Innings({ card }: { card: InningsCard }) {
           );
         })}
         {yetToBat.length > 0 && (
-          <View style={[styles.note, { borderTopColor: theme.cardDivider }]}>
+          <View style={[styles.note, light && styles.lightTr, { borderTopColor: theme.cardDivider }]}>
             <Text style={[type.caption, { color: theme.muted }]}>
               <Text style={type.label}>Yet to bat: </Text>
               {yetToBat.map((b) => b.playerName).join(', ')}
@@ -90,12 +94,14 @@ function Innings({ card }: { card: InningsCard }) {
       <Deck style={styles.totals}>
         <View style={{ flex: 1 }}>
           <Text style={[type.label, { color: theme.onDarkSoft }]}>
-            EXTRAS {card.extrasTotal} · WD {card.wides} · NB {card.noBalls} · B {card.byes} · LB {card.legByes}
-            {card.penaltyRuns ? ` · PEN ${card.penaltyRuns}` : ''}
+            {light
+              ? `Extras ${card.extrasTotal}: wd ${card.wides}, nb ${card.noBalls}, b ${card.byes}, lb ${card.legByes}${card.penaltyRuns ? `, pen ${card.penaltyRuns}` : ''}`
+              : `EXTRAS ${card.extrasTotal} · WD ${card.wides} · NB ${card.noBalls} · B ${card.byes} · LB ${card.legByes}${card.penaltyRuns ? ` · PEN ${card.penaltyRuns}` : ''}`}
           </Text>
           <Text style={[type.score, { color: theme.onDark }]}>
             {card.runs}
-            <Text style={{ color: theme.accent }}>/{card.wickets}</Text>
+            <Text style={{ color: light ? theme.placeholderInk : theme.accent }}>/</Text>
+            {card.wickets}
           </Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
@@ -103,7 +109,9 @@ function Innings({ card }: { card: InningsCard }) {
             {card.overs}
             {card.oversLimit ? ` / ${card.oversLimit}` : ''} ov
           </Text>
-          <Text style={[type.bodyStrong, { color: theme.accent }]}>RR {card.runRate.toFixed(2)}</Text>
+          <Text style={[type.bodyStrong, { color: light ? theme.deep : theme.accent }]}>
+            {light ? 'Run rate' : 'RR'} {card.runRate.toFixed(2)}
+          </Text>
         </View>
       </Deck>
 
@@ -112,8 +120,11 @@ function Innings({ card }: { card: InningsCard }) {
           <SectionHeader title="Fall of wickets" />
           <View style={styles.fow}>
             {card.fallOfWickets.map((f) => (
-              <View key={f.wicketNumber} style={[styles.fowChip, { backgroundColor: theme.deck, borderColor: theme.borderOnDark }]}>
-                <Text style={[type.bodyStrong, { color: theme.accent }]}>
+              <View
+                key={f.wicketNumber}
+                style={[styles.fowChip, { backgroundColor: theme.deck, borderColor: theme.borderOnDark }, light && styles.lightFow]}
+              >
+                <Text style={[type.bodyStrong, { color: light ? theme.deep : theme.accent }]}>
                   {f.wicketNumber}-{f.runs}
                 </Text>
                 <Text style={[type.caption, { color: theme.onDark }]}>
@@ -131,7 +142,7 @@ function Innings({ card }: { card: InningsCard }) {
         {card.bowling.map((b) => (
           <View
             key={b.playerId}
-            style={[styles.tr, { borderTopColor: theme.cardDivider }]}
+            style={[styles.tr, light && styles.lightTr, { borderTopColor: theme.cardDivider }]}
             accessible
             accessibilityLabel={`${b.playerName}: ${b.overs} overs, ${b.maidens} maidens, ${b.runs} runs, ${b.wickets} wickets`}
           >
@@ -160,29 +171,36 @@ function Innings({ card }: { card: InningsCard }) {
 }
 
 function Head({ cols, first }: { cols: string[]; first: string }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
-    <View style={[styles.tr, styles.th, { backgroundColor: theme.chip }]} importantForAccessibility="no-hide-descendants">
+    <View
+      style={[styles.tr, styles.th, { backgroundColor: theme.chip }, theme.mode === 'light' && [styles.lightTr, { backgroundColor: 'transparent' }]]}
+      importantForAccessibility="no-hide-descendants"
+    >
       <Text style={[type.label, styles.nameCell, { color: theme.muted }]}>{first}</Text>
       {cols.map((c, i) => (
         <Text key={c} style={[type.label, styles.cell, i === cols.length - 1 && styles.wide, { color: theme.muted }]}>
-          {c.toUpperCase()}
+          {c}
         </Text>
       ))}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ figures, fonts }: Typography) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   tr: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: space.md, paddingVertical: space.sm, borderTopWidth: 1, minHeight: 52 },
   th: { borderTopWidth: 0, minHeight: 36 },
   nameCell: { flex: 1, paddingRight: space.xs },
-  cell: { width: 34, textAlign: 'center', fontFamily: fonts.bodySemiBold, fontSize: 14, fontVariant: ['tabular-nums'] },
+  cell: { width: 34, textAlign: 'center', fontFamily: fonts.bodySemiBold, fontSize: 14, fontVariant: figures },
   wide: { width: 46 },
   big: { fontFamily: fonts.display, fontSize: 20 },
   note: { paddingHorizontal: space.md, paddingVertical: space.sm, borderTopWidth: 1 },
   totals: { flexDirection: 'row', alignItems: 'center' },
   fow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   fowChip: { borderRadius: radius.md, borderWidth: 1, paddingHorizontal: space.sm, paddingVertical: space.xs },
+  lightTr: { paddingHorizontal: 0 },
+  lightFow: { borderWidth: 0, paddingHorizontal: 0, marginRight: space.md },
 });

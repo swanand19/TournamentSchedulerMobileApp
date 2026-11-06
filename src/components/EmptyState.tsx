@@ -2,14 +2,15 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import Button from '@/components/Button';
 import Icon, { type IconName } from '@/components/Icon';
-import { useSportTheme } from '@/theme/SportTheme';
-import { space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { space } from '@/theme/theme';
 
 // What an empty list says: what goes here, and the one action that fills it.
 
 type Props = { icon: IconName; title: string; message: string; actionLabel?: string; onAction?: () => void };
 
 export default function EmptyState({ icon, title, message, actionLabel, onAction }: Props) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   return (
     <View style={[styles.box, { borderColor: theme.borderOnDark }]}>

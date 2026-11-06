@@ -2,12 +2,14 @@ import { Stack } from 'expo-router';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import ConfirmHost from '@/components/ConfirmHost';
+import { themedScreenLayout } from '@/components/ThemedScreen';
 import { TournamentProvider } from '@/hooks/useTournament';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
 
 // Everything inside one tournament: its hub, teams, schedule builder and the match screens. The
 // provider loads the tournament once and re-tints this whole stack to its sport.
+
+const screenLayout = themedScreenLayout();
 
 export default function TournamentLayout() {
   return (
@@ -20,15 +22,19 @@ export default function TournamentLayout() {
 }
 
 function TournamentStack() {
+  const { fonts } = useTypography();
   const theme = useSportTheme();
   const reduced = useReducedMotion();
 
   return (
     <Stack
+      screenLayout={screenLayout}
       screenOptions={{
-        headerStyle: { backgroundColor: theme.deck },
-        headerTintColor: theme.accent,
-        headerTitleStyle: { fontFamily: fonts.bodySemiBold, fontSize: 17, color: theme.onDark },
+        // Glass: the bar floats over the wallpaper (ThemedScreen keeps the content below it).
+        headerTransparent: theme.mode === 'dark',
+        headerStyle: { backgroundColor: theme.mode === 'dark' ? 'transparent' : theme.page },
+        headerTintColor: theme.mode === 'light' ? theme.ink : theme.onDark,
+        headerTitleStyle: { fontFamily: theme.mode === 'light' ? fonts.body : fonts.bodySemiBold, fontSize: 17, color: theme.onDark },
         headerShadowVisible: false,
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: theme.page },
@@ -48,7 +54,7 @@ function TournamentStack() {
           sheetAllowedDetents: [0.6, 0.95],
           sheetGrabberVisible: true,
           headerShown: false,
-          contentStyle: { backgroundColor: theme.cream },
+          contentStyle: { backgroundColor: theme.mode === 'light' ? theme.cream : theme.page },
         }}
       />
       <Stack.Screen name="football/[matchId]/setup" options={{ title: 'Match setup' }} />

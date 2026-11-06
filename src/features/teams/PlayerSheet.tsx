@@ -23,10 +23,10 @@ import {
   roleBowls,
 } from '@/lib/cricketLabels';
 import { confirm } from '@/lib/confirm';
-import { formatPhone } from '@/lib/format';
+import { capitalizeWords, formatPhone } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
 // Add or edit a player. Football asks for a shirt number and a position; cricket asks for the
 // role, how they bat and — only if they bowl — how they bowl, and names the style as it's picked
@@ -56,6 +56,7 @@ type Props = {
  * being edited — and keeps it mounted while closing, so the sheet can animate away.
  */
 export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, team, player, sport }: Props) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const router = useRouter();
   const action = useAction();
@@ -331,7 +332,7 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
             label="Player name"
             value={name}
             onChangeText={(v) => {
-              setName(v);
+              setName(capitalizeWords(v));
               if (nameError) setNameError('');
             }}
             placeholder="e.g. J. Henderson"
@@ -450,6 +451,7 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
 }
 
 function Group({ label, children }: { label: string; children: ReactNode }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   return (
     <View style={{ gap: space.sm }}>

@@ -5,20 +5,22 @@ import type { WatchMarkKind, WatchPlayer, WatchSide } from '@/api/types';
 import { Card } from '@/components/Card';
 import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // One side on a team sheet: the squad before the start, the XI or starting line-up after, then
 // the bench. Football rows carry what happened to the player (goal, cards, on or off); cricket
 // rows the batting order and C / WK. A name opens that player's profile.
 
 export default function SideCard({ side, sport }: { side: WatchSide; sport: 'football' | 'cricket' }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <Card style={{ padding: 0, gap: 0, overflow: 'hidden' }}>
       <View style={[styles.head, { borderBottomColor: theme.cardDivider }]}>
         <Text style={[type.heading, { color: theme.deep, flex: 1 }]} numberOfLines={2}>
-          {side.name.toUpperCase()}
+          {side.name}
         </Text>
         <Text style={[type.label, { color: theme.muted }]}>{side.heading}</Text>
       </View>
@@ -42,6 +44,8 @@ export default function SideCard({ side, sport }: { side: WatchSide; sport: 'foo
 }
 
 function PlayerRow({ player, sport, index, bench }: { player: WatchPlayer; sport: 'football' | 'cricket'; index: number; bench?: boolean }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const router = useRouter();
   // Cricket numbers the XI by batting order; before the toss (no order yet) the shirt number shows.
@@ -82,6 +86,8 @@ function PlayerRow({ player, sport, index, bench }: { player: WatchPlayer; sport
 }
 
 function Mark({ kind, minute }: { kind: WatchMarkKind; minute: string }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const glyph =
     kind === 'Goal' ? <Icon name="soccer" size={14} color={theme.ink} />
@@ -97,12 +103,12 @@ function Mark({ kind, minute }: { kind: WatchMarkKind; minute: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ figures, fonts }: Typography) => StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.md, paddingHorizontal: space.lg, borderBottomWidth: 1 },
   empty: { padding: space.lg },
   benchHead: { paddingHorizontal: space.lg, paddingVertical: space.xs },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 52, paddingHorizontal: space.lg, paddingVertical: space.sm },
-  number: { width: 28, textAlign: 'center', fontFamily: fonts.display, fontSize: 20, fontVariant: ['tabular-nums'] },
+  number: { width: 28, textAlign: 'center', fontFamily: fonts.display, fontSize: 20, fontVariant: figures },
   nameLine: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   tag: { borderRadius: radius.sm, paddingHorizontal: 5, paddingVertical: 1 },
   tagText: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 15 },

@@ -2,15 +2,20 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { MatchCard } from '@/api/types';
 import Button from '@/components/Button';
-import { Deck } from '@/components/Card';
 import PressableScale from '@/components/PressableScale';
 import StatusChip from '@/components/StatusChip';
 import { phaseOf, statusLine } from '@/features/matches/status';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, lip, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
-// Match cards for the hub's Matches tab. Played and live matches sit on cream (a result is a
-// record you read); upcoming ones sit on the dark deck, quieter, until they kick off.
+// Match cards for the hub's Matches tab: frosted cards in the glass theme, open rows between
+// hairlines in the light theme.
+
+/** What a live match's button says: scoring for those who can score, watching for everyone else. */
+function liveLabel(m: MatchCard, canScore: boolean) {
+  if (!canScore) return 'Watch live';
+  return m.sport === 'Football' ? 'Tap to score' : 'Open live scorer';
+}
 
 function scoreOf(m: MatchCard): { home: string; away: string } | null {
   if (m.sport === 'Football') return m.status === 'NotStarted' ? null : { home: String(m.homeScore), away: String(m.awayScore) };
@@ -18,145 +23,182 @@ function scoreOf(m: MatchCard): { home: string; away: string } | null {
   return { home: m.homeLine ?? '—', away: m.awayLine ?? 'Yet to bat' };
 }
 
-/** The big pinned card for a match in progress, with the one button that matters. */
-export function LiveMatchCard({ match, onOpen }: { match: MatchCard; onOpen: () => void }) {
+/**
+ * The light theme's match ("B · Sight-screen"): one row between hairlines — a line of status, then
+ * each side with its score in thin figures (the side behind in a football result muted), then what
+ * happened. The whole row opens the match; a live one says so in the accent.
+ */
+function LightMatchRow({ match, onOpen, live, canScore }: { match: MatchCard; onOpen: () => void; live?: boolean; canScore: boolean }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const line = statusLine(match);
   const score = scoreOf(match);
-  return (
-    <Deck accessibilityLabel={`Match ${match.matchNumber}, ${match.homeTeamName} against ${match.awayTeamName}, ${line.label}`}>
-      <View style={styles.topRow}>
-        <StatusChip label={line.label} tone="live" />
-        <Text style={[type.label, { color: theme.onDarkSoft }]}>
-          Match {match.matchNumber}, {match.roundLabel ?? `group ${match.groupName}`}
-        </Text>
-      </View>
+  const where = `match ${match.matchNumber}, ${match.roundLabel ?? `Group ${match.groupName}`}`;
+  const result = match.sport === 'Cricket' ? match.resultSummary : null;
+  const done = phaseOf(match) === 'completed';
+  const behind = (side: 'home' | 'away') =>
+    done && match.sport === 'Football' && (side === 'home' ? match.homeScore < match.awayScore : match.awayScore < match.homeScore);
 
-      {match.sport === 'Football' ? (
-        <View style={styles.liveScore}>
-          <Text style={[styles.liveTeam, { color: theme.onDark }]} numberOfLines={2}>
-            {match.homeTeamName.toUpperCase()}
-          </Text>
-          <View style={[styles.scoreBox, { backgroundColor: theme.page }]}>
-            <Text style={[type.score, { color: theme.accent }]}>
-              {score?.home ?? 0}
-              <Text style={{ color: theme.onDarkSoft }}> : </Text>
-              <Text style={{ color: theme.onDark }}>{score?.away ?? 0}</Text>
-            </Text>
-          </View>
-          <Text style={[styles.liveTeam, { color: theme.onDark, textAlign: 'right' }]} numberOfLines={2}>
-            {match.awayTeamName.toUpperCase()}
-          </Text>
-        </View>
-      ) : (
-        <View style={{ gap: space.sm }}>
-          <CricketLine name={match.homeTeamName} line={score?.home} strong />
-          <CricketLine name={match.awayTeamName} line={score?.away} />
-        </View>
-      )}
-
-      <Button
-        label={match.sport === 'Football' ? 'Tap to score' : 'Open live scorer'}
-        icon="whistle"
-        onPress={onOpen}
-        size="lg"
-      />
-    </Deck>
-  );
-}
-
-function CricketLine({ name, line, strong }: { name: string; line?: string; strong?: boolean }) {
-  const theme = useSportTheme();
-  return (
-    <View style={styles.cricketRow}>
-      <Text style={[type.heading, { color: theme.onDark, flex: 1 }]} numberOfLines={1}>
-        {name.toUpperCase()}
+  const side = (name: string, value: string | undefined, which: 'home' | 'away') => (
+    <View style={styles.lightSide}>
+      <Text
+        style={[behind(which) ? type.body : type.lead, styles.lightName, { color: behind(which) ? theme.muted : theme.ink }]}
+        numberOfLines={1}
+      >
+        {name}
       </Text>
-      <Text style={[type.figure, { color: strong ? theme.accent : theme.onDark }]}>{line ?? 'Yet to bat'}</Text>
+      {value !== undefined && (
+        <Text style={[type.figure, { color: behind(which) ? theme.muted : theme.ink }]}>{value}</Text>
+      )}
     </View>
   );
-}
-
-/** A row in a group's list of fixtures. */
-export function MatchRow({ match, onOpen }: { match: MatchCard; onOpen: () => void }) {
-  const theme = useSportTheme();
-  const phase = phaseOf(match);
-  const line = statusLine(match);
-  const score = scoreOf(match);
-  const onCream = phase !== 'upcoming';
-  const fg = onCream ? theme.ink : theme.onDark;
-  const soft = onCream ? theme.muted : theme.onDarkSoft;
-  const result = match.sport === 'Cricket' ? match.resultSummary : null;
 
   return (
     <PressableScale
       onPress={onOpen}
       accessibilityLabel={`Match ${match.matchNumber}, ${match.homeTeamName} ${score ? score.home : ''} against ${match.awayTeamName} ${score ? score.away : ''}, ${line.label}`}
-      style={[
-        styles.row,
-        onCream
-          ? [{ backgroundColor: theme.cream }, lip(theme)]
-          : { backgroundColor: theme.deck, borderWidth: 1, borderColor: theme.borderOnDark },
-      ]}
+      accessibilityHint={live ? 'Opens the match' : undefined}
+      style={[styles.lightRow, { borderBottomColor: theme.cardDivider }]}
     >
-      <View style={styles.topRow}>
-        <Text style={[type.label, { color: soft }]}>Match {match.matchNumber}{match.roundLabel ? ` · ${match.roundLabel}` : ''}</Text>
-        <StatusChip label={line.label} tone={line.tone} onDark={!onCream} />
+      <View style={styles.lightStatus}>
+        {live && (
+          <View style={[styles.lightRing, { backgroundColor: theme.tint }]}>
+            <View style={[styles.lightDot, { backgroundColor: theme.accent }]} />
+          </View>
+        )}
+        <Text style={[type.caption, { color: live ? theme.deep : theme.muted }]}>
+          {line.label}, {where}
+        </Text>
       </View>
-
-      {match.sport === 'Football' ? (
-        <View style={styles.fixture}>
-          <Text style={[styles.team, { color: fg }]} numberOfLines={1}>
-            {match.homeTeamName.toUpperCase()}
-          </Text>
-          {score ? (
-            <View style={[styles.miniScore, { backgroundColor: theme.ink }]}>
-              <Text style={[type.figure, { color: theme.cream }]}>
-                {score.home} - {score.away}
-              </Text>
-            </View>
-          ) : (
-            <View style={[styles.vs, { backgroundColor: theme.deckRaised }]}>
-              <Text style={[type.label, { color: theme.accent }]}>VS</Text>
-            </View>
-          )}
-          <Text style={[styles.team, { color: fg, textAlign: 'right' }]} numberOfLines={1}>
-            {match.awayTeamName.toUpperCase()}
-          </Text>
+      {score ? (
+        <View style={{ gap: 2 }}>
+          {side(match.homeTeamName, score.home, 'home')}
+          {side(match.awayTeamName, score.away, 'away')}
         </View>
       ) : (
-        <View style={{ gap: 2 }}>
-          <View style={styles.cricketRow}>
-            <Text style={[styles.teamSmall, { color: fg }]} numberOfLines={1}>
-              {match.homeTeamName.toUpperCase()}
-            </Text>
-            <Text style={[type.bodyStrong, { color: fg }]}>{score?.home ?? ''}</Text>
-          </View>
-          <View style={styles.cricketRow}>
-            <Text style={[styles.teamSmall, { color: fg }]} numberOfLines={1}>
-              {match.awayTeamName.toUpperCase()}
-            </Text>
-            <Text style={[type.bodyStrong, { color: fg }]}>{score?.away ?? ''}</Text>
-          </View>
-          {!score && <Text style={[type.caption, { color: soft }]}>Toss and XIs not set yet</Text>}
-        </View>
+        <Text style={[type.lead, styles.lightName, { color: theme.ink }]} numberOfLines={2}>
+          {match.homeTeamName} <Text style={[type.body, { color: theme.muted }]}>v</Text> {match.awayTeamName}
+        </Text>
       )}
-
-      {result ? <Text style={[type.bodyStrong, { color: theme.successInk }]}>{result}</Text> : null}
+      {result ? <Text style={[type.caption, { color: theme.ink }]}>{result}</Text> : null}
+      {!score && match.sport === 'Cricket' ? <Text style={[type.caption, { color: theme.muted }]}>Toss and XIs not set yet</Text> : null}
+      {live && (
+        <Text style={[type.bodyStrong, { color: theme.deep }]}>
+          {liveLabel(match, canScore)} ›
+        </Text>
+      )}
     </PressableScale>
   );
 }
 
-const styles = StyleSheet.create({
+/**
+ * Who won a finished match, for the bold line: football by the goals; cricket by the server's own
+ * result line ("Lions won by 6 wickets"), since a card carries no winner id.
+ */
+function winnerOf(m: MatchCard): 'home' | 'away' | null {
+  if (phaseOf(m) !== 'completed') return null;
+  if (m.sport === 'Football') return m.homeScore > m.awayScore ? 'home' : m.awayScore > m.homeScore ? 'away' : null;
+  const r = m.resultSummary ?? '';
+  return r.startsWith(m.homeTeamName) ? 'home' : r.startsWith(m.awayTeamName) ? 'away' : null;
+}
+
+/**
+ * The glass theme's match ("N · Matches"): a frosted card — what it is and where it stands, each side
+ * with its score (the winner in bold), then what happened in the sport's colour. A live one adds the
+ * one tinted button that matters; an upcoming one says what's still to set.
+ */
+function GlassMatchCard({ match, onOpen, live, canScore }: { match: MatchCard; onOpen: () => void; live?: boolean; canScore: boolean }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
+  const theme = useSportTheme();
+  const line = statusLine(match);
+  const score = scoreOf(match);
+  const won = winnerOf(match);
+  const where = `Match ${match.matchNumber}, ${match.roundLabel ?? `group ${match.groupName}`}`;
+  const result = match.sport === 'Cricket' ? match.resultSummary : null;
+
+  const side = (name: string, value: string, which: 'home' | 'away') => (
+    <View style={styles.side}>
+      <Text style={[won === which ? type.lead : styles.sideName, { color: theme.onDark, flex: 1 }]} numberOfLines={1}>
+        {name}
+      </Text>
+      <Text style={[won === which ? styles.sideScoreWon : styles.sideScore, { color: theme.onDark }]}>{value}</Text>
+    </View>
+  );
+
+  const label = `${where}, ${match.homeTeamName} ${score ? score.home : ''} against ${match.awayTeamName} ${score ? score.away : ''}, ${line.label}`;
+  // A live card's button is how it opens, so the card itself isn't one (no button in a button).
+  const Frame = live ? View : PressableScale;
+  return (
+    <Frame
+      onPress={live ? undefined : onOpen}
+      accessibilityLabel={live ? undefined : label}
+      style={[styles.card, { backgroundColor: theme.cream }]}
+    >
+      <View style={styles.topRow}>
+        {live ? <StatusChip label={line.label} tone="live" /> : <Text style={[type.caption, { color: theme.onDarkSoft }]}>{where}</Text>}
+        {live ? (
+          <Text style={[type.caption, { color: theme.onDarkSoft }]}>{where}</Text>
+        ) : (
+          // Not started isn't a warning here, just a fact: quiet words.
+          <StatusChip label={line.label} tone={line.tone === 'setup' ? 'done' : line.tone} />
+        )}
+      </View>
+      {score ? (
+        <View style={{ gap: 4 }}>
+          {side(match.homeTeamName, score.home, 'home')}
+          {side(match.awayTeamName, score.away, 'away')}
+        </View>
+      ) : (
+        <>
+          <Text style={[styles.sideName, { color: theme.onDark }]} numberOfLines={2}>
+            {match.homeTeamName} v {match.awayTeamName}
+          </Text>
+          {match.sport === 'Cricket' && <Text style={[type.caption, { color: theme.onDarkSoft }]}>Toss and XIs not set yet</Text>}
+        </>
+      )}
+      {result ? <Text style={[styles.result, { color: theme.accent }]}>{result}</Text> : null}
+      {live && (
+        <Button
+          label={liveLabel(match, canScore)}
+          onPress={onOpen}
+          accessibilityHint={label}
+          style={styles.liveButton}
+        />
+      )}
+    </Frame>
+  );
+}
+
+/** The big pinned card for a match in progress, with the one button that matters. */
+export function LiveMatchCard({ match, onOpen, canScore }: { match: MatchCard; onOpen: () => void; canScore: boolean }) {
+  const theme = useSportTheme();
+  if (theme.mode === 'light') return <LightMatchRow match={match} onOpen={onOpen} live canScore={canScore} />;
+  return <GlassMatchCard match={match} onOpen={onOpen} live canScore={canScore} />;
+}
+
+/** A row in a group's list of fixtures. */
+export function MatchRow({ match, onOpen, canScore }: { match: MatchCard; onOpen: () => void; canScore: boolean }) {
+  const theme = useSportTheme();
+  const live = phaseOf(match) === 'live';
+  if (theme.mode === 'light') return <LightMatchRow match={match} onOpen={onOpen} live={live} canScore={canScore} />;
+  return <GlassMatchCard match={match} onOpen={onOpen} live={live} canScore={canScore} />;
+}
+
+const makeStyles = ({ fonts, figures }: Typography) => StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
-  liveScore: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  liveTeam: { flex: 1, fontFamily: fonts.display, fontSize: 22, lineHeight: 26 },
-  scoreBox: { borderRadius: radius.lg, paddingHorizontal: space.md },
-  row: { borderRadius: radius.lg, padding: space.lg, gap: space.sm },
-  fixture: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  team: { flex: 1, fontFamily: fonts.display, fontSize: 20, lineHeight: 24 },
-  teamSmall: { flex: 1, fontFamily: fonts.display, fontSize: 18, lineHeight: 22 },
-  miniScore: { borderRadius: radius.md, paddingHorizontal: space.md, paddingVertical: 2 },
-  vs: { borderRadius: radius.md, paddingHorizontal: space.md, paddingVertical: space.xs },
-  cricketRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  card: { borderRadius: radius.glass, borderCurve: 'continuous', paddingVertical: 14, paddingHorizontal: space.lg, gap: space.sm },
+  side: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
+  sideName: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 22 },
+  sideScore: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 22, fontVariant: figures },
+  sideScoreWon: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 22, fontVariant: figures },
+  result: { fontFamily: fonts.bodyMedium, fontSize: 14, lineHeight: 19 },
+  liveButton: { marginTop: space.xs },
+  lightRow: { gap: space.sm, paddingTop: 14, paddingBottom: space.lg, borderBottomWidth: 1 },
+  lightStatus: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  lightRing: { width: 15, height: 15, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  lightDot: { width: 7, height: 7, borderRadius: 4 },
+  lightSide: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },
+  lightName: { flex: 1, fontSize: 18, lineHeight: 24 },
 });

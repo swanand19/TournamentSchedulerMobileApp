@@ -1,21 +1,32 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { useServer } from '@/config/server';
+import { isLive, onLiveChange, subscribe, type LiveTopic } from '@/realtime/live';
+
+/** While the live line is open, polling is only a safety net for a nudge that went missing. */
+export const LIVE_POLL_MS = 60_000;
+
+/** Several nudges this close together make one reload. */
+const BUNCH_MS = 500;
 
 // Loading data for a screen: the first load, pull-to-refresh, a silent reload when the screen comes
 // back into focus (so the hub shows a score entered on the match screen), and optional polling for
 // live screens so a second phone stays in step.
 //
 // Polling only runs while the screen is focused and the app is in the foreground — a scorer's
-// phone in a pocket shouldn't be hitting the laptop every few seconds.
+// phone in a pocket shouldn't be hitting the laptop every few seconds. With a `live` topic the
+// screen also reloads as soon as the live line says it changed (realtime/live.ts), and polls only
+// slowly (LIVE_POLL_MS) while the line is open.
 
 type Options = {
   /** Reload every this many ms while focused. Off by default. */
   pollMs?: number;
   /** When false the query waits (e.g. until the server address has been read). */
   enabled?: boolean;
+  /** Reload when the live line says this changed. */
+  live?: LiveTopic | null;
 };
 
 export type Query<T> = {
@@ -33,7 +44,7 @@ export type Query<T> = {
 };
 
 /** `fetcher` must be stable (wrap it in useCallback); a new fetcher means a fresh load. */
-export function useQuery<T>(fetcher: () => Promise<T>, { pollMs, enabled: wanted = true }: Options = {}): Query<T> {
+export function useQuery<T>(fetcher: () => Promise<T>, { pollMs, enabled: wanted = true, live }: Options = {}): Query<T> {
   // Nothing loads until the saved server address has been read — otherwise a screen opened
   // straight from a link (or restored by Android) asks "(no server set)" and fails. A new
   // address means a fresh load, so it's part of the effect below.
@@ -61,6 +72,11 @@ export function useQuery<T>(fetcher: () => Promise<T>, { pollMs, enabled: wanted
     }
   }, [fetcher]);
 
+  const [lineOpen, setLineOpen] = useState(isLive);
+  useEffect(() => onLiveChange(setLineOpen), []);
+  const liveKey = live ? JSON.stringify(live) : null;
+  const every = pollMs && liveKey && lineOpen ? Math.max(pollMs, LIVE_POLL_MS) : pollMs;
+
   // Runs on first focus, on every return to the screen, and whenever the fetcher changes while
   // focused — one effect covers the first load, the reload-on-return and a changed query.
   useFocusEffect(
@@ -68,14 +84,33 @@ export function useQuery<T>(fetcher: () => Promise<T>, { pollMs, enabled: wanted
       if (!enabled) return undefined;
       run();
 
-      if (!pollMs) return undefined;
+      if (!every) return undefined;
       const timer = setInterval(() => {
         if (AppState.currentState === 'active') run();
-      }, pollMs);
+      }, every);
       return () => clearInterval(timer);
       // baseUrl isn't read here, but a changed server address has to trigger a fresh load.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [enabled, pollMs, run, baseUrl]),
+    }, [enabled, every, run, baseUrl]),
+  );
+
+  // Listening only while focused: a screen further back in the stack reloads when it's returned to.
+  useFocusEffect(
+    useCallback(() => {
+      if (!enabled || !liveKey) return undefined;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const unsubscribe = subscribe(JSON.parse(liveKey) as LiveTopic, () => {
+        if (timer) return;
+        timer = setTimeout(() => {
+          timer = undefined;
+          if (AppState.currentState === 'active') run();
+        }, BUNCH_MS);
+      });
+      return () => {
+        clearTimeout(timer);
+        unsubscribe();
+      };
+    }, [enabled, liveKey, run]),
   );
 
   const refresh = useCallback(async () => {

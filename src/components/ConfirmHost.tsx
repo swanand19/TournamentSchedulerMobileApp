@@ -1,16 +1,20 @@
+import { BlurView } from 'expo-blur';
 import { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated';
 
 import Button from '@/components/Button';
 import { registerConfirmHost, type ConfirmRequest } from '@/lib/confirm';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { materialize } from '@/lib/motion';
+import { useGlassSupport } from '@/theme/glass';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
-// The dialog behind confirm(): a scoreboard deck on the dimmed pitch, the question, and two
-// buttons — the confirm in amber, or red when something is lost. Tapping outside or the back
-// button is a Cancel. It settles in with a short fade and scale from 96% (never from zero) and
-// simply appears under Reduce Motion.
+// The dialog behind confirm(): the question and two buttons — the confirm in the sport's colour, or
+// red when something is lost. Tapping outside or the back button is a Cancel.
+// Glass theme: a frosted glass pane over the dimmed screen that materializes — it grows into place
+// with one soft overshoot as it fades in, the way an alert arrives on iOS. Light theme: a white
+// card that settles in from 96%. Under Reduce Motion both simply fade in.
 
 const EASE_OUT = cubicBezier(0.23, 1, 0.32, 1);
 const SETTLE_IN = {
@@ -20,8 +24,11 @@ const SETTLE_IN = {
 const FADE_IN = { from: { opacity: 0 }, to: { opacity: 1 } };
 
 export default function ConfirmHost() {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const reduced = useReducedMotion();
+  const support = useGlassSupport();
+  const glass = theme.mode === 'dark';
   const [request, setRequest] = useState<ConfirmRequest | null>(null);
   // The open request lives in a ref too, so answering it never depends on a render having happened.
   const open = useRef<ConfirmRequest | null>(null);
@@ -63,12 +70,30 @@ export default function ConfirmHost() {
         <Animated.View
           accessibilityViewIsModal
           accessibilityRole="alert"
+          entering={glass ? materialize : undefined}
           style={[
             styles.dialog,
-            { backgroundColor: theme.deck, borderColor: request.destructive ? theme.dangerSolid : theme.accentSoft, borderTopColor: request.destructive ? theme.dangerSolid : theme.accent },
-            !reduced && { animationName: SETTLE_IN, animationDuration: 200, animationTimingFunction: EASE_OUT },
+            glass
+              ? [
+                  styles.glass,
+                  {
+                    backgroundColor: support === 'blur' ? theme.sheetFill : theme.glassSolid,
+                    borderColor: theme.glassBorder,
+                    boxShadow: `inset 0 1px 0 ${theme.glassRim}, 0 20px 50px rgba(0,0,0,0.5)`,
+                  },
+                ]
+              : [
+                  styles.card,
+                  {
+                    backgroundColor: theme.deck,
+                    borderColor: request.destructive ? theme.dangerSolid : theme.accentSoft,
+                    borderTopColor: request.destructive ? theme.dangerSolid : theme.accent,
+                  },
+                  !reduced && { animationName: SETTLE_IN, animationDuration: 200, animationTimingFunction: EASE_OUT },
+                ],
           ]}
         >
+          {glass && support === 'blur' && <BlurView intensity={60} tint="dark" style={[StyleSheet.absoluteFill, styles.clip]} />}
           <Text style={[type.headline, { color: theme.onDark }]} accessibilityRole="header">
             {request.title}
           </Text>
@@ -90,6 +115,9 @@ export default function ConfirmHost() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', padding: space.xl },
-  dialog: { borderRadius: radius.xl, borderWidth: 1, borderTopWidth: 3, padding: space.lg, gap: space.md, maxWidth: 440, width: '100%', alignSelf: 'center' },
+  dialog: { padding: space.lg, gap: space.md, maxWidth: 440, width: '100%', alignSelf: 'center' },
+  card: { borderRadius: radius.xl, borderWidth: 1, borderTopWidth: 3 },
+  glass: { borderRadius: 34, borderCurve: 'continuous', borderWidth: 1, padding: space.xl - 2 },
+  clip: { borderRadius: 34, overflow: 'hidden' },
   buttons: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
 });

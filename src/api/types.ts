@@ -26,7 +26,16 @@ export type Account = {
 };
 
 /** What the sign-in screen offers. Mobile numbers stay off until the server can send texts. */
-export type AuthOptions = { phone: boolean; defaultCountryCode: string };
+/** Whether this app version is the latest, should update or must update (HLD P-25). */
+export type ClientUpdate = {
+  status: 'None' | 'Suggested' | 'Required';
+  latestVersion: string | null;
+  description: string | null;
+  storeUrl: string | null;
+  message: string | null;
+};
+
+export type AuthOptions = { phone: boolean; phoneVia?: 'WhatsApp' | 'Sms' | null; defaultCountryCode: string; clientUpdate?: ClientUpdate };
 
 export type SendOtpResponse = {
   /** The email or number the code went to, as the server stores it. */
@@ -54,8 +63,8 @@ export type LogoutAllResponse = { signedOutDevices: number };
 
 export type TournamentStatus = 'Upcoming' | 'Live' | 'Completed' | 'Cancelled';
 
-/** What the signed-in person is in a tournament: "creator", "owner", "scorer", "player". */
-export type TournamentRole = 'creator' | 'owner' | 'scorer' | 'player';
+/** What the signed-in person is in a tournament: "creator", "owner", "scorer", "player", "follower" (6E: follows it while it's public). */
+export type TournamentRole = 'creator' | 'owner' | 'scorer' | 'player' | 'follower';
 
 export type TournamentListItem = {
   id: number;
@@ -86,6 +95,8 @@ export type TournamentAccess = {
   canComplete: boolean;
   /** Live and every match is over: ask once "All matches played. Mark the tournament complete?" */
   allMatchesPlayed: boolean;
+  /** They follow it (6E) — offer "Stop following". */
+  isFollowing: boolean;
 };
 
 export type Tournament = {
@@ -99,6 +110,31 @@ export type Tournament = {
   startDate: string | null;
   endDate: string | null;
   access: TournamentAccess | null;
+  /** The owners' switch (6E): anyone with the link may watch, no account needed. */
+  isPublic: boolean;
+  /** The public link while it is public: the code, and the whole address when the server knows the web app's. */
+  share: PublicShare | null;
+};
+
+export type PublicShare = { code: string; url: string | null };
+
+/** FOLLOW_ADD: the tournament just followed. */
+export type FollowedTournament = { tournamentId: number; name: string; sport: Sport; isStarted: boolean };
+
+/** FOLLOW_SEARCH: a public tournament found by name or code — enough to tell two of the same name apart. */
+export type PublicSearchResult = {
+  tournamentId: number;
+  code: string;
+  name: string;
+  sport: Sport;
+  status: TournamentStatus;
+  startDate: string | null;
+  endDate: string | null;
+  teams: number;
+  /** They follow it already. */
+  isFollowing: boolean;
+  /** They run, score or play in it — it's on their Home already. */
+  isMine: boolean;
 };
 
 export type TournamentMember = {

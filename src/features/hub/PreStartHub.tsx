@@ -20,14 +20,16 @@ import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // Before kick-off: a checklist — teams, schedule, the knockout stage (optional), start — each saying
 // where it stands and offering its one action, then the fixtures that will be created. A tournament
 // can skip the groups and be knockouts only.
 
 export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const theme = useSportTheme();
   const { id } = useTournament();
@@ -207,6 +209,8 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
 }
 
 function InfoTile({ icon, label, value }: { icon: IconName; label: string; value: string }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <View style={[styles.tile, { backgroundColor: theme.deck, borderColor: theme.borderOnDark }]} accessible accessibilityLabel={`${label}: ${value}`}>
@@ -236,6 +240,8 @@ function Step({
   body: string;
   children: ReactNode;
 }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <Card>
@@ -260,7 +266,7 @@ function Step({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   tile: {
     flexBasis: '48%',

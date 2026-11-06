@@ -5,8 +5,8 @@ import Chip from '@/components/Chip';
 import Stepper from '@/components/Stepper';
 import SwitchRow from '@/components/SwitchRow';
 import TextField from '@/components/TextField';
-import { useSportTheme } from '@/theme/SportTheme';
-import { space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { space } from '@/theme/theme';
 
 // Every rule of a cricket match, grouped the way a scorer thinks about them. Presets fill these in;
 // this is for the league that plays two runs a wide or no LBW. Whatever's set here is sent whole.
@@ -22,6 +22,7 @@ const PITCHES: PitchType[] = ['Turf', 'Matting', 'Astroturf', 'Concrete', 'Other
 
 /** `knockout`: the match must send a side through, so a tie can't stand and there's no draw (the server enforces it too). */
 export default function RulesEditor({ rules, onChange, knockout = false }: { rules: CricketRules; onChange: (r: CricketRules) => void; knockout?: boolean }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const set = <K extends keyof CricketRules>(key: K, value: CricketRules[K]) => onChange({ ...rules, [key]: value });
   const timed = rules.format === 'MultiInningsTimed';
@@ -100,6 +101,7 @@ export default function RulesEditor({ rules, onChange, knockout = false }: { rul
 }
 
 function Heading({ text }: { text: string }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   return <Text style={[type.lead, { color: theme.ink, marginTop: space.sm }]}>{text}</Text>;
 }

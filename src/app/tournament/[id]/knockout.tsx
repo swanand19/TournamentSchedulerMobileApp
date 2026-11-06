@@ -25,8 +25,8 @@ import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { space } from '@/theme/theme';
 
 // The knockout stage. Everyone sees it: each side's team, or where it comes from ("Group A winner",
 // "Winner of Semi-final 1") until that's known. Owners set it up — a format that fits the groups, or
@@ -34,6 +34,7 @@ import { space, type } from '@/theme/theme';
 // results come in; this screen only draws what it says.
 
 export default function KnockoutScreen() {
+  const { type } = useTypography();
   const router = useRouter();
   const theme = useSportTheme();
   const t = useTournament();
@@ -43,7 +44,7 @@ export default function KnockoutScreen() {
   const teams = useTeams(t.id);
 
   const stageFetcher = useCallback(() => api.call<KnockoutStage>('KNOCKOUT_GET', { routeParams: { id: t.id } }), [t.id]);
-  const stage = useQuery(stageFetcher, { pollMs: 15000 });
+  const stage = useQuery(stageFetcher, { pollMs: 15000, live: { kind: 'tournament', tournamentId: t.id } });
   const presetsFetcher = useCallback(() => api.call<KnockoutPreset[]>('KNOCKOUT_PRESETS', { routeParams: { id: t.id } }), [t.id]);
   const presets = useQuery(presetsFetcher, { enabled: canEdit && stage.data?.started === false });
 

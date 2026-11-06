@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -24,9 +25,12 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { BlurView } from 'expo-blur';
+
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useGlassSupport } from '@/theme/glass';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
 // The bottom sheet for every in-match picker: goal scorer, card, sub, wicket, next bowler. It lives
 // inside the screen (not as its own route) because it needs the live match state it was opened
@@ -39,6 +43,9 @@ import { radius, space, type } from '@/theme/theme';
 //    and the release velocity is handed to the spring so there's no seam.
 //  - The backdrop's opacity is derived from the same value, so it can never drift out of sync.
 //  - Reduce Motion: no travel, just appear and disappear.
+// Glass theme: Apple's inset sheet — it floats 8pt in from the screen's edges with the display's
+// big corners, a frosted pane with a bright rim over the dimmed screen (a denser fill where there's
+// no live blur). Light theme: a white sheet from the bottom edge.
 // A blocking sheet (`dismissible={false}`) has no grabber, ignores the backdrop and back button —
 // used when the match cannot continue without an answer (next batter, next bowler).
 
@@ -73,10 +80,13 @@ type Props = {
 };
 
 export default function Sheet({ visible, onClose, title, subtitle, children, footer, dismissible = true, dark }: Props) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
   const reduced = useReducedMotion();
+  const support = useGlassSupport();
+  const glass = theme.mode === 'dark';
 
   // Stays mounted through the closing animation, then unmounts. Derived during render (not in an
   // effect) so opening is never a frame late.
@@ -84,6 +94,23 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
   if (visible && !mounted) setMounted(true);
   // With Reduce Motion there's no closing animation to wait for.
   if (!visible && mounted && reduced) setMounted(false);
+
+  // The keyboard. iOS has KeyboardAvoidingView below. Android doesn't resize a full-screen modal
+  // for the keyboard on an edge-to-edge screen, so the sheet would sit behind it: lift it by the
+  // keyboard's height ourselves. The larger of the two readings covers both ways Android reports
+  // the window (with or without the navigation bar).
+  const [lift, setLift] = useState(0);
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !mounted) return undefined;
+    const show = Keyboard.addListener('keyboardDidShow', (e) =>
+      setLift(Math.max(e.endCoordinates.height, screenHeight - e.endCoordinates.screenY)),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () => setLift(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [mounted, screenHeight]);
 
   const offscreen = screenHeight;
   const y = useSharedValue(offscreen);
@@ -136,9 +163,11 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
 
   if (!mounted) return null;
 
-  const bg = dark ? theme.deck : theme.cream;
-  const fg = dark ? theme.onDark : theme.ink;
-  const soft = dark ? theme.onDarkSoft : theme.muted;
+  const bg = glass ? (support === 'blur' ? theme.sheetFill : theme.glassSolid) : dark ? theme.deck : theme.cream;
+  const fg = glass || dark ? theme.onDark : theme.ink;
+  const soft = glass || dark ? theme.onDarkSoft : theme.muted;
+  // The inset sheet already stands clear of the screen's bottom edge; its padding covers the rest.
+  const bottomRoom = glass ? Math.max(insets.bottom - INSET, 0) : insets.bottom;
 
   return (
     <Modal
@@ -161,7 +190,7 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
         </Animated.View>
 
         <KeyboardAvoidingView
-          style={styles.anchor}
+          style={[styles.anchor, { paddingBottom: lift }]}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           pointerEvents="box-none"
         >
@@ -169,10 +198,15 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
             accessibilityViewIsModal
             style={[
               styles.sheet,
-              { backgroundColor: bg, borderTopColor: theme.accent, maxHeight: screenHeight * 0.9 },
+              { backgroundColor: bg, maxHeight: Math.min(screenHeight * 0.9, screenHeight - lift - insets.top - space.lg) },
+              glass && [
+                styles.inset,
+                { borderColor: theme.glassBorder, boxShadow: `inset 0 1px 0 ${theme.glassRim}, 0 -10px 40px rgba(0,0,0,0.45)` },
+              ],
               sheetStyle,
             ]}
           >
+            {glass && support === 'blur' && <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill} />}
             <GestureDetector gesture={pan}>
               <View style={styles.header}>
                 {dismissible && <View style={[styles.grabber, { backgroundColor: soft }]} />}
@@ -197,13 +231,16 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
               <View
                 style={[
                   styles.footer,
-                  { paddingBottom: insets.bottom + space.md, borderTopColor: dark ? theme.borderOnDark : theme.cardDivider },
+                  {
+                    paddingBottom: (lift ? 0 : bottomRoom) + space.md,
+                    borderTopColor: glass ? 'transparent' : dark ? theme.borderOnDark : theme.cardDivider,
+                  },
                 ]}
               >
                 {footer}
               </View>
             ) : (
-              <View style={{ height: insets.bottom + space.md }} />
+              <View style={{ height: (lift ? 0 : bottomRoom) + space.md }} />
             )}
           </Animated.View>
         </KeyboardAvoidingView>
@@ -212,13 +249,21 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
   );
 }
 
+/** How far the glass sheet floats in from the screen's edges. */
+const INSET = 8;
+
 const styles = StyleSheet.create({
   anchor: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
     borderTopLeftRadius: radius.xl + 6,
     borderTopRightRadius: radius.xl + 6,
-    borderTopWidth: 2,
     overflow: 'hidden',
+  },
+  inset: {
+    margin: INSET,
+    borderRadius: radius.sheet,
+    borderCurve: 'continuous',
+    borderWidth: 1,
   },
   header: { paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.sm, gap: 2 },
   grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, opacity: 0.5, marginBottom: space.sm },

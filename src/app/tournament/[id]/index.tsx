@@ -7,9 +7,8 @@ import type { CricketStats, FootballStats } from '@/api/types';
 import Button from '@/components/Button';
 import EmptyState from '@/components/EmptyState';
 import ErrorBanner from '@/components/ErrorBanner';
-import Icon from '@/components/Icon';
-import PitchBackground from '@/components/PitchBackground';
-import PressableScale from '@/components/PressableScale';
+import GlassTabBar, { type GlassTab } from '@/components/GlassTabBar';
+import HeaderButton from '@/components/HeaderButton';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
@@ -20,6 +19,7 @@ import HubPage from '@/features/hub/HubPage';
 import MatchesTab from '@/features/hub/MatchesTab';
 import PreStartHub from '@/features/hub/PreStartHub';
 import { CricketStatsPage, FootballStatsPage } from '@/features/hub/StatsTab';
+import { CricketSummaryPage, FootballSummaryPage } from '@/features/hub/SummaryTab';
 import { CricketTable, FootballTable } from '@/features/hub/TableTab';
 import TeamsList from '@/features/teams/TeamsList';
 import { useAction } from '@/hooks/useAction';
@@ -27,23 +27,25 @@ import { useQuery } from '@/hooks/useQuery';
 import { useTeams } from '@/hooks/useTeams';
 import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
+import { dateRange } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
-// A tournament's hub. Before kick-off it's the setup checklist; after, it's four peer pages —
-// matches, table, stats, teams — under a tab bar that stays pinned while each page scrolls on its
-// own. Tap a tab or swipe sideways to move between them.
+// A tournament's hub. Before kick-off it's the setup checklist; after, it's five peer pages —
+// matches, table, summary, stats, teams — under a tab bar that stays pinned while each page scrolls
+// on its own. Tap a tab or swipe sideways to move between them.
 
-type Tab = 'matches' | 'table' | 'stats' | 'teams';
+type Tab = 'matches' | 'table' | 'summary' | 'stats' | 'teams';
 
 // Module scope: the pager rebuilds its gesture when this array changes identity.
-const PAGES: Tab[] = ['matches', 'table', 'stats', 'teams'];
-const SEGMENTS: { key: Tab; label: string }[] = [
-  { key: 'matches', label: 'Matches' },
-  { key: 'table', label: 'Table' },
-  { key: 'stats', label: 'Stats' },
-  { key: 'teams', label: 'Teams' },
+const PAGES: Tab[] = ['matches', 'table', 'summary', 'stats', 'teams'];
+const SEGMENTS: GlassTab<Tab>[] = [
+  { key: 'matches', label: 'Matches', icon: 'calendar-month-outline' },
+  { key: 'table', label: 'Table', icon: 'format-list-numbered' },
+  { key: 'summary', label: 'Summary', icon: 'chart-donut' },
+  { key: 'stats', label: 'Stats', icon: 'chart-bar' },
+  { key: 'teams', label: 'Teams', icon: 'account-group-outline' },
 ];
 
 export default function TournamentHub() {
@@ -102,11 +104,14 @@ export default function TournamentHub() {
 }
 
 function StartedHub() {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const router = useRouter();
   const { id, sport, name, access, closed, query } = useTournament();
   const action = useAction();
   const [promptDismissed, setPromptDismissed] = useState(false);
+  const light = theme.mode === 'light';
+  const dates = dateRange(query.data?.startDate, query.data?.endDate);
 
   // Asked once, when the last match finishes.
   const completeNow = async () => {
@@ -126,7 +131,7 @@ function StartedHub() {
   const [seen, setSeen] = useState<Set<Tab>>(() => new Set(['matches']));
   if (!seen.has(tab)) setSeen(new Set(seen).add(tab));
 
-  // One fetch feeds both Table and Stats; it waits until one of them has been opened.
+  // One fetch feeds Table, Summary and Stats; it waits until one of them has been opened.
   const statsFetcher = useCallback(
     () =>
       sport === 'Cricket'
@@ -134,7 +139,7 @@ function StartedHub() {
         : api.call<FootballStats>('TOURNAMENT_STATS', { routeParams: { id } }),
     [id, sport],
   );
-  const stats = useQuery<FootballStats | CricketStats>(statsFetcher, { enabled: seen.has('table') || seen.has('stats') });
+  const stats = useQuery<FootballStats | CricketStats>(statsFetcher, { enabled: seen.has('table') || seen.has('summary') || seen.has('stats') });
   const teams = useTeams(id, seen.has('teams'));
 
   const statsBody = (render: (s: FootballStats | CricketStats) => ReactNode) =>
@@ -157,6 +162,14 @@ function StartedHub() {
             {sport === 'Cricket' ? <CricketTable stats={s as CricketStats} /> : <FootballTable stats={s as FootballStats} />}
           </HubPage>
         ));
+      case 'summary':
+        return statsBody((s) =>
+          sport === 'Cricket' ? (
+            <CricketSummaryPage stats={s as CricketStats} refreshing={stats.refreshing} onRefresh={stats.refresh} />
+          ) : (
+            <FootballSummaryPage stats={s as FootballStats} refreshing={stats.refreshing} onRefresh={stats.refresh} />
+          ),
+        );
       case 'stats':
         return statsBody((s) =>
           sport === 'Cricket' ? (
@@ -182,29 +195,31 @@ function StartedHub() {
     <View style={{ flex: 1 }}>
       <Stack.Screen
         options={{
-          title: name,
+          // The name is the page's own big title below, so the bar stays empty.
+          title: '',
           headerRight: () => (
             <View style={styles.headerRow}>
-              <PressableScale
+              <HeaderButton
+                icon="tournament"
+                label="Knockout stage"
                 onPress={() => router.push({ pathname: '/tournament/[id]/knockout', params: { id: String(id) } })}
-                accessibilityLabel="Knockout stage"
-                style={styles.headerBtn}
-              >
-                <Icon name="tournament" size={24} color={theme.accent} />
-              </PressableScale>
-              <PressableScale
+              />
+              <HeaderButton
+                icon="account-group-outline"
+                label="People and settings"
                 onPress={() => router.push({ pathname: '/tournament/[id]/people', params: { id: String(id) } })}
-                accessibilityLabel="People and settings"
-                style={styles.headerBtn}
-              >
-                <Icon name="account-group-outline" size={24} color={theme.accent} />
-              </PressableScale>
+              />
             </View>
           ),
         }}
       />
-      <PitchBackground theme={theme} />
-      <View style={[styles.tabBar, { backgroundColor: theme.deck, borderBottomColor: theme.borderOnDark }]}>
+      <View style={[styles.tabBar, light ? styles.lightTabBar : styles.glassTop]}>
+        <View style={{ gap: 4, marginBottom: light ? space.sm : 0 }}>
+          <Text style={[type.title, { color: theme.ink }]} accessibilityRole="header" numberOfLines={2}>
+            {name}
+          </Text>
+          {!!dates && <Text style={[type.body, { color: theme.muted }]}>{dates}</Text>}
+        </View>
         {closed && (
           <Text style={[type.caption, { color: theme.onDarkSoft, paddingVertical: space.xs }]}>
             {query.data?.status === 'Completed'
@@ -222,17 +237,23 @@ function StartedHub() {
             </View>
           </View>
         )}
-        <SegmentedControl accessibilityLabel="Tournament sections" segments={SEGMENTS} value={tab} onChange={setTab} />
+        {/* Five words spread across the width, so they also fit a 360-wide phone. */}
+        {light && (
+          <SegmentedControl variant="tabs" accessibilityLabel="Tournament sections" segments={SEGMENTS} value={tab} onChange={setTab} style={styles.lightTabs} />
+        )}
       </View>
       <TabPager pages={PAGES} value={tab} onChange={setTab} renderPage={renderPage} />
+      {!light && <GlassTabBar accessibilityLabel="Tournament sections" tabs={SEGMENTS} value={tab} onChange={setTab} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: { paddingHorizontal: space.lg, paddingBottom: space.md, paddingTop: space.xs, borderBottomWidth: StyleSheet.hairlineWidth, gap: space.sm },
-  headerBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md },
-  headerRow: { flexDirection: 'row' },
-  prompt: { borderWidth: 1, borderRadius: radius.lg, padding: space.md, gap: space.sm },
+  lightTabBar: { paddingBottom: 0, borderBottomWidth: 0 },
+  lightTabs: { justifyContent: 'space-between', gap: space.md },
+  glassTop: { borderBottomWidth: 0, paddingTop: 0, paddingHorizontal: space.lg + 4 },
+  headerRow: { flexDirection: 'row', gap: space.sm },
+  prompt: { borderWidth: 1, borderRadius: radius.xl, borderCurve: 'continuous', padding: space.md, gap: space.sm },
   promptRow: { flexDirection: 'row', gap: space.sm },
 });

@@ -7,8 +7,8 @@ import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import { haptic } from '@/lib/haptics';
 import { roleKeeps } from '@/lib/cricketLabels';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // Picking one side's XI. Three lists: the XI in batting order, the bench, and anyone unavailable.
 // In the XI each player has a captain (C) and keeper (WK) toggle; "Edit order" swaps those for
@@ -55,6 +55,8 @@ export function pickProblems(pick: TeamPick, size: number): string[] {
 type Props = { team: SetupTeam; pick: TeamPick; size: number; onChange: (p: TeamPick) => void };
 
 export default function XiPicker({ team, pick, size, onChange }: Props) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const [ordering, setOrdering] = useState(false);
   const byId = new Map(team.players.map((p) => [p.id, p]));
@@ -159,6 +161,7 @@ export default function XiPicker({ team, pick, size, onChange }: Props) {
 }
 
 function Toggle({ text, on, label, onPress }: { text: string; on: boolean; label: string; onPress: () => void }) {
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <PressableScale
@@ -187,6 +190,7 @@ function Square({
   disabled?: boolean;
   accent?: boolean;
 }) {
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <PressableScale
@@ -201,7 +205,7 @@ function Square({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   headRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderRadius: radius.lg, borderWidth: 1, padding: space.sm, paddingLeft: space.md, minHeight: 60 },
   order: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },

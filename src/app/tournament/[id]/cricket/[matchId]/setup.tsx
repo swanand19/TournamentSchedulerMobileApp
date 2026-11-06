@@ -19,8 +19,8 @@ import { useAction } from '@/hooks/useAction';
 import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // Format, toss and both XIs, sent in one call — the way the laws treat it: nothing is scored
 // until the captains have exchanged teams and the coin has landed. A tournament is played to one
@@ -34,6 +34,8 @@ function presetLine(r: CricketRules) {
 }
 
 export default function CricketSetup() {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const theme = useSportTheme();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
@@ -159,10 +161,10 @@ export default function CricketSetup() {
     >
       <Deck>
         <Text style={[type.board, { color: theme.accent }]}>
-          {loaded.state.roundLabel ? loaded.state.roundLabel.toUpperCase() : `GROUP ${loaded.state.groupName}`} · MATCH {loaded.state.matchNumber}
+          {`${loaded.state.roundLabel ?? `Group ${loaded.state.groupName}`} · Match ${loaded.state.matchNumber}`}
         </Text>
         <Text style={[type.title, { color: theme.onDark }]}>
-          {o.homeTeamName.toUpperCase()} <Text style={{ color: theme.accent }}>VS</Text> {o.awayTeamName.toUpperCase()}
+          {o.homeTeamName} <Text style={{ color: theme.mode === 'light' ? theme.muted : theme.accent }}>{'vs'}</Text> {o.awayTeamName}
         </Text>
       </Deck>
 
@@ -185,7 +187,7 @@ export default function CricketSetup() {
             >
               <View style={styles.presetTop}>
                 <Text style={[styles.presetName, { color: on ? theme.accentInk : theme.onDark }]} numberOfLines={1}>
-                  {p.name.toUpperCase()}
+                  {p.name}
                 </Text>
                 {on && <Icon name="check-circle" size={20} color={theme.accentInk} />}
               </View>
@@ -245,7 +247,7 @@ export default function CricketSetup() {
               >
                 {on && <Icon name="circle-slice-8" size={18} color={theme.accentInk} />}
                 <Text style={[styles.tossName, { color: on ? theme.accentInk : theme.onDark }]} numberOfLines={2}>
-                  {t.name.toUpperCase()}
+                  {t.name}
                 </Text>
               </PressableScale>
             );
@@ -304,7 +306,7 @@ export default function CricketSetup() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   preset: { width: 176, borderRadius: radius.lg, borderWidth: 1.5, padding: space.md, gap: 4, borderBottomWidth: 3 },
   presetTop: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   presetName: { flex: 1, fontFamily: fonts.display, fontSize: 20, lineHeight: 24 },

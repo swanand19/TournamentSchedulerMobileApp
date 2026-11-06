@@ -102,11 +102,13 @@ export async function sealRequest(
   const { keyId, key } = serverPublicKey();
   const requestUUID = ExpoCrypto.randomUUID();
   const timestamp = new Date().toISOString();
+  const appVersion = Constants.expoConfig?.version ?? 'unknown';
 
   const { token, contentKey } = encryptRequest({
     serverPublicKey: key,
     keyId,
-    claims: { serviceRequestId, requestUUID, timestamp },
+    // The channel and version are sealed too: the server's update check reads them (HLD P-25).
+    claims: { serviceRequestId, requestUUID, timestamp, channel, appVersion },
     plaintext: utf8ToBytes(JSON.stringify(session ? { ...payload, session: session.token } : payload)),
     randomBytes: (length) => ExpoCrypto.getRandomBytes(length),
   });
@@ -120,7 +122,7 @@ export async function sealRequest(
         journeyId,
         sessionId: session?.sessionId ?? null,
         channel,
-        appVersion: Constants.expoConfig?.version ?? 'unknown',
+        appVersion,
         deviceId: await deviceId(),
         keyId,
         apiVersion: '1',

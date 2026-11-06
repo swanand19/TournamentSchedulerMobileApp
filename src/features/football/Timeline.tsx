@@ -6,8 +6,8 @@ import type { FootballMatch, MatchEvent } from '@/api/types';
 import Icon, { type IconName } from '@/components/Icon';
 import { playerIndex, playerLabel } from '@/features/football/useFootballMatch';
 import { minuteLabel } from '@/lib/format';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // The match as it happened, newest first. Goals, cards and subs are cards the eye stops on;
 // clock and period bookkeeping are single quiet lines.
@@ -20,8 +20,12 @@ const ENTER = FadeInDown.duration(220);
 const PERIOD = ['1st half', '2nd half', 'Extra time 1st half', 'Extra time 2nd half'];
 
 export default function Timeline({ match, events }: { match: FootballMatch; events: MatchEvent[] }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const players = playerIndex(match);
+  // Light: no cards — each event a row with a thin coloured edge, the minute in thin figures.
+  const light = theme.mode === 'light';
   // The newest id present on first render; anything after it is new while we watched.
   const [seenUpTo] = useState(() => events.reduce((m, e) => Math.max(m, e.id), 0));
 
@@ -50,8 +54,8 @@ export default function Timeline({ match, events }: { match: FootballMatch; even
     <View style={{ gap: space.sm }}>
       {rows.reverse().map(({ e, period, secondYellow }) => {
         const minute = minuteLabel(e.minuteOfMatch, e.stoppageMinute);
-        const team = teamName(e.teamId).toUpperCase();
-        const tag = team ? ` · ${team}` : '';
+        const team = teamName(e.teamId);
+        const tag = team ? (light ? ` · ${team}` : `, ${team}`) : '';
         const fresh = e.id > seenUpTo;
 
         let major: { icon: IconName; iconColor: string; title: string; who: string; detail?: string; edge: string } | null = null;
@@ -61,7 +65,7 @@ export default function Timeline({ match, events }: { match: FootballMatch; even
           case 'Goal':
             major = {
               icon: 'soccer',
-              iconColor: theme.warnInk,
+              iconColor: light ? theme.deep : theme.warnInk,
               title: `Goal${tag}`,
               who: e.playerId ? playerLabel(players.get(e.playerId)) : 'Own goal / unknown scorer',
               detail: e.relatedPlayerId ? `Assist: ${playerLabel(players.get(e.relatedPlayerId))}` : undefined,
@@ -144,17 +148,20 @@ export default function Timeline({ match, events }: { match: FootballMatch; even
             <Animated.View
               key={e.id}
               entering={fresh ? ENTER : undefined}
-              style={[styles.card, { backgroundColor: theme.cream, borderLeftColor: major.edge }]}
+              // Glass: a frosted row — the minute quiet on the left, then what happened and who.
+              style={[styles.card, { backgroundColor: theme.cream, borderLeftColor: major.edge }, light ? styles.lightCard : styles.glassCard]}
               accessible
               accessibilityLabel={`${minute} ${major.title}. ${major.who}. ${major.detail ?? ''}`}
             >
-              <View style={[styles.minute, { backgroundColor: theme.ink }]}>
-                <Text style={[styles.minuteText, { color: theme.cream }]}>{minute}</Text>
+              <View style={[styles.minute, { backgroundColor: 'transparent' }]}>
+                <Text style={[styles.minuteText, { color: light ? theme.ink : theme.onDarkSoft }, light ? styles.lightMinute : styles.glassMinute]}>
+                  {minute}
+                </Text>
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <View style={styles.titleRow}>
                   <Icon name={major.icon} size={16} color={major.iconColor} />
-                  <Text style={[styles.title, { color: theme.warnInk }]} numberOfLines={1}>
+                  <Text style={[styles.title, { color: light ? theme.muted : theme.onDark }, light && styles.lightTitle]} numberOfLines={1}>
                     {major.title}
                   </Text>
                 </View>
@@ -170,8 +177,8 @@ export default function Timeline({ match, events }: { match: FootballMatch; even
         return (
           <Animated.View key={e.id} entering={fresh ? ENTER : undefined} style={styles.minor} accessible accessibilityLabel={`${minute} ${minor.text}`}>
             <Text style={[styles.minorMinute, { color: theme.onDarkSoft }]}>{minute}</Text>
-            <Icon name={minor.icon} size={16} color={theme.accent} />
-            <Text style={[type.bodyStrong, { color: theme.onDarkSoft, flex: 1 }]}>{minor.text}</Text>
+            <Icon name={minor.icon} size={16} color={light ? theme.muted : theme.accent} />
+            <Text style={[light ? type.body : type.bodyStrong, { color: theme.onDarkSoft, flex: 1 }]}>{minor.text}</Text>
           </Animated.View>
         );
       })}
@@ -179,12 +186,17 @@ export default function Timeline({ match, events }: { match: FootballMatch; even
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ figures, fonts }: Typography) => StyleSheet.create({
   card: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.lg, padding: space.md, borderLeftWidth: 5 },
   minute: { borderRadius: radius.md, minWidth: 52, paddingHorizontal: space.sm, paddingVertical: space.sm, alignItems: 'center' },
-  minuteText: { fontFamily: fonts.display, fontSize: 20, fontVariant: ['tabular-nums'] },
+  minuteText: { fontFamily: fonts.display, fontSize: 20, fontVariant: figures },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   title: { fontFamily: fonts.bodySemiBold, fontSize: 13, flexShrink: 1 },
   minor: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.sm, minHeight: 32 },
   minorMinute: { fontFamily: fonts.display, fontSize: 15, minWidth: 52, textAlign: 'center' },
+  lightCard: { borderRadius: 0, borderLeftWidth: 2, paddingVertical: space.sm, paddingLeft: space.sm },
+  glassCard: { borderRadius: 20, borderCurve: 'continuous', borderLeftWidth: 0, paddingVertical: space.md },
+  glassMinute: { fontFamily: fonts.bodySemiBold, fontSize: 15 },
+  lightMinute: { fontSize: 24 },
+  lightTitle: { fontFamily: fonts.body },
 });

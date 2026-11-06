@@ -6,13 +6,15 @@ import { Deck } from '@/components/Card';
 import StatusChip from '@/components/StatusChip';
 import MatchClock from '@/features/football/MatchClock';
 import { playerIndex } from '@/features/football/useFootballMatch';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // The football scoreboard: period, status, clock, both teams and the score, and who scored. The
 // scorer's console and the watcher's screen draw the same board.
 
 export default function Scoreboard({ match, events }: { match: FootballMatch; events: MatchEvent[] }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const players = playerIndex(match);
   const subsUsed = (teamId: number | null) => events.filter((e) => e.eventType === 'SubstitutionIn' && e.teamId === teamId).length;
@@ -41,40 +43,105 @@ export default function Scoreboard({ match, events }: { match: FootballMatch; ev
             : { label: 'Live', tone: 'live' };
 
   const pens = match.penaltyHomeScore != null && match.penaltyAwayScore != null;
+  const light = theme.mode === 'light';
 
-  return (
-    <Deck>
-      <View style={styles.boardTop}>
-        <View style={{ flex: 1, gap: space.xs }}>
-          <Text style={[type.board, { color: theme.accent }]}>{match.currentPeriodLabel.toUpperCase()}</Text>
-          <StatusChip label={state.label} tone={state.tone} onDark />
-          <Text style={[type.caption, { color: theme.onDarkSoft }]}>
-            {match.roundLabel ?? `Group ${match.groupName}`} · Match {match.matchNumber}
-          </Text>
+  // Light ("B · Sight-screen"): no board — the period and clock in a quiet line, then the teams in
+  // sentence case either side of a thin, oversized score.
+  if (light) {
+    const sideLine = (teamId: number | null, label: string) => `${label}, subs ${subsUsed(teamId)}/${match.maxSubstitutions ?? 0}`;
+    return (
+      <View style={{ gap: space.md }}>
+        <View style={styles.lightTop}>
+          <Text style={[type.body, { color: theme.muted }]}>{match.currentPeriodLabel}</Text>
+          <StatusChip label={state.label} tone={state.tone} />
+          <View style={{ flex: 1 }} />
+          {match.status !== 'Completed' && <MatchClock match={match} />}
         </View>
+        <View
+          style={styles.lightTeams}
+          accessible
+          accessibilityLabel={`${match.homeTeamName} ${match.homeScore}, ${match.awayTeamName} ${match.awayScore}`}
+          accessibilityLiveRegion="polite"
+        >
+          <View style={styles.teamCol}>
+            <Text style={[type.lead, styles.lightTeam, { color: theme.ink }]} numberOfLines={2}>
+              {match.homeTeamName}
+            </Text>
+            <Text style={[type.caption, { color: theme.muted }]}>{sideLine(match.homeTeamId, 'Home')}</Text>
+          </View>
+          <View style={styles.lightScore}>
+            <Bump value={match.homeScore} style={[type.scoreLarge, { color: theme.ink }]} />
+            <Text style={[type.score, { color: theme.placeholderInk }]}>–</Text>
+            <Bump value={match.awayScore} style={[type.scoreLarge, { color: theme.ink }]} />
+          </View>
+          <View style={[styles.teamCol, { alignItems: 'flex-end' }]}>
+            <Text style={[type.lead, styles.lightTeam, { color: theme.ink, textAlign: 'right' }]} numberOfLines={2}>
+              {match.awayTeamName}
+            </Text>
+            <Text style={[type.caption, { color: theme.muted, textAlign: 'right' }]}>{sideLine(match.awayTeamId, 'Away')}</Text>
+          </View>
+        </View>
+        {pens && (
+          <Text style={[styles.lightPens, type.bodyStrong, { color: theme.deep, backgroundColor: theme.tint }]}>
+            Penalties {match.penaltyHomeScore}–{match.penaltyAwayScore}
+          </Text>
+        )}
+        {(scorers(match.homeTeamId).length > 0 || scorers(match.awayTeamId).length > 0) && (
+          <View style={styles.scorers}>
+            <View style={{ flex: 1, gap: 2 }}>
+              {scorers(match.homeTeamId).map((s) => (
+                <Text key={s} style={[type.caption, { color: theme.muted }]}>
+                  {s}
+                </Text>
+              ))}
+            </View>
+            <View style={{ flex: 1, gap: 2, alignItems: 'flex-end' }}>
+              {scorers(match.awayTeamId).map((s) => (
+                <Text key={s} style={[type.caption, { color: theme.muted, textAlign: 'right' }]}>
+                  {s}
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
+        <Text style={[type.caption, { color: theme.muted }]}>
+          {match.roundLabel ?? `Group ${match.groupName}`}, match {match.matchNumber}
+        </Text>
+      </View>
+    );
+  }
+
+  // Glass ("N · Football live"): one frosted panel — the period, the live dot and the clock along
+  // the top; the two sides either side of a heavy score; who scored under each; where it's played.
+  return (
+    <Deck style={{ gap: space.md }}>
+      <View style={styles.boardTop}>
+        <Text style={[type.bodyStrong, { color: theme.onDark }]}>{match.currentPeriodLabel}</Text>
+        <StatusChip label={state.label} tone={state.tone} />
+        <View style={{ flex: 1 }} />
         {match.status !== 'Completed' && <MatchClock match={match} />}
       </View>
 
       <View style={styles.teams} accessible accessibilityLabel={`${match.homeTeamName} ${match.homeScore}, ${match.awayTeamName} ${match.awayScore}`} accessibilityLiveRegion="polite">
         <View style={styles.teamCol}>
-          <Text style={[styles.teamName, { color: theme.onDark }]} numberOfLines={2}>
-            {match.homeTeamName.toUpperCase()}
+          <Text style={[type.heading, { color: theme.onDark }]} numberOfLines={2}>
+            {match.homeTeamName}
           </Text>
-          <Text style={[type.label, { color: theme.onDarkSoft }]}>
-            HOME · SUBS {subsUsed(match.homeTeamId)}/{match.maxSubstitutions ?? 0}
+          <Text style={[type.caption, { color: theme.onDarkSoft }]}>
+            Home, subs {subsUsed(match.homeTeamId)}/{match.maxSubstitutions ?? 0}
           </Text>
         </View>
-        <View style={[styles.score, { backgroundColor: theme.page }]}>
-          <Bump value={match.homeScore} style={[type.scoreLarge, { color: theme.accent }]} />
-          <Text style={[type.score, { color: theme.onDarkSoft }]}>:</Text>
-          <Bump value={match.awayScore} style={[type.scoreLarge, { color: theme.onDark }]} />
+        <View style={styles.score}>
+          <Bump value={match.homeScore} style={[styles.figure, { color: theme.onDark }]} />
+          <Text style={[styles.dash, { color: theme.onDarkSoft }]}>–</Text>
+          <Bump value={match.awayScore} style={[styles.figure, { color: theme.onDark }]} />
         </View>
         <View style={[styles.teamCol, { alignItems: 'flex-end' }]}>
-          <Text style={[styles.teamName, { color: theme.onDark, textAlign: 'right' }]} numberOfLines={2}>
-            {match.awayTeamName.toUpperCase()}
+          <Text style={[type.heading, { color: theme.onDark, textAlign: 'right' }]} numberOfLines={2}>
+            {match.awayTeamName}
           </Text>
-          <Text style={[type.label, { color: theme.onDarkSoft }]}>
-            AWAY · SUBS {subsUsed(match.awayTeamId)}/{match.maxSubstitutions ?? 0}
+          <Text style={[type.caption, { color: theme.onDarkSoft, textAlign: 'right' }]}>
+            Away, subs {subsUsed(match.awayTeamId)}/{match.maxSubstitutions ?? 0}
           </Text>
         </View>
       </View>
@@ -90,28 +157,37 @@ export default function Scoreboard({ match, events }: { match: FootballMatch; ev
           <View style={{ flex: 1, gap: 2 }}>
             {scorers(match.homeTeamId).map((s) => (
               <Text key={s} style={[type.caption, { color: theme.onDarkSoft }]}>
-                ⚽ {s}
+                {s}
               </Text>
             ))}
           </View>
           <View style={{ flex: 1, gap: 2, alignItems: 'flex-end' }}>
             {scorers(match.awayTeamId).map((s) => (
               <Text key={s} style={[type.caption, { color: theme.onDarkSoft, textAlign: 'right' }]}>
-                {s} ⚽
+                {s}
               </Text>
             ))}
           </View>
         </View>
       )}
+      <Text style={[type.caption, { color: theme.onDarkSoft }]}>
+        {match.roundLabel ?? `Group ${match.groupName}`}, match {match.matchNumber}
+      </Text>
     </Deck>
   );
 }
 
-const styles = StyleSheet.create({
-  boardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
+  boardTop: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   teams: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   teamCol: { flex: 1, gap: 4 },
-  teamName: { fontFamily: fonts.display, fontSize: 24, lineHeight: 28 },
-  score: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: radius.lg, paddingHorizontal: space.md },
+  score: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  figure: { fontFamily: fonts.display, fontSize: 64, lineHeight: 70, letterSpacing: -2, fontVariant: ['tabular-nums'] },
+  dash: { fontFamily: fonts.body, fontSize: 44, lineHeight: 70 },
   scorers: { flexDirection: 'row', gap: space.md },
+  lightTop: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 44 },
+  lightTeams: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  lightTeam: { fontSize: 18, lineHeight: 23 },
+  lightScore: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  lightPens: { alignSelf: 'center', paddingHorizontal: 14, paddingVertical: space.sm, borderRadius: radius.pill, overflow: 'hidden' },
 });

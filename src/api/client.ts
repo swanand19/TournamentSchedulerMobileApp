@@ -1,4 +1,5 @@
 import { clearSession, sessionFor } from '@/auth/session';
+import { markUpdateRequired } from '@/features/update/clientUpdate';
 
 import { apiError, NetworkError, unreadableAnswer } from './errors';
 import { openResponse, sealRequest } from './gateway';
@@ -89,6 +90,8 @@ export async function request<T>(
     const error = apiError(res.status, JSON.stringify(envelope));
     // Signed out on the server (elsewhere, expired, blocked): back to the sign-in screen, which says why.
     if (res.status === 401 && session) clearSession(error.message);
+    // This app version must update (HLD P-25): the root layout covers the app with the update screen.
+    if (res.status === 426) markUpdateRequired(error.message);
     throw error;
   }
   return (isEnvelope(envelope) ? envelope.data : envelope) as T;

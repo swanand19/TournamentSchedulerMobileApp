@@ -24,10 +24,10 @@ import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
 import { CRICKET_ROLES, describeCricketer, roleShort } from '@/lib/cricketLabels';
 import { confirm } from '@/lib/confirm';
-import { plural } from '@/lib/format';
+import { capitalizeWords, plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, lip, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { lip, radius, space, type Typography } from '@/theme/theme';
 
 // A team's squad: who's in it, sorted by shirt number, with a line-count summary on top and a
 // filter by position (football) or role (cricket). Owners tap a player to edit, add from the footer,
@@ -37,11 +37,15 @@ import { fonts, lip, radius, space, type } from '@/theme/theme';
 type Filter = 'ALL' | Line | string;
 
 export default function TeamScreen() {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const { teamId } = useLocalSearchParams<{ teamId: string }>();
   const router = useRouter();
   const { id: tournamentId, name: tournamentName, sport, access, closed } = useTournament();
   const canEdit = access.canEdit;
   const theme = useSportTheme();
+  // Light ("B · Team"): no tiles or boxes — a dashed code panel, plain words for roles, thin numbers.
+  const light = theme.mode === 'light';
   const isCricket = sport === 'Cricket';
 
   const fetcher = useCallback(
@@ -130,20 +134,20 @@ export default function TeamScreen() {
               <PressableScale
                 onPress={() => setRename((r) => ({ open: true, key: r.key + 1 }))}
                 accessibilityLabel={`Rename ${t.name}`}
-                style={[styles.iconBtn, { backgroundColor: theme.deck, borderColor: theme.borderOnDark }]}
+                style={[styles.iconBtn, { backgroundColor: theme.deck, borderColor: theme.borderOnDark }, light && styles.lightIconBtn]}
               >
-                <Icon name="pencil" size={20} color={theme.accent} />
+                <Icon name="pencil-outline" size={22} color={light ? theme.ink : theme.accent} />
               </PressableScale>
             ) : undefined}
           />
 
           {/* Owners share this; players type it under "Join a team" and pick their name. */}
           {canEdit && t.joinCode && !closed && (
-            <Card>
+            <Card style={light ? [styles.lightCodePanel, { borderColor: theme.ring }] : undefined}>
               <ErrorBanner message={codeAction.error?.message} />
               <Text style={[type.label, { color: theme.muted }]}>Join code</Text>
               <Text
-                style={[styles.code, { color: theme.ink }]}
+                style={[styles.code, light && styles.lightCode, { color: theme.ink }]}
                 accessibilityLabel={`Join code ${t.joinCode.split('').join(' ')}`}
                 selectable
               >
@@ -181,7 +185,7 @@ export default function TeamScreen() {
             </Text>
             <View style={styles.counts}>
               {buckets.map((b) => (
-                <View key={b} style={[styles.count, { backgroundColor: theme.chip }]} accessible accessibilityLabel={`${players.filter((p) => groupOf(p) === b).length} ${b}`}>
+                <View key={b} style={[styles.count, { backgroundColor: light ? 'transparent' : theme.chip }]} accessible accessibilityLabel={`${players.filter((p) => groupOf(p) === b).length} ${b}`}>
                   <Text style={[type.figure, { color: theme.ink, fontSize: 24, lineHeight: 28 }]}>
                     {players.filter((p) => groupOf(p) === b).length}
                   </Text>
@@ -219,7 +223,7 @@ export default function TeamScreen() {
                   disabled={!canEdit && !p.isLinked}
                   accessibilityLabel={`${p.jerseyNumber != null ? `Number ${p.jerseyNumber}, ` : ''}${p.name}${captain ? ', captain' : ''}`}
                   accessibilityHint={canEdit ? "Edit player" : p.isLinked ? "Opens their profile" : undefined}
-                  style={[styles.row, { backgroundColor: theme.cream }, lip(theme), captain && { borderWidth: 2, borderColor: theme.accent }]}
+                  style={[styles.row, { backgroundColor: theme.cream }, lip(theme), captain && !light && { borderWidth: 2, borderColor: theme.accent }]}
                 >
                   <JerseyBadge number={p.jerseyNumber} highlight={captain} />
                   <View style={{ flex: 1, gap: 2 }}>
@@ -228,8 +232,8 @@ export default function TeamScreen() {
                         {p.name}
                       </Text>
                       {captain && (
-                        <View style={[styles.capt, { backgroundColor: theme.deep }]}>
-                          <Text style={[type.label, { color: theme.accent }]}>Captain</Text>
+                        <View style={[styles.capt, { backgroundColor: light ? theme.tint : theme.deep }]}>
+                          <Text style={[type.label, { color: light ? theme.deep : theme.accent }]}>Captain</Text>
                         </View>
                       )}
                       {p.isMe ? (
@@ -246,8 +250,8 @@ export default function TeamScreen() {
                     </Text>
                   </View>
                   {tag && (
-                    <View style={[styles.tag, { backgroundColor: theme.chip }]}>
-                      <Text style={[styles.tagText, { color: theme.ink }]}>{tag}</Text>
+                    <View style={[styles.tag, { backgroundColor: light ? 'transparent' : theme.chip }]}>
+                      <Text style={[styles.tagText, light && [type.caption, { textTransform: 'none' }], { color: light ? theme.muted : theme.ink }]}>{tag}</Text>
                     </View>
                   )}
                 </PressableScale>
@@ -307,12 +311,12 @@ function RenameSheet({ visible, onClose, team, tournamentId, onSaved }: { visibl
       }
     >
       <ErrorBanner message={action.error?.message} />
-      <TextField label="Team name" value={name} onChangeText={setName} autoCapitalize="words" returnKeyType="done" onSubmitEditing={save} />
+      <TextField label="Team name" value={name} onChangeText={(text) => setName(capitalizeWords(text))} autoCapitalize="words" returnKeyType="done" onSubmitEditing={save} />
     </Sheet>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   iconBtn: { width: 48, height: 48, borderRadius: radius.lg, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   counts: { flexDirection: 'row', gap: space.sm },
   count: { flex: 1, borderRadius: radius.md, alignItems: 'center', paddingVertical: space.sm },
@@ -324,4 +328,7 @@ const styles = StyleSheet.create({
   tagText: { fontFamily: fonts.display, fontSize: 15 },
   code: { fontFamily: fonts.display, fontSize: 40, lineHeight: 48, letterSpacing: 6 },
   codeActions: { flexDirection: 'row', gap: space.sm },
+  lightIconBtn: { backgroundColor: 'transparent', borderWidth: 0 },
+  lightCode: { fontSize: 30, lineHeight: 36, letterSpacing: 4 },
+  lightCodePanel: { borderWidth: 1, borderTopWidth: 1, borderStyle: 'dashed', borderRadius: 18, paddingHorizontal: space.lg, paddingBottom: space.lg },
 });

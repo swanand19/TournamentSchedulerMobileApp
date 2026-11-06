@@ -13,10 +13,10 @@ import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import { useAction } from '@/hooks/useAction';
 import { confirm } from '@/lib/confirm';
-import { plural } from '@/lib/format';
+import { capitalizeWords, plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, lip, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { lip, radius, space, type Typography } from '@/theme/theme';
 
 // The tournament's teams. Before kick-off the organiser adds and removes sides here; once the
 // tournament has started the fixtures depend on them, so the list becomes read-only (squads stay
@@ -30,6 +30,8 @@ type Props = {
 };
 
 export default function TeamsList({ tournamentId, teams, editable, onChanged }: Props) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const theme = useSportTheme();
   const action = useAction();
@@ -64,7 +66,7 @@ export default function TeamsList({ tournamentId, teams, editable, onChanged }: 
     router.push({ pathname: '/tournament/[id]/team/[teamId]', params: { id: String(tournamentId), teamId: String(team.id) } });
 
   return (
-    <View style={{ gap: space.md }}>
+    <View style={{ gap: theme.mode === 'light' ? 0 : space.md }}>
       <ErrorBanner message={action.error?.message} />
 
       {editable && (
@@ -75,7 +77,8 @@ export default function TeamsList({ tournamentId, teams, editable, onChanged }: 
           <View style={styles.addRow}>
             <TextInput
               value={name}
-              onChangeText={setName}
+              onChangeText={(text) => setName(capitalizeWords(text))}
+              autoCapitalize="words"
               placeholder="e.g. Rovers FC"
               placeholderTextColor={theme.placeholderInk}
               returnKeyType="done"
@@ -127,7 +130,7 @@ export default function TeamsList({ tournamentId, teams, editable, onChanged }: 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   addRow: { flexDirection: 'row', gap: space.sm, alignItems: 'center' },
   input: { flex: 1, minHeight: 48, borderRadius: radius.md, paddingHorizontal: space.md, fontFamily: fonts.bodyMedium, fontSize: 16 },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.lg, padding: space.md, minHeight: 72 },

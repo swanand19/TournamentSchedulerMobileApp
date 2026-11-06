@@ -12,20 +12,24 @@ import PressableScale from '@/components/PressableScale';
 import Screen from '@/components/Screen';
 import { useAction } from '@/hooks/useAction';
 import { haptic } from '@/lib/haptics';
-import { fonts, radius, space, themeFor, type } from '@/theme/theme';
+import { useThemeMode } from '@/theme/appearance';
+import { useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, themeFor, type Typography } from '@/theme/theme';
 
 // Joining a team with the code its organiser shared: type the code, see the team and the names in
 // it nobody has claimed, tap yours — or join as a new player. Instant; the server keeps it to one
 // team per tournament. Lands in the tournament afterwards.
 
 export default function JoinScreen() {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const action = useAction();
   const [code, setCode] = useState('');
   const [preview, setPreview] = useState<JoinTeamPreview | null>(null);
   const [joining, setJoining] = useState<number | 'new' | null>(null);
 
-  const theme = themeFor(preview?.sport ?? 'Football');
+  const theme = themeFor(preview?.sport ?? 'Football', useThemeMode());
 
   const look = async () => {
     if (!code.trim()) return;
@@ -118,7 +122,7 @@ export default function JoinScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   code: { minHeight: 64, borderRadius: radius.md, paddingHorizontal: space.md, fontFamily: fonts.display, fontSize: 32, letterSpacing: 6, textAlign: 'center' },
   place: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.lg, padding: space.md, minHeight: 64 },
   name: { fontFamily: fonts.bodySemiBold, fontSize: 17, lineHeight: 22 },

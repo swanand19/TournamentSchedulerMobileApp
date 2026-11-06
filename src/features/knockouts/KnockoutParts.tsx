@@ -12,8 +12,8 @@ import Icon from '@/components/Icon';
 import Sheet from '@/components/Sheet';
 import StatusChip from '@/components/StatusChip';
 import TextField from '@/components/TextField';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
 // The knockout screen's pieces: a match card (each side's team, or where it comes from until that's
 // known), the sheet an owner picks a team in, and the sheet that adds or edits a knockout match.
@@ -59,6 +59,7 @@ type CardProps = {
 };
 
 export function KnockoutCard({ fixture: f, canEdit, canScore, onOpenMatch, onPickTeam, onEdit, onDelete }: CardProps) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const live = f.status != null && LIVE.includes(f.status);
   const ready = f.home.teamId != null && f.away.teamId != null;
@@ -95,6 +96,7 @@ export function KnockoutCard({ fixture: f, canEdit, canScore, onOpenMatch, onPic
 }
 
 function Side({ side, winner, canPick, onPick }: { side: KnockoutSide; winner: number | null; canPick: boolean; onPick: () => void }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const through = winner != null && winner === side.teamId;
   const out = winner != null && side.teamId != null && winner !== side.teamId;
@@ -134,6 +136,7 @@ export function TeamPickSheet({
   onPick: (teamId: number | null) => void;
   busy: boolean;
 }) {
+  const { type } = useTypography();
   const s = fixture ? (side === 'Home' ? fixture.home : fixture.away) : null;
   return (
     <Sheet visible={visible} onClose={onClose} title="Choose the team" subtitle={fixture && s ? `${fixture.label} · ${s.source}` : undefined}>
@@ -230,6 +233,7 @@ function SlotPicker({
   groups: KnockoutStage['groups'];
   earlier: KnockoutFixture[];
 }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const [open, setOpen] = useState(false);
   const kinds: { value: KnockoutSlotKind; label: string }[] = [
@@ -284,6 +288,7 @@ function SlotPicker({
 }
 
 function Group({ label, children }: { label: string; children: ReactNode }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   return (
     <View style={{ gap: space.sm }}>

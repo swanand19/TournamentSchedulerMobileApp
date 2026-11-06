@@ -3,8 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import Icon, { type IconName } from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // A two-column grid of big player tiles for the scoring pickers — scorer, booked player, who's
 // coming on, next batter. Shirt number first in the display face, because that's what a scorer
@@ -31,6 +31,8 @@ type Props = {
 };
 
 export default function PlayerGrid({ players, selected, onSelect, dark, label }: Props) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <View style={styles.grid} accessibilityRole="radiogroup" accessibilityLabel={label}>
@@ -73,7 +75,7 @@ export default function PlayerGrid({ players, selected, onSelect, dark, label }:
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   tile: { flexBasis: '48%', flexGrow: 1, minHeight: 72, borderRadius: radius.lg, borderWidth: 1.5, padding: space.md, gap: 2 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 4 },

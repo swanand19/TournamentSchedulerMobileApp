@@ -10,7 +10,6 @@ import Button from '@/components/Button';
 import { Deck } from '@/components/Card';
 import ErrorBanner from '@/components/ErrorBanner';
 import Icon, { type IconName } from '@/components/Icon';
-import PitchBackground from '@/components/PitchBackground';
 import ScoringBanner from '@/components/ScoringBanner';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
@@ -29,20 +28,21 @@ import SideCard from '@/features/watch/SideCard';
 import { useActivity } from '@/features/watch/useActivity';
 import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
 // Watching a match (Round 2) — for everyone who can't score it, and for owners and scorers who
 // chose "Watch" while someone else scores. Before the start: a preview with both squads (the XIs
 // and the toss once a cricket match is set up). Once under way: the Live page (the scoreboard and
-// the match activity) and, a swipe away, the Scorecard (cricket) or the Line-ups (football).
-// Nothing here changes the match; it all polls, so it follows the scorer within a few seconds.
+// the match activity) and, a swipe away, the Scorecard and Playing XI (cricket) or the Line-ups
+// (football). Nothing here changes the match; it all polls, so it follows the scorer within a few seconds.
 
 type Sport = 'football' | 'cricket';
-type Page = 'live' | 'more';
+type Page = 'live' | 'scorecard' | 'sides';
 
 // Module scope: the pager rebuilds its gesture when this array changes identity.
-const PAGES: Page[] = ['live', 'more'];
+const CRICKET_PAGES: Page[] = ['live', 'scorecard', 'sides'];
+const FOOTBALL_PAGES: Page[] = ['live', 'sides'];
 
 export default function WatchScreen({ sport }: { sport: Sport }) {
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function WatchScreen({ sport }: { sport: Sport }) {
   const id = Number(matchId);
   const fetcher = useCallback(() => api.call<WatchMatch>('WATCH_MATCH', { routeParams: { sport, matchId: id } }), [sport, id]);
   // Slow poll: the sides rarely change, but a preview has to notice when play starts.
-  const watch = useQuery(fetcher, { pollMs: 10000 });
+  const watch = useQuery(fetcher, { pollMs: 10000, live: { kind: 'match', sport, matchId: id } });
   const w = watch.data;
 
   const title = !w ? '' : w.phase === 'Preview' ? 'Match preview' : w.phase === 'Finished' ? 'Result' : 'Live';
@@ -89,6 +89,7 @@ export default function WatchScreen({ sport }: { sport: Sport }) {
 }
 
 function PreviewBoard({ w }: { w: WatchMatch }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   return (
     <Deck>
@@ -99,7 +100,7 @@ function PreviewBoard({ w }: { w: WatchMatch }) {
         <StatusChip label="Not started" tone="setup" onDark />
       </View>
       <Text style={[type.title, { color: theme.onDark }]} accessibilityRole="header">
-        {w.home.name.toUpperCase()} <Text style={{ color: theme.accent }}>V</Text> {w.away.name.toUpperCase()}
+        {w.home.name} <Text style={{ color: theme.mode === 'light' ? theme.muted : theme.accent }}>{'v'}</Text> {w.away.name}
       </Text>
       {w.formatLine ? <Line icon="timer-outline" text={w.formatLine} /> : null}
       {w.tossLine ? <Line icon="circle-half-full" text={w.tossLine} strong /> : null}
@@ -111,6 +112,7 @@ function PreviewBoard({ w }: { w: WatchMatch }) {
 }
 
 function Line({ icon, text, strong }: { icon: IconName; text: string; strong?: boolean }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   return (
     <View style={styles.line}>
@@ -135,16 +137,16 @@ function Viewer({
   sidesError: Error | null;
   onChangeServer: () => void;
 }) {
-  const theme = useSportTheme();
   const [page, setPage] = useState<Page>('live');
-  const tabs: { key: Page; label: string }[] = [
-    { key: 'live', label: w.phase === 'Finished' ? 'Match' : 'Live' },
-    { key: 'more', label: sport === 'cricket' ? 'Scorecard' : 'Line-ups' },
-  ];
+  const live = { key: 'live' as const, label: w.phase === 'Finished' ? 'Match' : 'Live' };
+  const tabs: { key: Page; label: string }[] =
+    sport === 'cricket'
+      ? [live, { key: 'scorecard', label: 'Scorecard' }, { key: 'sides', label: 'Playing XI' }]
+      : [live, { key: 'sides', label: 'Line-ups' }];
 
   const renderPage = (key: Page) => {
     if (key === 'live') return sport === 'cricket' ? <CricketLive matchId={matchId} w={w} /> : <FootballLive matchId={matchId} w={w} />;
-    if (sport === 'cricket') return <ScorecardPage matchId={matchId} />;
+    if (key === 'scorecard') return <ScorecardPage matchId={matchId} />;
     return (
       <PageScroll refreshing={false} onRefresh={onRefreshSides}>
         <ErrorBanner
@@ -160,9 +162,8 @@ function Viewer({
 
   return (
     <View style={{ flex: 1 }}>
-      <PitchBackground theme={theme} />
       <UnderlineTabs tabs={tabs} value={page} onChange={setPage} />
-      <TabPager pages={PAGES} value={page} onChange={setPage} renderPage={renderPage} />
+      <TabPager pages={sport === 'cricket' ? CRICKET_PAGES : FOOTBALL_PAGES} value={page} onChange={setPage} renderPage={renderPage} />
     </View>
   );
 }
@@ -182,6 +183,7 @@ function PageScroll({ children, refreshing, onRefresh }: { children: ReactNode; 
 
 /** For owners and scorers only: who is scoring, and the way back to the scoring screen when it's free. */
 function WatchStrip({ sport, matchId, scoring, over, onChanged }: { sport: Sport; matchId: number; scoring: Scoring | null | undefined; over: boolean; onChanged: () => void }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const router = useRouter();
   const { id: tournamentId, access } = useTournament();
@@ -264,7 +266,7 @@ function FootballLive({ matchId, w }: { matchId: number; w: WatchMatch }) {
 
 function ScorecardPage({ matchId }: { matchId: number }) {
   const fetcher = useCallback(() => api.call<CricketScorecard>('CRICKET_SCORECARD', { routeParams: { matchId } }), [matchId]);
-  const card = useQuery(fetcher, { pollMs: 15000 });
+  const card = useQuery(fetcher, { pollMs: 15000, live: { kind: 'match', sport: 'cricket', matchId } });
   return (
     <PageScroll refreshing={card.refreshing} onRefresh={card.refresh}>
       <ErrorBanner message={card.error?.message} actionLabel="Try again" onAction={card.refresh} />

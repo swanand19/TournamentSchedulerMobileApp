@@ -33,6 +33,10 @@ export const SERVICES = [
   // Your inbox (phase 6D)
   'NOTIFICATION_LIST', // query: before, take
   'NOTIFICATION_UNREAD',
+  'LIVE_TICKET', // live updates (realtime/live.ts): opens the line once
+  'LIVE_WATCH_TOURNAMENT', // connectionId, id
+  'LIVE_WATCH_MATCH', // connectionId, sport, matchId
+  'LIVE_UNWATCH', // connectionId; { tournamentId } | { sport, matchId }
   'NOTIFICATION_READ', // notificationId
   'NOTIFICATION_READ_ALL',
 
@@ -67,6 +71,12 @@ export const SERVICES = [
   'TOURNAMENT_INVITE_RESEND', // id, inviteId
   'TOURNAMENT_INVITE_CANCEL', // id, inviteId
   'TOURNAMENT_LEAVE', // id
+
+  // Public live scores (6E): the owners' switch, finding and following (the public pages are the website's)
+  'TOURNAMENT_PUBLIC_SET', // id; { isPublic }
+  'FOLLOW_SEARCH', // query: q — public tournaments by name, code or link
+  'FOLLOW_ADD', // { code } (or the whole link)
+  'FOLLOW_REMOVE', // tournamentId
 
   // Who is scoring a match — sport ('football' | 'cricket'), matchId
   'SCORING_REQUEST',

@@ -12,7 +12,8 @@ const PULSE = {
 
 const EASE_IN_OUT = cubicBezier(0.77, 0, 0.175, 1);
 
-export default function LiveDot({ color, size = 8 }: { color: string; size?: number }) {
+/** `glow` lights the dot from within, as the glass theme draws it on the wallpaper. */
+export default function LiveDot({ color, size = 8, glow }: { color: string; size?: number; glow?: boolean }) {
   const reduced = useReducedMotion();
   return (
     <Animated.View
@@ -20,6 +21,7 @@ export default function LiveDot({ color, size = 8 }: { color: string; size?: num
       importantForAccessibility="no"
       style={[
         { width: size, height: size, borderRadius: size / 2, backgroundColor: color },
+        glow && { boxShadow: `0 0 ${size}px ${color}` },
         !reduced && {
           animationName: PULSE,
           animationDuration: 1600,

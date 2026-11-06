@@ -22,8 +22,8 @@ import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // The shootout: whose kick it is, who's taking it, and two big buttons — SCORED or MISSED. The
 // server decides when it's over (and whether it's gone to sudden death); this screen draws the
@@ -41,6 +41,8 @@ const ARRIVE = {
 type Data = { match: FootballMatch; pens: PenaltyState };
 
 export default function PenaltiesScreen() {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const theme = useSportTheme();
   const reduced = useReducedMotion();
@@ -55,7 +57,7 @@ export default function PenaltiesScreen() {
     ]);
     return { match, pens };
   }, [matchId]);
-  const data = useQuery(fetcher, { pollMs: 5000 });
+  const data = useQuery(fetcher, { pollMs: 5000, live: { kind: 'match', sport: 'football', matchId: Number(matchId) } });
 
   const [taker, setTaker] = useState<number | null | undefined>(undefined);
   const [chosenTeam, setChosenTeam] = useState<number | null>(null);
@@ -126,7 +128,7 @@ export default function PenaltiesScreen() {
     <Screen footer={footer} onRefresh={data.refresh} refreshing={data.refreshing} error={action.error ?? data.error} onRetry={data.refresh}>
       <Deck>
         <View style={styles.headRow}>
-          <Text style={[type.board, { color: theme.accent, flex: 1 }]}>{suddenDeath ? 'SUDDEN DEATH' : 'PENALTY SHOOTOUT'}</Text>
+          <Text style={[type.board, { color: theme.accent, flex: 1 }]}>{suddenDeath ? 'Sudden death' : 'Penalty shootout'}</Text>
           <Text style={[type.label, { color: theme.onDarkSoft }]}>
             FT {match.homeScore}–{match.awayScore}
             {aet ? ' (AET)' : ''}
@@ -134,7 +136,7 @@ export default function PenaltiesScreen() {
         </View>
         <View style={styles.board} accessible accessibilityLiveRegion="polite" accessibilityLabel={`Penalties: ${match.homeTeamName} ${pens.homeScore}, ${match.awayTeamName} ${pens.awayScore}`}>
           <Text style={[styles.team, { color: theme.onDark }]} numberOfLines={2}>
-            {match.homeTeamName.toUpperCase()}
+            {match.homeTeamName}
           </Text>
           <View style={[styles.score, { backgroundColor: theme.page }]}>
             <Bump value={pens.homeScore} style={[type.scoreLarge, { color: theme.accent }]} />
@@ -142,7 +144,7 @@ export default function PenaltiesScreen() {
             <Bump value={pens.awayScore} style={[type.scoreLarge, { color: theme.onDark }]} />
           </View>
           <Text style={[styles.team, { color: theme.onDark, textAlign: 'right' }]} numberOfLines={2}>
-            {match.awayTeamName.toUpperCase()}
+            {match.awayTeamName}
           </Text>
         </View>
       </Deck>
@@ -154,7 +156,7 @@ export default function PenaltiesScreen() {
           <Card style={{ alignItems: 'center' }}>
             <Icon name="trophy" size={48} color={theme.warnInk} />
             <Text style={[type.title, { color: theme.ink, textAlign: 'center' }]} accessibilityRole="header">
-              {winnerName.toUpperCase()} WIN {Math.max(pens.homeScore, pens.awayScore)}–{Math.min(pens.homeScore, pens.awayScore)} ON PENALTIES
+              {`${winnerName} win ${Math.max(pens.homeScore, pens.awayScore)}–${Math.min(pens.homeScore, pens.awayScore)} on penalties`}
             </Text>
             <Text style={[type.body, { color: theme.muted, textAlign: 'center' }]}>
               {aet ? 'After extra time' : 'After full time'} {match.homeScore}–{match.awayScore}
@@ -166,7 +168,7 @@ export default function PenaltiesScreen() {
         <View style={[styles.toKick, { backgroundColor: theme.accent }]} accessibilityRole="alert">
           <Icon name="lightning-bolt" size={28} color={theme.accentInk} />
           <View style={{ flex: 1 }}>
-            <Text style={[type.heading, { color: theme.accentInk }]}>{kickingName.toUpperCase()} TO KICK</Text>
+            <Text style={[type.heading, { color: theme.accentInk }]}>{`${kickingName} to kick`}</Text>
             <Text style={[type.caption, { color: theme.accentInk }]}>
               {suddenDeath ? 'Sudden death — one kick each until someone misses' : `Best of ${takers} each`}
             </Text>
@@ -275,7 +277,7 @@ export default function PenaltiesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   row: { flexDirection: 'row', gap: space.sm },
   headRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   board: { flexDirection: 'row', alignItems: 'center', gap: space.sm },

@@ -28,8 +28,8 @@ import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // The football scoring console. Top: the scoreboard (observation). Bottom: the scoring pad in the
 // thumb zone (action). Between them, the match controls — and only the ones the server's flags say
@@ -42,6 +42,8 @@ type SheetKind = 'goal' | 'card' | 'sub' | 'stoppage' | 'penalties' | 'end';
 type SheetState = { kind: SheetKind | null; open: boolean; key: number; side: 'home' | 'away'; colour: 'yellow' | 'red' };
 
 export default function FootballLive() {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const theme = useSportTheme();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
@@ -132,7 +134,7 @@ export default function FootballLive() {
         <View style={styles.row}>
           <Button
             label="+1 Goal"
-            caption={match.homeTeamName.toUpperCase()}
+            caption={match.homeTeamName}
             icon="soccer"
             size="xl"
             display
@@ -143,7 +145,7 @@ export default function FootballLive() {
           />
           <Button
             label="+1 Goal"
-            caption={match.awayTeamName.toUpperCase()}
+            caption={match.awayTeamName}
             icon="soccer"
             size="xl"
             display
@@ -154,9 +156,9 @@ export default function FootballLive() {
           />
         </View>
         <View style={styles.row}>
-          <Button label="Yellow" icon="card" iconColor={theme.yellowCard} variant="secondary" onPress={() => open('card', { colour: 'yellow' })} style={{ flex: 1 }} />
+          <Button label="Yellow" icon="card" iconColor={theme.yellowCard} variant="secondary" display={theme.mode === 'dark'} onPress={() => open('card', { colour: 'yellow' })} style={{ flex: 1 }} />
           <Button label="Red" icon="card" variant="danger" onPress={() => open('card', { colour: 'red' })} style={{ flex: 1 }} />
-          <Button label="Sub" icon="swap-horizontal" variant="secondary" onPress={() => open('sub')} style={{ flex: 1 }} />
+          <Button label="Sub" icon="swap-horizontal" variant="secondary" display={theme.mode === 'dark'} onPress={() => open('sub')} style={{ flex: 1 }} />
         </View>
       </>
     );
@@ -167,7 +169,8 @@ export default function FootballLive() {
   }
 
   return (
-    <Screen footer={footer} onRefresh={data.refresh} refreshing={data.refreshing} error={action.error ?? data.error} onRetry={data.refresh}>
+    // While the ball's in play the footer is the scoring pad: keys, so the glass theme draws its pad.
+    <Screen footer={footer} pad={live} onRefresh={data.refresh} refreshing={data.refreshing} error={action.error ?? data.error} onRetry={data.refresh}>
       <Scoreboard match={match} events={events} />
       <ScoringBanner
         sport="football"
@@ -196,7 +199,15 @@ export default function FootballLive() {
             <Button label="Full time" icon="flag-checkered" variant="success" size="lg" busy={action.busy} onPress={fullTime} />
           )}
 
-          <View style={[styles.controls, { backgroundColor: theme.deckRaised, borderColor: theme.borderOnDark }]}>
+          {/* Glass: a bar of clear glass, the controls parted by hairlines. */}
+          <View
+            style={[
+              styles.controls,
+              theme.mode === 'light'
+                ? [styles.lightControls, { borderColor: theme.fieldBorder }]
+                : [styles.glassControls, { backgroundColor: theme.glassFill, borderColor: theme.glassBorder, boxShadow: `inset 0 1px 0 ${theme.glassRim}` }],
+            ]}
+          >
             {match.canEndPeriod &&
               (match.status === 'Paused' ? (
                 <ClockControl first label="Resume" icon="play" busy={action.busy} onPress={() => act(() => api.call('MATCH_CLOCK_RESUME', { routeParams: { matchId } }))} />
@@ -263,6 +274,7 @@ function ClockControl({
   first?: boolean;
   accessibilityLabel?: string;
 }) {
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <PressableScale
@@ -275,7 +287,7 @@ function ClockControl({
     >
       {busy ? <ActivityIndicator color={theme.onDark} /> : <Icon name={icon} size={22} color={theme.onDark} />}
       {label ? (
-        <Text style={[styles.controlLabel, { color: theme.onDarkSoft }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+        <Text style={[styles.controlLabel, theme.mode === 'light' && styles.lightControlLabel, { color: theme.onDarkSoft }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
           {label}
         </Text>
       ) : null}
@@ -283,10 +295,13 @@ function ClockControl({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   row: { flexDirection: 'row', gap: space.sm },
   controls: { flexDirection: 'row', borderRadius: radius.xl, borderWidth: 1.5, overflow: 'hidden' },
   control: { flex: 1, minHeight: 64, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: space.xs },
-  controlNarrow: { flex: 0, width: 56 },
+  controlNarrow: { flexGrow: 0, flexShrink: 0, flexBasis: 56, width: 56 },
+  lightControls: { borderWidth: 1, backgroundColor: 'transparent' },
+  glassControls: { borderWidth: 1, borderRadius: 24, borderCurve: 'continuous' },
   controlLabel: { fontFamily: fonts.bodySemiBold, fontSize: 13, lineHeight: 16, letterSpacing: 0.2 },
+  lightControlLabel: { fontFamily: fonts.body, letterSpacing: 0 },
 });

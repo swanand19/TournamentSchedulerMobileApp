@@ -1,8 +1,8 @@
 import { StyleSheet, Switch, Text, View } from 'react-native';
 
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { space } from '@/theme/theme';
 
 // A labelled on/off rule. The platform switch, themed: it already animates correctly and speaks
 // its state to TalkBack, so there is nothing to gain from drawing our own.
@@ -17,7 +17,9 @@ type Props = {
 };
 
 export default function SwitchRow({ label, hint, value, onChange, disabled, onDark }: Props) {
+  const { type } = useTypography();
   const theme = useSportTheme();
+  const light = theme.mode === 'light';
   return (
     <View style={[styles.row, disabled && { opacity: 0.5 }]}>
       <View style={{ flex: 1 }}>
@@ -32,9 +34,12 @@ export default function SwitchRow({ label, hint, value, onChange, disabled, onDa
           onChange(v);
         }}
         accessibilityLabel={label}
-        trackColor={{ false: onDark ? theme.deckRaised : theme.fieldBorder, true: theme.successSolid }}
-        thumbColor={value ? theme.accent : theme.cream}
-        ios_backgroundColor={onDark ? theme.deckRaised : theme.fieldBorder}
+        // Glass: the standard switch, on in the sport's colour with a white knob, as iOS draws it.
+        trackColor={
+          light ? { false: theme.fieldBorder, true: theme.successSolid } : { false: 'rgba(120,120,140,0.32)', true: theme.accent }
+        }
+        thumbColor={light ? (value ? theme.accent : theme.cream) : '#FFFFFF'}
+        ios_backgroundColor={light ? theme.fieldBorder : 'rgba(120,120,140,0.32)'}
       />
     </View>
   );

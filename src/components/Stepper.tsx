@@ -3,8 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // − value + for small whole numbers (players per side, minutes, overs). Big targets instead of a
 // keyboard: nobody wants the number pad over the form with gloves on. A selection tick per step.
@@ -23,10 +23,17 @@ type Props = {
 };
 
 export default function Stepper({ label, hint, value, onChange, min = 0, max = 999, step = 1, display, onDark }: Props) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const fg = onDark ? theme.onDark : theme.ink;
   const soft = onDark ? theme.onDarkSoft : theme.muted;
-  const btnBg = onDark ? theme.deckRaised : theme.chip;
+  const light = theme.mode === 'light';
+  const btnBg = light ? 'transparent' : theme.chip;
+  // Light: outlined round buttons around a thin figure. Glass: round plain fills with a bright rim.
+  const btnShape = light
+    ? { borderRadius: 24, borderWidth: 1, borderColor: theme.fieldBorder }
+    : { borderRadius: 24, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16)' };
 
   const change = (next: number) => {
     const clamped = Math.min(max, Math.max(min, next));
@@ -53,7 +60,7 @@ export default function Stepper({ label, hint, value, onChange, min = 0, max = 9
         <PressableScale
           onPress={() => change(value - step)}
           disabled={value <= min}
-          style={[styles.btn, { backgroundColor: btnBg }]}
+          style={[styles.btn, { backgroundColor: btnBg }, btnShape]}
           accessibilityLabel={`Decrease ${label}`}
         >
           <Icon name="minus" size={22} color={fg} />
@@ -62,7 +69,7 @@ export default function Stepper({ label, hint, value, onChange, min = 0, max = 9
         <PressableScale
           onPress={() => change(value + step)}
           disabled={value >= max}
-          style={[styles.btn, { backgroundColor: btnBg }]}
+          style={[styles.btn, { backgroundColor: btnBg }, btnShape]}
           accessibilityLabel={`Increase ${label}`}
         >
           <Icon name="plus" size={22} color={fg} />
@@ -72,9 +79,9 @@ export default function Stepper({ label, hint, value, onChange, min = 0, max = 9
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ figures, fonts }: Typography) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56 },
   controls: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   btn: { width: 48, height: 48, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },
-  value: { fontFamily: fonts.display, fontSize: 26, minWidth: 48, textAlign: 'center', fontVariant: ['tabular-nums'] },
+  value: { fontFamily: fonts.display, fontSize: 22, minWidth: 44, textAlign: 'center', fontVariant: figures },
 });

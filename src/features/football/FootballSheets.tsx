@@ -14,8 +14,8 @@ import { playerIndex } from '@/features/football/useFootballMatch';
 import { useAction } from '@/hooks/useAction';
 import { confirm } from '@/lib/confirm';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { space } from '@/theme/theme';
 
 // The pickers behind the live console's buttons. Each asks only what the server needs for that
 // event, offers only the players who can legally be chosen (on the pitch, on the bench), and
@@ -129,6 +129,7 @@ export function GoalSheet({ visible, onClose, onDone, match, side }: Base & { si
 }
 
 function AssistPicker({ players, value, onChange }: { players: Player[]; value: number | null; onChange: (id: number | null) => void }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   return (
     <View style={{ gap: space.sm }}>
@@ -158,6 +159,7 @@ export function CardSheet({
   events,
   colour,
 }: Base & { events: MatchEvent[]; colour: 'yellow' | 'red' }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const action = useAction();
   const [side, setSide] = useState<Side>('home');
@@ -242,6 +244,7 @@ export function CardSheet({
 // ---------------------------------------------------------------------------------------------
 
 export function SubSheet({ visible, onClose, onDone, match, events }: Base & { events: MatchEvent[] }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const action = useAction();
   const [side, setSide] = useState<Side>('home');
@@ -381,6 +384,7 @@ export function PenaltiesStartSheet({ visible, onClose, onDone, match }: Base) {
 
 /** Force-completing: an abandonment, or a forfeit awarded to one side. Behind the overflow. */
 export function EndMatchSheet({ visible, onClose, onDone, match }: Base) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const action = useAction();
 

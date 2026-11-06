@@ -9,7 +9,7 @@ import type { Career, StatGroup } from '@/api/types';
 import EmptyState from '@/components/EmptyState';
 import ErrorBanner from '@/components/ErrorBanner';
 import type { IconName } from '@/components/Icon';
-import PitchBackground from '@/components/PitchBackground';
+import Wallpaper from '@/components/Wallpaper';
 import SegmentedControl from '@/components/SegmentedControl';
 import Skeleton from '@/components/Skeleton';
 import TabPager from '@/components/TabPager';
@@ -25,8 +25,8 @@ import {
 } from '@/features/profile/ProfileParts';
 import { useQuery } from '@/hooks/useQuery';
 import { dateRange, shortDate } from '@/lib/format';
-import { SportThemeProvider, useSportTheme } from '@/theme/SportTheme';
-import { fonts, space, type } from '@/theme/theme';
+import { SportThemeProvider, useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { space, type Typography } from '@/theme/theme';
 
 // A sport profile: Stats (cricket splits it into batting, bowling and fielding), Teams,
 // Tournaments and Honours, as swipeable peers. Everything is the server's: the figures arrive
@@ -62,6 +62,8 @@ export default function CareerScreen() {
 }
 
 function CareerView({ sport, userId, playerId }: { sport: string; userId?: string; playerId?: string }) {
+  const { type, fonts } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const router = useRouter();
   const fetcher = useCallback(() => api.call<Career>('PROFILE_CAREER', { query: { sport, userId, playerId } }), [sport, userId, playerId]);
@@ -130,17 +132,19 @@ function CareerView({ sport, userId, playerId }: { sport: string; userId?: strin
     <View style={{ flex: 1 }}>
       <Stack.Screen
         options={{
-          title: theme.label,
-          headerStyle: { backgroundColor: theme.deck },
-          headerTintColor: theme.accent,
-          headerTitleStyle: { fontFamily: fonts.bodySemiBold, fontSize: 17, color: theme.onDark },
+          // Glass: the sport is the small line over the name, so the bar stays empty.
+          title: theme.mode === 'light' ? theme.label : '',
+          headerStyle: { backgroundColor: theme.mode === 'light' ? theme.deck : 'transparent' },
+          headerTintColor: theme.mode === 'light' ? theme.ink : theme.onDark,
+          headerTitleStyle: { fontFamily: theme.mode === 'light' ? fonts.body : fonts.bodySemiBold, fontSize: 17, color: theme.onDark },
           contentStyle: { backgroundColor: theme.page },
         }}
       />
-      <PitchBackground theme={theme} />
-      <View style={[styles.who, { backgroundColor: theme.deck }]}>
+      <Wallpaper underHeader />
+      <View style={[styles.who, { backgroundColor: theme.mode === 'light' ? theme.deck : 'transparent' }]}>
+        {theme.mode === 'dark' && <Text style={[type.eyebrow, { color: theme.onDarkSoft }]}>{theme.label}</Text>}
         <Text style={[styles.name, { color: theme.onDark }]} numberOfLines={1} accessibilityRole="header">
-          {c ? c.name.toUpperCase() : ' '}
+          {c ? c.name : ' '}
         </Text>
       </View>
       <UnderlineTabs tabs={TABS} value={tab} onChange={setTab} />
@@ -179,6 +183,7 @@ function Page({ children, refreshing, onRefresh }: { children: ReactNode; refres
 
 /** One group's figures: the hero, then tiles two by two, and football's shootout row last. */
 function StatsPage({ career, refreshing, onRefresh, onJoin }: { career: Career; refreshing: boolean; onRefresh: () => void; onJoin: () => void }) {
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const groups = career.statGroups;
   const [groupKey, setGroupKey] = useState(groups[0]?.key ?? '');
@@ -234,7 +239,7 @@ function StatsPage({ career, refreshing, onRefresh, onJoin }: { career: Career; 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   who: { paddingHorizontal: space.lg, paddingTop: space.xs, paddingBottom: space.md },
   name: { fontFamily: fonts.display, fontSize: 24, lineHeight: 30, letterSpacing: 0.5 },
   tileRow: { flexDirection: 'row', gap: space.md - 2 },

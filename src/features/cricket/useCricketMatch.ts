@@ -12,5 +12,6 @@ export function useCricketMatch(matchId: number, { pollMs }: { pollMs?: number }
     () => api.call<CricketMatchState>('CRICKET_MATCH_GET', { routeParams: { matchId } }),
     [matchId],
   );
-  return useQuery(fetcher, { pollMs });
+  // A polled screen is a live one: it also reloads the moment the live line says the match changed.
+  return useQuery(fetcher, { pollMs, live: pollMs ? { kind: 'match', sport: 'cricket', matchId } : null });
 }

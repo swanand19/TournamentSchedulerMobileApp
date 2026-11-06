@@ -5,8 +5,8 @@ import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import { haptic } from '@/lib/haptics';
 import { dismissalLabel } from '@/lib/cricketLabels';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // "How out" as a fixed three-column grid of equal tiles, so every row lines up whatever the label
 // lengths. Only the engine's possibleDismissals are offered (a free hit leaves run out and a few
@@ -27,10 +27,13 @@ export function orderDismissals(allowed: string[]) {
 }
 
 export default function DismissalGrid({ allowed, value, onChange }: { allowed: string[]; value: string; onChange: (d: string) => void }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const { common, rare } = orderDismissals(allowed);
   const [moreOpen, setMoreOpen] = useState(false);
   const showRare = rare.length > 0 && (moreOpen || common.length === 0 || rare.includes(value));
+  const glass = theme.mode === 'dark';
 
   return (
     <View style={{ gap: space.sm }}>
@@ -42,8 +45,11 @@ export default function DismissalGrid({ allowed, value, onChange }: { allowed: s
           accessibilityState={{ expanded: showRare }}
           style={styles.more}
         >
-          <Text style={[type.caption, { color: theme.onDarkSoft }]}>{showRare ? 'Fewer ways out' : 'More ways out'}</Text>
-          <Icon name={showRare ? 'chevron-up' : 'chevron-down'} size={16} color={theme.onDarkSoft} />
+          {/* Glass: in the sport's colour, a link to more (as the N2 board draws it). */}
+          <Text style={[glass ? type.bodyStrong : type.caption, { color: glass ? theme.accent : theme.onDarkSoft }]}>
+            {showRare ? 'Fewer ways out' : 'More ways out'}
+          </Text>
+          <Icon name={showRare ? 'chevron-up' : 'chevron-down'} size={glass ? 18 : 16} color={glass ? theme.accent : theme.onDarkSoft} />
         </PressableScale>
       ) : null}
       {showRare ? <Grid items={rare} value={value} onChange={onChange} /> : null}
@@ -52,6 +58,7 @@ export default function DismissalGrid({ allowed, value, onChange }: { allowed: s
 }
 
 function Grid({ items, value, onChange }: { items: string[]; value: string; onChange: (d: string) => void }) {
+  const styles = useThemedStyles(makeStyles);
   const rows: string[][] = [];
   for (let i = 0; i < items.length; i += COLUMNS) rows.push(items.slice(i, i + COLUMNS));
   return (
@@ -72,7 +79,9 @@ function Grid({ items, value, onChange }: { items: string[]; value: string; onCh
 }
 
 function Tile({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
+  const glass = theme.mode === 'dark';
   return (
     <PressableScale
       onPress={() => {
@@ -82,22 +91,29 @@ function Tile({ label, selected, onPress }: { label: string; selected: boolean; 
       accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={label}
+      glow={glass}
+      glowRadius={18}
       style={[
         styles.cell,
         styles.tile,
+        glass && styles.glassTile,
+        // Glass: plain fills on the glass sheet (never glass on glass); the chosen one red, as a
+        // wicket is the one thing red means. Light: the same, outlined.
         selected
           ? { backgroundColor: theme.dangerSolid, borderColor: theme.dangerSolid }
-          : { backgroundColor: theme.surfaceOnDark, borderColor: theme.borderOnDark },
+          : glass
+            ? { backgroundColor: theme.chip, borderColor: 'transparent', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)' }
+            : { backgroundColor: theme.surfaceOnDark, borderColor: theme.borderOnDark },
       ]}
     >
-      <Text style={[styles.label, { color: selected ? '#FFFFFF' : theme.onDark }]} numberOfLines={2}>
+      <Text style={[styles.label, glass && !selected && styles.glassLabel, { color: selected ? '#FFFFFF' : theme.onDark }]} numberOfLines={2}>
         {label}
       </Text>
     </PressableScale>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   row: { flexDirection: 'row', gap: space.sm },
   cell: { flex: 1 },
   tile: {
@@ -110,5 +126,7 @@ const styles = StyleSheet.create({
     paddingVertical: space.xs,
   },
   label: { fontFamily: fonts.bodySemiBold, fontSize: 14, lineHeight: 18, textAlign: 'center' },
-  more: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: space.xs, minHeight: 32 },
+  glassTile: { minHeight: 56, borderRadius: 18, borderCurve: 'continuous', borderWidth: 0 },
+  glassLabel: { fontFamily: fonts.bodyMedium, fontSize: 15, lineHeight: 19 },
+  more: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: space.xs, minHeight: 44 },
 });

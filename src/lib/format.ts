@@ -85,6 +85,12 @@ export function initials(name: string): string {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
+/** "mumbai indians" → "Mumbai Indians" as it's typed. Only first letters are raised, so "FC" or
+ *  "McLaren" stay as written; done here because many Android keyboards ignore autoCapitalize. */
+export function capitalizeWords(value: string): string {
+  return value.replace(/(^|\s)(\p{Ll})/gu, (_m, gap: string, letter: string) => gap + letter.toUpperCase());
+}
+
 /** A → 0, B → 1… for grouping, and back. */
 export const groupLabel = (i: number) => String.fromCharCode(65 + i);
 

@@ -6,13 +6,15 @@ import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import { haptic } from '@/lib/haptics';
 import { plural } from '@/lib/format';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // The approved fixtures, read-only, grouped by group then by round (matchday). The first group is
 // open; the rest fold away so a long schedule doesn't bury the Start button above it.
 
 export default function FixturesPreview({ schedule }: { schedule: SavedSchedule }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const groups = [...schedule.groups].sort((a, b) => a.groupName.localeCompare(b.groupName));
   const [open, setOpen] = useState<string | null>(groups[0]?.groupName ?? null);
@@ -72,7 +74,7 @@ export default function FixturesPreview({ schedule }: { schedule: SavedSchedule 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   group: { borderRadius: radius.lg, borderWidth: 1, overflow: 'hidden' },
   groupHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.md, minHeight: 56 },
   dot: { width: 8, height: 8, borderRadius: 2 },

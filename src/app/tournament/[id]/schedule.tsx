@@ -23,8 +23,8 @@ import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { groupLabel, plural } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, lip, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { lip, radius, space, type Typography } from '@/theme/theme';
 
 // Building the fixtures, in four steps: which teams play, how they're grouped, how many matches
 // each, then a preview to approve. The server generates the round-robin and explains anything it
@@ -37,6 +37,8 @@ const STEPS = ['Teams', 'Groups', 'Format', 'Preview'];
 const STEP_IN = FadeIn.duration(180);
 
 export default function ScheduleWizard() {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const theme = useSportTheme();
   const tournament = useTournament();
@@ -290,6 +292,8 @@ export default function ScheduleWizard() {
 }
 
 function Progress({ step }: { step: Step }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <View style={styles.progress} accessible accessibilityLabel={`Step ${step + 1} of 4, ${STEPS[step]}`}>
@@ -334,6 +338,8 @@ function TeamsStep({
   setExcluded: (s: Set<number>) => void;
   count: number;
 }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <>
@@ -381,6 +387,8 @@ function GroupCard({
   onPickTeam: (team: string | null) => void;
   onMoveHere: () => void;
 }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const canReceive = moving !== null && !group.teams.includes(moving);
   return (
@@ -419,6 +427,8 @@ function GroupCard({
 }
 
 function Preview({ schedule, onRegenerate, busy }: { schedule: TournamentSchedule; onRegenerate: () => void; busy: boolean }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <>
@@ -458,11 +468,11 @@ function Preview({ schedule, onRegenerate, busy }: { schedule: TournamentSchedul
               .map((f) => (
                 <View key={f.id} style={[styles.fixture, { backgroundColor: theme.cream }, lip(theme)]} accessible accessibilityLabel={`${f.home} against ${f.away}`}>
                   <Text style={[styles.fixtureTeam, { color: theme.ink }]} numberOfLines={1}>
-                    {f.home.toUpperCase()}
+                    {f.home}
                   </Text>
                   <Text style={[type.label, { color: theme.warnInk }]}>VS</Text>
                   <Text style={[styles.fixtureTeam, { color: theme.ink, textAlign: 'right' }]} numberOfLines={1}>
-                    {f.away.toUpperCase()}
+                    {f.away}
                   </Text>
                 </View>
               ))}
@@ -474,6 +484,8 @@ function Preview({ schedule, onRegenerate, busy }: { schedule: TournamentSchedul
 }
 
 function Callout({ tone, text }: { tone: 'warn' | 'info'; text: string }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <View
@@ -486,7 +498,7 @@ function Callout({ tone, text }: { tone: 'warn' | 'info'; text: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   footerRow: { flexDirection: 'row', gap: space.sm },
   progress: { flexDirection: 'row', justifyContent: 'space-between' },
   progressItem: { alignItems: 'center', gap: 4, flex: 1 },

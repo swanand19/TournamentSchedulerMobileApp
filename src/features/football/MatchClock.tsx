@@ -3,8 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { FootballMatch } from '@/api/types';
 import { parseUtc, stopwatch } from '@/lib/format';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { space, type Typography } from '@/theme/theme';
 
 // The match clock, computed on the phone once a second from the server's timestamps — the same
 // sum the server does (CalculateMinuteBreakdown), so the minute the scorer sees is the minute an
@@ -23,6 +23,8 @@ export function elapsedSeconds(match: FootballMatch, now: number): number {
 }
 
 export default function MatchClock({ match }: { match: FootballMatch }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const [now, setNow] = useState(() => Date.now());
   const ticking = match.isClockRunning && !match.pausedAt;
@@ -58,7 +60,15 @@ export default function MatchClock({ match }: { match: FootballMatch }) {
       accessibilityLiveRegion={timeUp ? 'polite' : 'none'}
       accessibilityLabel={`Match clock ${Math.floor(total / 60)} minutes${stoppage ? `, plus ${Math.floor(stoppage / 60)} minutes stoppage` : ''}${timeUp ? ', time up' : running ? '' : ', stopped'}`}
     >
-      <Text style={[styles.clock, { color: running ? theme.accent : theme.onDarkSoft }]}>{stopwatch(total)}</Text>
+      <Text
+        style={[
+          styles.clock,
+          theme.mode === 'light' ? styles.lightClock : styles.glassClock,
+          { color: running ? (theme.mode === 'light' ? theme.deep : theme.accent) : theme.onDarkSoft },
+        ]}
+      >
+        {stopwatch(total)}
+      </Text>
       {addedSeconds > 0 && (
         <Text style={[styles.stoppage, { color: timeUp ? theme.onDarkSoft : theme.accent }]}>
           +{stopwatch(stoppage)} <Text style={[type.caption, { color: theme.onDarkSoft }]}>of {match.extraMinutesAddedThisHalf} min</Text>
@@ -69,8 +79,12 @@ export default function MatchClock({ match }: { match: FootballMatch }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ figures, fonts }: Typography) => StyleSheet.create({
   wrap: { alignItems: 'flex-end', gap: 2 },
-  clock: { fontFamily: fonts.display, fontSize: 52, lineHeight: 56, fontVariant: ['tabular-nums'] },
-  stoppage: { fontFamily: fonts.display, fontSize: 22, lineHeight: 24, fontVariant: ['tabular-nums'], marginTop: -space.xs },
+  clock: { fontFamily: fonts.display, fontSize: 52, lineHeight: 56, fontVariant: figures },
+  /** Light: the clock sits in the quiet line above the score, so it's smaller and thin. */
+  lightClock: { fontSize: 30, lineHeight: 34 },
+  /** Glass: inside the scoreboard panel's top line, beside the period. */
+  glassClock: { fontFamily: fonts.bodySemiBold, fontSize: 26, lineHeight: 30 },
+  stoppage: { fontFamily: fonts.display, fontSize: 22, lineHeight: 24, fontVariant: figures, marginTop: -space.xs },
 });

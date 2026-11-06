@@ -8,8 +8,8 @@ import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import SectionHeader from '@/components/SectionHeader';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { fonts, radius, space, type } from '@/theme/theme';
+import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
+import { radius, space, type Typography } from '@/theme/theme';
 
 // Standings per group. The columns that fit a phone are always on; the rest of a football row
 // (goals, clean sheets, cards, shootouts) opens under it on tap rather than scrolling sideways.
@@ -17,6 +17,7 @@ import { fonts, radius, space, type } from '@/theme/theme';
 const COL = 30;
 
 export function FootballTable({ stats }: { stats: FootballStats }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const groups = [...new Set(stats.standings.map((r) => r.groupName))].sort();
   if (stats.standings.length === 0) {
@@ -38,8 +39,10 @@ export function FootballTable({ stats }: { stats: FootballStats }) {
   );
 }
 
-/** The tournament's champions, once its final is won. */
-function Champion({ name }: { name?: string | null }) {
+/** The tournament's champions, once its final is won. Also at the top of the Matches tab. */
+export function Champion({ name }: { name?: string | null }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   if (!name) return null;
   return (
@@ -56,11 +59,14 @@ function Champion({ name }: { name?: string | null }) {
 }
 
 function FootballGroup({ name, rows }: { name: string; rows: TeamStandingRow[] }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
+  const light = theme.mode === 'light';
   const [open, setOpen] = useState<number | null>(null);
   return (
     <Deck style={{ padding: 0, gap: 0, overflow: 'hidden' }}>
-      <View style={{ padding: space.lg, paddingBottom: space.sm }}>
+      <View style={light ? styles.lightTitle : { padding: space.lg, paddingBottom: space.sm }}>
         <SectionHeader title={`Group ${name} table`} />
       </View>
       <HeaderRow cols={['P', 'W', 'D', 'L', 'GD', 'PTS']} />
@@ -77,10 +83,10 @@ function FootballGroup({ name, rows }: { name: string; rows: TeamStandingRow[] }
               }}
               accessibilityLabel={`${r.rank}, ${r.teamName}: played ${r.played}, won ${r.won}, drawn ${r.drawn}, lost ${r.lost}, goal difference ${r.goalDifference}, ${r.points} points`}
               accessibilityState={{ expanded }}
-              style={[styles.row, { borderTopColor: theme.borderOnDark }]}
+              style={[styles.row, { borderTopColor: theme.borderOnDark }, light && styles.lightRow]}
             >
               <View style={styles.line}>
-                <Text style={[styles.rank, { color: theme.accent }]}>{r.rank}</Text>
+                <Text style={[styles.rank, { color: light ? theme.deep : theme.accent }]}>{r.rank}</Text>
                 <Text style={[type.bodyStrong, { color: theme.onDark, flex: 1 }]} numberOfLines={1}>
                   {r.teamName}
                 </Text>
@@ -107,7 +113,10 @@ function FootballGroup({ name, rows }: { name: string; rows: TeamStandingRow[] }
 }
 
 export function CricketTable({ stats }: { stats: CricketStats }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
+  const light = theme.mode === 'light';
   if (stats.pointsTable.every((g) => g.rows.length === 0)) {
     return (
       <View style={{ gap: space.lg }}>
@@ -121,19 +130,19 @@ export function CricketTable({ stats }: { stats: CricketStats }) {
       <Champion name={stats.championName} />
       {stats.pointsTable.map((g) => (
         <Deck key={g.groupName} style={{ padding: 0, gap: 0, overflow: 'hidden' }}>
-          <View style={{ padding: space.lg, paddingBottom: space.sm }}>
+          <View style={light ? styles.lightTitle : { padding: space.lg, paddingBottom: space.sm }}>
             <SectionHeader eyebrow="Points, then net run rate" title={`Group ${g.groupName}`} />
           </View>
           <HeaderRow cols={['P', 'W', 'L', 'NR', 'PTS']} wide="NRR" />
           {g.rows.map((r) => (
             <View
               key={r.teamId}
-              style={[styles.row, { borderTopColor: theme.borderOnDark }]}
+              style={[styles.row, { borderTopColor: theme.borderOnDark }, light && styles.lightRow]}
               accessible
               accessibilityLabel={`${r.rank}, ${r.teamName}: played ${r.played}, won ${r.won}, lost ${r.lost}, ${r.points} points, net run rate ${r.netRunRate.toFixed(3)}`}
             >
               <View style={styles.line}>
-                <Text style={[styles.rank, { color: theme.accent }]}>{r.rank}</Text>
+                <Text style={[styles.rank, { color: light ? theme.deep : theme.accent }]}>{r.rank}</Text>
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={[type.bodyStrong, { color: theme.onDark }]} numberOfLines={1}>
                     {r.teamName}
@@ -146,7 +155,7 @@ export function CricketTable({ stats }: { stats: CricketStats }) {
                   </Text>
                 ))}
                 <Text style={[styles.cell, styles.pts, { color: theme.onDark }]}>{r.points}</Text>
-                <Text style={[styles.cell, styles.nrr, { color: r.netRunRate >= 0 ? '#B9DB94' : theme.onDarkSoft }]}>
+                <Text style={[styles.cell, styles.nrr, { color: r.netRunRate >= 0 ? (theme.mode === 'light' ? theme.successInk : '#B9DB94') : theme.onDarkSoft }]}>
                   {r.netRunRate >= 0 ? '+' : ''}
                   {r.netRunRate.toFixed(2)}
                 </Text>
@@ -162,6 +171,7 @@ export function CricketTable({ stats }: { stats: CricketStats }) {
 
 /** W / L / T / D / NR pills. A loss is muted, not red — red means a wicket in this app. */
 function FormStrip({ form }: { form: string[] }) {
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   return (
     <View style={styles.form} accessibilityLabel={`Form ${form.join(', ')}`}>
@@ -181,9 +191,12 @@ function FormStrip({ form }: { form: string[] }) {
 }
 
 function HeaderRow({ cols, wide }: { cols: string[]; wide?: string }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
+  const light = theme.mode === 'light';
   return (
-    <View style={[styles.line, styles.head, { backgroundColor: theme.surfaceOnDark }]} importantForAccessibility="no-hide-descendants">
+    <View style={[styles.line, styles.head, { backgroundColor: light ? 'transparent' : theme.surfaceOnDark }, light && styles.lightRow]} importantForAccessibility="no-hide-descendants">
       <Text style={[styles.rank, type.label, { color: theme.onDarkSoft }]}>#</Text>
       <Text style={[type.label, { color: theme.onDarkSoft, flex: 1 }]}>Team</Text>
       {cols.map((c) => (
@@ -197,6 +210,7 @@ function HeaderRow({ cols, wide }: { cols: string[]; wide?: string }) {
 }
 
 function Detail({ label, value }: { label: string; value: string | number }) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   return (
     <View style={{ alignItems: 'center', flex: 1 }}>
@@ -206,15 +220,18 @@ function Detail({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = ({ figures, fonts }: Typography) => StyleSheet.create({
   champion: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   head: { paddingHorizontal: space.lg, paddingVertical: space.sm },
   row: { paddingHorizontal: space.lg, paddingVertical: space.md, borderTopWidth: 1, gap: space.sm },
   line: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   rank: { width: 26, fontFamily: fonts.display, fontSize: 18 },
-  cell: { width: COL, textAlign: 'center', fontFamily: fonts.bodySemiBold, fontSize: 14, fontVariant: ['tabular-nums'] },
+  cell: { width: COL, textAlign: 'center', fontFamily: fonts.bodySemiBold, fontSize: 14, fontVariant: figures },
   pts: { fontFamily: fonts.display, fontSize: 18 },
   nrr: { width: 50 },
+  // Light: flush with the screen, no header band (B · Table).
+  lightTitle: { paddingTop: space.sm, paddingBottom: space.sm },
+  lightRow: { paddingHorizontal: 0 },
   detail: { flexDirection: 'row', borderRadius: radius.md, paddingVertical: space.sm },
   form: { flexDirection: 'row', gap: 3 },
   formPill: { minWidth: 20, height: 18, borderRadius: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 1, paddingHorizontal: 2 },

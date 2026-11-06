@@ -7,8 +7,8 @@ import ErrorBanner from '@/components/ErrorBanner';
 import { useAction } from '@/hooks/useAction';
 import { confirm } from '@/lib/confirm';
 import { haptic } from '@/lib/haptics';
-import { useSportTheme } from '@/theme/SportTheme';
-import { radius, space, type } from '@/theme/theme';
+import { useSportTheme, useTypography } from '@/theme/SportTheme';
+import { radius, space } from '@/theme/theme';
 
 // Who is scoring this match, and what you can do about it — drawn from the match's `scoring`
 // block, never decided here. One person scores a match at a time: others follow along, a scorer
@@ -35,6 +35,7 @@ export function isScoringLocked(scoring: Scoring | null | undefined, over: boole
 }
 
 export default function ScoringBanner({ sport, matchId, scoring, onChanged, onWatch, watching }: Props) {
+  const { type } = useTypography();
   const theme = useSportTheme();
   const action = useAction();
 
