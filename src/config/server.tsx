@@ -4,12 +4,20 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { request, setApiBaseUrl } from '@/api/client';
 import { ApiError } from '@/api/errors';
 
-// Where the API lives. The laptop's IP can change (the router hands addresses out), so the address
-// is saved on the phone and editable in the Server screen instead of being baked into the build.
-// EXPO_PUBLIC_API_BASE_URL (in .env.local) is only the first-run default.
+// Where the API lives. In development (Expo Go against the laptop) the laptop's IP can change, so the
+// address is saved on the phone and editable in the Server screen; EXPO_PUBLIC_API_BASE_URL (in
+// .env.local) is only the first-run default. Installed builds (the APK and Google Play, eas.json) set
+// EXPO_PUBLIC_SERVER_LOCKED: they always use the Azure address they were built with, whatever an earlier
+// install saved, and the Server screen only checks the connection.
 
 const STORAGE_KEY = 'server.baseUrl';
 const DEFAULT_PORT = 5080;
+
+/** An installed build talks only to the server it was built for. */
+export const SERVER_LOCKED = process.env.EXPO_PUBLIC_SERVER_LOCKED === 'true';
+
+/** The action offered next to a network error: change the address, or (installed builds) check the connection. */
+export const SERVER_ACTION_LABEL = SERVER_LOCKED ? 'Check connection' : 'Change server';
 
 /**
  * Accepts the address however it's typed — "192.168.1.14", "192.168.1.14:5080",
@@ -55,7 +63,12 @@ export async function testServer(address: string): Promise<ConnectionTest> {
     return { ok: true, ms: Date.now() - started, environment: health.environment };
   } catch (e) {
     if (e instanceof ApiError && e.status === 503) {
-      return { ok: false, message: 'The server answered, but its database isn\'t reachable. Check SQL Server on the laptop.' };
+      return {
+        ok: false,
+        message: SERVER_LOCKED
+          ? 'The server answered, but its database isn\'t reachable. Try again in a few minutes.'
+          : 'The server answered, but its database isn\'t reachable. Check SQL Server on the laptop.',
+      };
     }
     return { ok: false, message: e instanceof Error ? e.message : 'The server didn\'t answer.' };
   }
@@ -69,10 +82,12 @@ export function ServerProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       let saved: string | null = null;
-      try {
-        saved = await AsyncStorage.getItem(STORAGE_KEY);
-      } catch {
-        // Storage unavailable: fall back to the build's default.
+      if (!SERVER_LOCKED) {
+        try {
+          saved = await AsyncStorage.getItem(STORAGE_KEY);
+        } catch {
+          // Storage unavailable: fall back to the build's default.
+        }
       }
       const initial = normaliseServerAddress(saved ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? '') ?? '';
       if (cancelled) return;
@@ -86,6 +101,7 @@ export function ServerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const save = useCallback(async (address: string) => {
+    if (SERVER_LOCKED) throw new Error('This app always uses its own server.');
     const root = normaliseServerAddress(address);
     if (!root) throw new Error('That doesn\'t look like an address.');
     await AsyncStorage.setItem(STORAGE_KEY, root);

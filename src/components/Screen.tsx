@@ -4,6 +4,7 @@ import { Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-na
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SERVER_ACTION_LABEL } from '@/config/server';
 import { NetworkError } from '@/api/errors';
 import ErrorBanner from '@/components/ErrorBanner';
 import Glass from '@/components/Glass';
@@ -50,7 +51,7 @@ export default function Screen({ children, footer, pad, onRefresh, refreshing = 
   const banner = (
     <ErrorBanner
       message={error?.message}
-      actionLabel={error instanceof NetworkError ? 'Change server' : onRetry ? 'Try again' : undefined}
+      actionLabel={error instanceof NetworkError ? SERVER_ACTION_LABEL : onRetry ? 'Try again' : undefined}
       onAction={error instanceof NetworkError ? () => router.push('/server') : onRetry}
     />
   );

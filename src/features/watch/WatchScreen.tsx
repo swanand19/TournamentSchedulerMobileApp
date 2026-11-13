@@ -3,6 +3,7 @@ import { useCallback, useState, type ReactNode } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SERVER_ACTION_LABEL } from '@/config/server';
 import { api } from '@/api/client';
 import { NetworkError } from '@/api/errors';
 import type { CricketMatchAwards, CricketScorecard, Scoring, WatchMatch } from '@/api/types';
@@ -151,7 +152,7 @@ function Viewer({
       <PageScroll refreshing={false} onRefresh={onRefreshSides}>
         <ErrorBanner
           message={sidesError?.message}
-          actionLabel={sidesError instanceof NetworkError ? 'Change server' : 'Try again'}
+          actionLabel={sidesError instanceof NetworkError ? SERVER_ACTION_LABEL : 'Try again'}
           onAction={sidesError instanceof NetworkError ? onChangeServer : onRefreshSides}
         />
         <SideCard side={w.home} sport={sport} />

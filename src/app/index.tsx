@@ -21,7 +21,7 @@ import SegmentedControl from '@/components/SegmentedControl';
 import Sheet from '@/components/Sheet';
 import Skeleton from '@/components/Skeleton';
 import StatusChip, { type ChipTone } from '@/components/StatusChip';
-import { useServer } from '@/config/server';
+import { SERVER_ACTION_LABEL, useServer } from '@/config/server';
 import NotificationBell from '@/features/notifications/NotificationBell';
 import { useAction } from '@/hooks/useAction';
 import { useKeyboardRoom } from '@/hooks/useKeyboardRoom';
@@ -194,7 +194,7 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
         <PressableScale
           onPress={() => router.push('/server')}
           style={styles.lightOnline}
-          accessibilityLabel={`Server ${online ? 'connected' : 'not connected'}, ${baseUrl || 'not set'}. Change server`}
+          accessibilityLabel={`Server ${online ? 'connected' : 'not connected'}, ${baseUrl || 'not set'}. ${SERVER_ACTION_LABEL}`}
         >
           <View style={[styles.dot, { width: 7, height: 7, backgroundColor: online ? theme.success : theme.danger }]} />
           <Text style={[type.body, { color: theme.muted }]}>{online ? 'Online' : 'Server'}</Text>
@@ -238,7 +238,7 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
 
       <ErrorBanner
         message={error?.message}
-        actionLabel={error instanceof NetworkError ? 'Change server' : 'Try again'}
+        actionLabel={error instanceof NetworkError ? SERVER_ACTION_LABEL : 'Try again'}
         onAction={error instanceof NetworkError ? () => router.push('/server') : list.refresh}
       />
 
@@ -285,7 +285,7 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
           feel="glass"
           glowRadius={22}
           style={styles.glassChip}
-          accessibilityLabel={`Server ${online ? 'connected' : 'not connected'}, ${baseUrl || 'not set'}. Change server`}
+          accessibilityLabel={`Server ${online ? 'connected' : 'not connected'}, ${baseUrl || 'not set'}. ${SERVER_ACTION_LABEL}`}
         >
           <Glass pointerEvents="none" radius={22} interactive style={StyleSheet.absoluteFill} />
           <View style={[styles.dot, { backgroundColor: online ? theme.successInk : theme.danger }]} />
@@ -332,7 +332,7 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
 
       <ErrorBanner
         message={error?.message}
-        actionLabel={error instanceof NetworkError ? 'Change server' : 'Try again'}
+        actionLabel={error instanceof NetworkError ? SERVER_ACTION_LABEL : 'Try again'}
         onAction={error instanceof NetworkError ? () => router.push('/server') : list.refresh}
       />
     </View>

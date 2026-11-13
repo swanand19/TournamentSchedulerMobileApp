@@ -12,7 +12,7 @@ import { Card } from '@/components/Card';
 import ErrorBanner from '@/components/ErrorBanner';
 import PressableScale from '@/components/PressableScale';
 import TextField from '@/components/TextField';
-import { useServer } from '@/config/server';
+import { SERVER_ACTION_LABEL, useServer } from '@/config/server';
 import { useAction } from '@/hooks/useAction';
 import { useAuthOptions } from '@/hooks/useAuthOptions';
 import { useKeyboardRoom } from '@/hooks/useKeyboardRoom';
@@ -118,7 +118,7 @@ export default function SignInScreen() {
             <PressableScale
               onPress={() => router.push('/server')}
               style={[styles.serverChip, { borderColor: theme.borderOnDark, backgroundColor: theme.deck }]}
-              accessibilityLabel={`Server ${baseUrl || 'not set'}. Change server`}
+              accessibilityLabel={`Server ${baseUrl || 'not set'}. ${SERVER_ACTION_LABEL}`}
             >
               <Text style={[styles.serverText, { color: theme.onDark }]}>Server</Text>
             </PressableScale>
@@ -126,7 +126,7 @@ export default function SignInScreen() {
 
           <ErrorBanner
             message={error}
-            actionLabel={action.error instanceof NetworkError ? 'Change server' : undefined}
+            actionLabel={action.error instanceof NetworkError ? SERVER_ACTION_LABEL : undefined}
             onAction={action.error instanceof NetworkError ? () => router.push('/server') : undefined}
           />
 

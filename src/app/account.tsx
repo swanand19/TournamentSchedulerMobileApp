@@ -1,3 +1,4 @@
+import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -37,6 +38,9 @@ import { footballTheme as theme, space } from '@/theme/theme';
 // linked to them), the email and mobile number they sign in with, signing out — of this phone, or
 // of every device at once (for a lost phone) — and deleting the account, confirmed with a code sent
 // to them.
+
+/** The web app's address (installed builds, eas.json) — where the privacy policy lives. Unset in Expo Go. */
+const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? '').replace(/\/+$/, '');
 
 export default function AccountScreen() {
   const fetcher = useCallback(() => api.call<Account>('ACCOUNT_GET'), []);
@@ -120,6 +124,11 @@ export default function AccountScreen() {
           </View>
 
           {account.data.canDelete && <DeleteAccount />}
+
+          {/* The website's policy page (Google Play asks for one in the app as well as on the listing). */}
+          {!!WEB_URL && (
+            <Button label="Privacy policy" variant="ghost" onPress={() => WebBrowser.openBrowserAsync(`${WEB_URL}/privacy`)} />
+          )}
         </>
       )}
     </Screen>

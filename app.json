@@ -11,6 +11,7 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.si.khelscore.app",
       "adaptiveIcon": {
         "backgroundColor": "#17402E",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

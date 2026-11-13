@@ -3,6 +3,7 @@ import { useCallback, useState, type ReactNode } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SERVER_ACTION_LABEL } from '@/config/server';
 import { api } from '@/api/client';
 import { NetworkError } from '@/api/errors';
 import type { Career, StatGroup } from '@/api/types';
@@ -153,7 +154,7 @@ function CareerView({ sport, userId, playerId }: { sport: string; userId?: strin
         <View style={{ padding: space.lg }}>
           <ErrorBanner
             message={career.error.message}
-            actionLabel={career.error instanceof NetworkError ? 'Change server' : 'Try again'}
+            actionLabel={career.error instanceof NetworkError ? SERVER_ACTION_LABEL : 'Try again'}
             onAction={career.error instanceof NetworkError ? () => router.push('/server') : career.refresh}
           />
         </View>

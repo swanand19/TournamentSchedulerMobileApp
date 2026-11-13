@@ -3,15 +3,63 @@ import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import PressableScale from '@/components/PressableScale';
-import { normaliseServerAddress, useServer, type ConnectionTest } from '@/config/server';
+import { normaliseServerAddress, SERVER_LOCKED, useServer, type ConnectionTest } from '@/config/server';
 import { useKeyboardRoom } from '@/hooks/useKeyboardRoom';
 import { useThemedStyles, useTypography } from '@/theme/SportTheme';
 import { footballTheme as theme, radius, space, type Typography } from '@/theme/theme';
 
 // Where the API lives. The laptop's IP changes when the router hands out a new one, so this is a
-// ten-second fix in the app rather than a new build.
+// ten-second fix in the app rather than a new build. Installed builds (SERVER_LOCKED) can't change it:
+// there the screen only checks the connection, for "is it the app or the server?".
 
 export default function ServerScreen() {
+  return SERVER_LOCKED ? <ConnectionCheck /> : <ServerForm />;
+}
+
+function ConnectionCheck() {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
+  const { baseUrl, test } = useServer();
+  const [result, setResult] = useState<ConnectionTest | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const runTest = async () => {
+    setBusy(true);
+    setResult(null);
+    setResult(await test(baseUrl));
+    setBusy(false);
+  };
+
+  return (
+    <ScrollView style={{ backgroundColor: theme.cream }} contentContainerStyle={styles.body}>
+      <Text style={[type.body, { color: theme.muted }]}>
+        Check that this phone can reach the server. If it can&apos;t, look at the phone&apos;s internet connection first.
+      </Text>
+      <Text style={[type.caption, { color: theme.muted }]}>{baseUrl}</Text>
+      <PressableScale onPress={runTest} disabled={busy} style={styles.secondary}>
+        {busy ? <ActivityIndicator color={theme.deep} /> : <Text style={styles.secondaryText}>Test connection</Text>}
+      </PressableScale>
+      {result && <TestResult result={result} />}
+    </ScrollView>
+  );
+}
+
+function TestResult({ result }: { result: ConnectionTest }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <View accessibilityLiveRegion="polite" style={[styles.result, result.ok ? styles.resultOk : styles.resultBad]}>
+      <Text style={[type.bodyStrong, { color: result.ok ? theme.successInk : '#a33' }]}>
+        {result.ok ? `Connected in ${result.ms} ms` : 'Not connected'}
+      </Text>
+      <Text style={[type.body, { color: theme.ink }]}>
+        {result.ok ? `The server, its database and the encrypted connection are all working.` : result.message}
+      </Text>
+    </View>
+  );
+}
+
+function ServerForm() {
   const { type } = useTypography();
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
@@ -77,21 +125,7 @@ export default function ServerScreen() {
           {busy ? <ActivityIndicator color={theme.deep} /> : <Text style={styles.secondaryText}>Test connection</Text>}
         </PressableScale>
 
-        {result && (
-          <View
-            accessibilityLiveRegion="polite"
-            style={[styles.result, result.ok ? styles.resultOk : styles.resultBad]}
-          >
-            <Text style={[type.bodyStrong, { color: result.ok ? theme.successInk : '#a33' }]}>
-              {result.ok ? `Connected in ${result.ms} ms` : 'Not connected'}
-            </Text>
-            <Text style={[type.body, { color: theme.ink }]}>
-              {result.ok
-                ? `The API, its database and the encrypted connection are all working (${result.environment}).`
-                : result.message}
-            </Text>
-          </View>
-        )}
+        {result && <TestResult result={result} />}
 
         <PressableScale
           onPress={saveAndClose}

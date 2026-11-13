@@ -1,0 +1,38 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "azure": {
+      "env": {
+        "EXPO_PUBLIC_SERVER_LOCKED": "true",
+        "EXPO_PUBLIC_API_BASE_URL": "https://<api-default-domain>",
+        "EXPO_PUBLIC_WEB_URL": "https://<web-default-domain>",
+        "EXPO_PUBLIC_GATEWAY_KEY_ID": "<production-key-id>",
+        "EXPO_PUBLIC_GATEWAY_PUBLIC_KEY": "<production-public-key>"
+      }
+    },
+    "preview": {
+      "extends": "azure",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "extends": "azure",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "track": "internal"
+      }
+    }
+  }
+}

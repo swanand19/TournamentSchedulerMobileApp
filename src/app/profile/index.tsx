@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SERVER_ACTION_LABEL } from '@/config/server';
 import { api } from '@/api/client';
 import { ApiError, NetworkError } from '@/api/errors';
 import type { Profile } from '@/api/types';
@@ -87,7 +88,7 @@ export default function ProfileScreen() {
         ) : (
           <ErrorBanner
             message={profile.error?.message}
-            actionLabel={profile.error instanceof NetworkError ? 'Change server' : 'Try again'}
+            actionLabel={profile.error instanceof NetworkError ? SERVER_ACTION_LABEL : 'Try again'}
             onAction={profile.error instanceof NetworkError ? () => router.push('/server') : profile.refresh}
           />
         )}
