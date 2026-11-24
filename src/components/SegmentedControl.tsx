@@ -120,11 +120,18 @@ function GlassSegments<K extends string>({ segments, value, onChange, style, acc
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             accessibilityLabel={s.badge !== undefined ? `${s.label}, ${s.badge}` : s.label}
-            // Four or more: each segment as wide as its words, so none is cut short.
-            style={[styles.item, crowded && styles.crowdedItem]}
+            // Four or more: each segment as wide as its words, so none is cut short ("All 6" needs far less
+            // room than "Completed 0"). `flex: 1` would fix every basis at 0 and make them equal again.
+            style={[styles.item, crowded ? styles.crowdedItem : styles.evenItem]}
             hitSlop={4}
           >
-            <Text numberOfLines={1} style={[active ? styles.labelOn : styles.label, crowded && styles.crowdedLabel, { color: theme.onDark }]}>
+            <Text
+              numberOfLines={1}
+              // A larger font setting on the phone can still overflow four segments: shrink a little, never cut.
+              adjustsFontSizeToFit={crowded}
+              minimumFontScale={0.8}
+              style={[active ? styles.labelOn : styles.label, crowded && styles.crowdedLabel, { color: theme.onDark }]}
+            >
               {s.label}
               {s.badge !== undefined ? <Text style={[styles.label, { color: theme.onDarkSoft }]}> {s.badge}</Text> : null}
             </Text>
@@ -139,7 +146,6 @@ const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   track: { flexDirection: 'row', padding: 4 },
   pill: { position: 'absolute', top: 4, bottom: 4, left: 0, borderRadius: 20, borderCurve: 'continuous' },
   item: {
-    flex: 1,
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
@@ -148,6 +154,7 @@ const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   },
   label: { fontFamily: fonts.bodyMedium, fontSize: 14 },
   labelOn: { fontFamily: fonts.bodySemiBold, fontSize: 14 },
+  evenItem: { flex: 1 },
   crowdedItem: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto', paddingHorizontal: 10 },
   crowdedLabel: { fontSize: 13 },
   lightPills: { flexDirection: 'row', gap: space.sm },

@@ -120,7 +120,7 @@ function GlassMatchCard({ match, onOpen, live, canScore }: { match: MatchCard; o
 
   const side = (name: string, value: string, which: 'home' | 'away') => (
     <View style={styles.side}>
-      <Text style={[won === which ? type.lead : styles.sideName, { color: theme.onDark, flex: 1 }]} numberOfLines={1}>
+      <Text style={[won === which ? styles.sideNameWon : styles.sideName, { color: theme.onDark, flex: 1 }]} numberOfLines={1}>
         {name}
       </Text>
       <Text style={[won === which ? styles.sideScoreWon : styles.sideScore, { color: theme.onDark }]}>{value}</Text>
@@ -188,17 +188,19 @@ export function MatchRow({ match, onOpen, canScore }: { match: MatchCard; onOpen
 
 const makeStyles = ({ fonts, figures }: Typography) => StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
-  card: { borderRadius: radius.glass, borderCurve: 'continuous', paddingVertical: 14, paddingHorizontal: space.lg, gap: space.sm },
+  // Compact (2026-11-24, the user found the list crowded): a fixture list is scanned, so rows stay short.
+  card: { borderRadius: radius.glass, borderCurve: 'continuous', paddingVertical: space.md, paddingHorizontal: 14, gap: 6 },
   side: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
-  sideName: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 22 },
-  sideScore: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 22, fontVariant: figures },
-  sideScoreWon: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 22, fontVariant: figures },
+  sideName: { fontFamily: fonts.bodyMedium, fontSize: 15, lineHeight: 20 },
+  sideNameWon: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20 },
+  sideScore: { fontFamily: fonts.bodyMedium, fontSize: 15, lineHeight: 20, fontVariant: figures },
+  sideScoreWon: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, fontVariant: figures },
   result: { fontFamily: fonts.bodyMedium, fontSize: 14, lineHeight: 19 },
   liveButton: { marginTop: space.xs },
-  lightRow: { gap: space.sm, paddingTop: 14, paddingBottom: space.lg, borderBottomWidth: 1 },
+  lightRow: { gap: 6, paddingTop: space.md, paddingBottom: 14, borderBottomWidth: 1 },
   lightStatus: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   lightRing: { width: 15, height: 15, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   lightDot: { width: 7, height: 7, borderRadius: 4 },
   lightSide: { flexDirection: 'row', alignItems: 'baseline', gap: space.md },
-  lightName: { flex: 1, fontSize: 18, lineHeight: 24 },
+  lightName: { flex: 1, fontSize: 17, lineHeight: 22 },
 });

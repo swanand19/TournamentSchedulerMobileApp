@@ -186,6 +186,16 @@ export const neutralWall = {
  * (app.json's splash), so the animation starts from exactly that picture; the dark opening ends on
  * the glass theme's own accents and the neutral wallpaper, which Home is drawn on.
  */
+/** The toss coin (cricket setup): the same brass in both themes, like a real coin. */
+export const coinColours = {
+  face: 'radial-gradient(circle at 35% 30%, #FFF4D2 0%, #FFD98A 38%, #E3AE4E 72%, #B98428 100%)',
+  flat: '#F0C46A',
+  ink: '#5A3F0B',
+  rim: 'rgba(152,104,24,0.45)',
+  shine: 'rgba(255,255,255,0.28)',
+  shadow: 'rgba(0,0,0,0.45)',
+};
+
 export const openingColours = {
   ground: '#17402E',
   stripe: '#1D4D38',

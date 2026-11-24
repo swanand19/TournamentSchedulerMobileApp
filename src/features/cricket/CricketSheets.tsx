@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text } from 'react-native';
 
-import type { CricketMatchState, CricketSquadMember, RecordBallRequest } from '@/api/types';
+import type { CricketMatchState, CricketRules, CricketSquadMember, RecordBallRequest } from '@/api/types';
 import Button from '@/components/Button';
 import ErrorBanner from '@/components/ErrorBanner';
 import PlayerGrid, { type GridPlayer } from '@/components/PlayerGrid';
@@ -11,6 +11,7 @@ import type { IconName } from '@/components/Icon';
 import Sheet from '@/components/Sheet';
 import Stepper from '@/components/Stepper';
 import DismissalGrid, { orderDismissals } from '@/features/cricket/DismissalGrid';
+import { FROM_LABEL, runSources, type Extra, type RunsFrom } from '@/features/cricket/RunPad';
 import { dismissalCanTakeNonStriker, dismissalTakesFielder } from '@/lib/cricketLabels';
 import { useSportTheme, useTypography } from '@/theme/SportTheme';
 
@@ -18,9 +19,104 @@ import { useSportTheme, useTypography } from '@/theme/SportTheme';
 // so a free hit or a wide offers only what can actually happen off that ball — and the batter and
 // bowler lists come from availableBatters / availableBowlers. Nothing here re-decides the laws.
 
-export type WicketDetails = Pick<RecordBallRequest, 'wicketType' | 'dismissedPlayerId' | 'fielderId' | 'isDirectHit' | 'runOutReceiverId'> & {
+export type WicketDetails = Pick<RecordBallRequest, 'wicketType' | 'dismissedPlayerId' | 'fielderId' | 'isDirectHit' | 'runOutReceiverId' | 'countsAsBall'> & {
   runsCompleted: number;
+  /** Where the runs completed came from (a run-out off byes, say); the pad's choice unless changed here. */
+  runsFrom: RunsFrom;
 };
+
+/** The engine's list for this kind of ball: off a wide or a no-ball fewer ways out are possible. */
+function dismissalsFor(state: CricketMatchState, extra: Extra) {
+  const a = state.actions;
+  if (extra === 'wide') return a.possibleDismissalsOffWide ?? a.possibleDismissals;
+  if (extra === 'noBall') return a.possibleDismissalsOffNoBall ?? a.possibleDismissals;
+  return a.possibleDismissals;
+}
+
+/** "The runs came: Off the bat · Byes · Leg byes", only those the rules allow. Nothing to ask on a wide. */
+function RunsFromChoice({ rules, extra, value, onChange }: { rules: CricketRules; extra: Extra; value: RunsFrom; onChange: (f: RunsFrom) => void }) {
+  const { type } = useTypography();
+  const theme = useSportTheme();
+  const sources = runSources(rules);
+  if (extra === 'wide' || sources.length < 2) return null;
+  return (
+    <>
+      <Text style={[type.label, { color: theme.onDarkSoft }]}>The runs came</Text>
+      <SegmentedControl
+        segments={sources.map((f) => ({ key: f, label: FROM_LABEL[f] }))}
+        value={value}
+        onChange={onChange}
+        accessibilityLabel="Where the runs came from"
+      />
+    </>
+  );
+}
+
+/**
+ * 7+: more runs off one ball than the keys hold — usually overthrows. They go to the batter when
+ * the ball came off the bat, otherwise they're byes or leg byes; on a wide they're all wides.
+ */
+export function MoreRunsSheet({
+  visible,
+  onClose,
+  onConfirm,
+  state,
+  extra,
+  runsFrom: startFrom,
+  busy,
+  error,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: (runs: number, from: RunsFrom) => void;
+  state: CricketMatchState;
+  extra: Extra;
+  runsFrom: RunsFrom;
+  busy: boolean;
+  error?: string;
+}) {
+  const { type } = useTypography();
+  const theme = useSportTheme();
+  const live = state.current!;
+  const rules = state.rules;
+  const [runs, setRuns] = useState(7);
+  const [from, setFrom] = useState<RunsFrom>(extra === 'wide' ? 'bat' : startFrom);
+  const striker = live.striker?.playerName ?? 'the batter';
+  const ball = extra === 'wide' ? 'a wide' : extra === 'noBall' ? 'a no ball' : 'a legal ball';
+
+  // The score after it, as the engine will fold it: the penalty run of a wide or no-ball on top.
+  const penalty = extra === 'wide' ? rules.widePenaltyRuns : extra === 'noBall' ? rules.noBallPenaltyRuns : 0;
+  const total = live.runs + runs + penalty;
+  const says =
+    extra === 'wide'
+      ? `${runs + penalty} wides. Every run on a wide is a wide.`
+      : from === 'bat'
+        ? `${striker} gets ${runs}.${extra === 'noBall' ? ` Plus ${penalty} no ball.` : ''} Overthrows off the bat are the batter's.`
+        : `Nothing to ${striker}: ${runs} ${from === 'byes' ? 'byes' : 'leg byes'}${extra === 'noBall' ? `, plus ${penalty} no ball` : ''}.`;
+
+  return (
+    <Sheet
+      visible={visible}
+      onClose={onClose}
+      dark
+      title="More runs"
+      subtitle={`${live.bowler?.playerName ?? 'Bowler'} to ${striker} · ${ball}`}
+      footer={
+        <>
+          <Button label="Cancel" variant="deck" onPress={onClose} style={{ flex: 1 }} />
+          <Button label={`Record ${runs} (${total}/${live.wickets})`} busy={busy} onPress={() => onConfirm(runs, from)} style={{ flex: 2 }} />
+        </>
+      }
+    >
+      <ErrorBanner message={error} />
+      <Stepper label="Runs off this ball" hint="Run, and overthrows" value={runs} min={1} max={15} onChange={setRuns} onDark />
+      <RunsFromChoice rules={rules} extra={extra} value={from} onChange={setFrom} />
+      <Text style={[type.caption, { color: theme.onDarkSoft }]}>{says}</Text>
+    </Sheet>
+  );
+}
+
+const isRetirement = (how: string) => how === 'RetiredHurt' || how === 'RetiredOut';
 
 const member = (m: CricketSquadMember, sub?: string): GridPlayer => ({
   id: m.playerId,
@@ -35,7 +131,8 @@ export function WicketSheet({
   state,
   busy,
   error,
-  extraLabel,
+  extra = 'none',
+  runsFrom: padFrom = 'bat',
 }: {
   visible: boolean;
   onClose: () => void;
@@ -43,13 +140,15 @@ export function WicketSheet({
   state: CricketMatchState;
   busy: boolean;
   error?: string;
-  /** "Wide" / "No ball" when a modifier is on, so the scorer sees what ball this is. */
-  extraLabel?: string;
+  /** The pad's wide / no-ball modifier: what ball this is, and so which ways out are possible. */
+  extra?: Extra;
+  runsFrom?: RunsFrom;
 }) {
   const { type } = useTypography();
   const theme = useSportTheme();
   const live = state.current!;
-  const dismissals = state.actions.possibleDismissals;
+  const extraLabel = extra === 'wide' ? 'Wide' : extra === 'noBall' ? 'No ball' : undefined;
+  const dismissals = dismissalsFor(state, extra);
   const ordered = orderDismissals(dismissals);
   const [how, setHow] = useState<string>(ordered.common[0] ?? ordered.rare[0] ?? 'Bowled');
   const [out, setOut] = useState<number | null | undefined>(live.striker?.playerId);
@@ -57,6 +156,17 @@ export function WicketSheet({
   const [directHit, setDirectHit] = useState<'direct' | 'relay'>('direct');
   const [receiver, setReceiver] = useState<number | null | undefined>(undefined);
   const [runs, setRuns] = useState(0);
+  const [from, setFrom] = useState<RunsFrom>(extra === 'wide' ? 'bat' : padFrom);
+  // A batter retires while the ball is dead (Law 25.4), so by default nothing is bowled. Some
+  // scorers write it onto the ball it happened on; that's their choice.
+  const [retireWhen, setRetireWhen] = useState<'between' | 'ball'>('between');
+  const retiring = isRetirement(how);
+  // Timed out is always between balls (the server decides; the batter never faced).
+  const timedOut = how === 'TimedOut';
+  const betweenBalls = timedOut || (retiring && retireWhen === 'between');
+  const costsAWicket = how !== 'RetiredHurt';
+  // The wide's or no-ball's own run(s) go on the score too.
+  const penalty = extra === 'wide' ? state.rules.widePenaltyRuns : extra === 'noBall' ? state.rules.noBallPenaltyRuns : 0;
 
   const fielders = state.squad.filter((p) => p.teamId === live.bowlingTeamId && p.squadStatus === 'Playing');
   const needsFielder = dismissalTakesFielder(how);
@@ -75,14 +185,21 @@ export function WicketSheet({
       onClose={onClose}
       dark
       title="Wicket"
-      subtitle={extraLabel ? `Off a ${extraLabel.toLowerCase()}` : `${live.bowler?.playerName ?? 'Bowler'} to ${live.striker?.playerName ?? 'striker'}`}
+      subtitle={
+        betweenBalls
+          ? 'Between balls · nothing bowled'
+          : extraLabel
+            ? `Off a ${extraLabel.toLowerCase()} · only these are possible`
+            : `${live.bowler?.playerName ?? 'Bowler'} to ${live.striker?.playerName ?? 'striker'}`
+      }
       footer={
         <>
           <Button label="Cancel" variant="deck" onPress={onClose} style={{ flex: 1 }} />
           <Button
-            label={`Confirm (${live.runs + runs}/${live.wickets + 1})`}
-            icon="alert-octagon"
-            variant="danger"
+            // Retired hurt costs no wicket, so the score after it keeps the same wickets, and it isn't red.
+            label={`Confirm (${live.runs + (betweenBalls ? 0 : runs + penalty)}/${live.wickets + (costsAWicket ? 1 : 0)})`}
+            icon={costsAWicket ? 'alert-octagon' : undefined}
+            variant={costsAWicket ? 'danger' : 'primary'}
             disabled={!ready}
             busy={busy}
             style={{ flex: 2 }}
@@ -93,7 +210,9 @@ export function WicketSheet({
                 fielderId: needsFielder ? fielder ?? null : null,
                 isDirectHit: runOut && directHit === 'direct',
                 runOutReceiverId: relay ? receiver ?? null : null,
-                runsCompleted: runs,
+                runsCompleted: betweenBalls ? 0 : runs,
+                runsFrom: from,
+                ...(retiring || timedOut ? { countsAsBall: !betweenBalls } : {}),
               })
             }
           />
@@ -126,6 +245,34 @@ export function WicketSheet({
           {striker.playerName} <Text style={[type.body, { color: theme.onDarkSoft }]}>· striker · {striker.runs} ({striker.ballsFaced})</Text>
         </Text>
       ) : null}
+
+      {retiring && (
+        <>
+          <Text style={[type.label, { color: theme.onDarkSoft }]}>Does it count as a ball?</Text>
+          <SegmentedControl
+            segments={[
+              { key: 'between', label: 'No, between balls' },
+              { key: 'ball', label: 'Yes, on this ball' },
+            ]}
+            value={retireWhen}
+            onChange={setRetireWhen}
+            accessibilityLabel="Does the retirement count as a ball"
+          />
+          <Text style={[type.caption, { color: theme.onDarkSoft }]}>
+            {retireWhen === 'between'
+              ? 'Nothing is bowled: no ball for the bowler or the batter, and the over carries on.'
+              : extraLabel
+                ? `Recorded on this ${extraLabel.toLowerCase()}, with the runs you chose for it.`
+                : 'Recorded on this ball: it counts for the bowler and the batter, with any runs off it.'}
+          </Text>
+        </>
+      )}
+
+      {timedOut && (
+        <Text style={[type.caption, { color: theme.onDarkSoft }]}>
+          The new batter wasn’t ready in time. Nothing is bowled, and the bowler doesn’t get the wicket.
+        </Text>
+      )}
 
       {runOut && (
         <SegmentedControl
@@ -165,8 +312,13 @@ export function WicketSheet({
       )}
 
       {(runOut || how === 'Stumped' || how === 'HitWicket' || how === 'ObstructingTheField') && (
-        <Stepper label="Runs completed" hint="Before the wicket fell" value={runs} min={0} max={6} onChange={setRuns} onDark />
+        <Stepper label="Runs completed" hint={extra === 'wide' ? 'Before the wicket fell · all wides' : 'Before the wicket fell'} value={runs} min={0} max={6} onChange={setRuns} onDark />
       )}
+      {(runOut || how === 'ObstructingTheField') && runs > 0 && <RunsFromChoice rules={state.rules} extra={extra} value={from} onChange={setFrom} />}
+      {retiring && !betweenBalls && (
+        <Stepper label="Runs off this ball" hint="Before the batter retired" value={runs} min={0} max={6} onChange={setRuns} onDark />
+      )}
+      {retiring && !betweenBalls && runs > 0 && <RunsFromChoice rules={state.rules} extra={extra} value={from} onChange={setFrom} />}
     </Sheet>
   );
 }
@@ -184,6 +336,7 @@ export function PickPlayerSheet({
   onClose,
   onUndo,
   strike,
+  onEndInnings,
 }: {
   visible: boolean;
   title: string;
@@ -198,6 +351,8 @@ export function PickPlayerSheet({
   onUndo?: () => void;
   /** Next batter only: the batter still in, and whether the newcomer faces by default. */
   strike?: { survivorName: string; newOnStrike: boolean };
+  /** Next batter only, when everyone left retired hurt (actions.canEndInningsNoBatters). */
+  onEndInnings?: () => void;
 }) {
   const { type } = useTypography();
   const theme = useSportTheme();
@@ -247,6 +402,14 @@ export function PickPlayerSheet({
             </>
           )}
           <PlayerGrid dark label={title} players={players} selected={chosen} onSelect={setChosen} />
+          {onEndInnings && (
+            <>
+              <Text style={[type.caption, { color: theme.onDarkSoft }]}>
+                Only batters who retired hurt are left. If none of them can come back, nobody is left to bat and the innings is over.
+              </Text>
+              <Button label="Nobody can come back: end the innings" variant="ghost" onPress={onEndInnings} disabled={busy} />
+            </>
+          )}
         </>
       )}
     </Sheet>

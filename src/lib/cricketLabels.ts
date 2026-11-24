@@ -96,7 +96,7 @@ export function dismissalLabel(type: string): string {
 
 /** Mirrors DismissalRules.CanDismissNonStriker: everything else only befalls the batter facing. */
 export function dismissalCanTakeNonStriker(type: string): boolean {
-  return type === 'RunOut' || type === 'ObstructingTheField' || type === 'RetiredHurt' || type === 'RetiredOut';
+  return type === 'RunOut' || type === 'ObstructingTheField' || type === 'RetiredHurt' || type === 'RetiredOut' || type === 'TimedOut';
 }
 
 /** Dismissals that record a fielder — the catcher, the thrower, or the keeper. */

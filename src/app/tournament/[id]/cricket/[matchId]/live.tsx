@@ -6,14 +6,13 @@ import { api } from '@/api/client';
 import type { CricketActions, CricketMatchAwards, CricketMatchState, CricketScorecard, RecordBallRequest } from '@/api/types';
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
-import Icon from '@/components/Icon';
 import HeaderButton from '@/components/HeaderButton';
 import ScoringBanner, { isScoringLocked } from '@/components/ScoringBanner';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import Skeleton from '@/components/Skeleton';
 import { CreaseCard, CricketScoreboard, DlsStrip, OverStrip } from '@/features/cricket/ConsoleParts';
-import { MoreSheet, PickPlayerSheet, ReduceOversSheet, ReplacePlayerSheet, WicketSheet, type MoreAction, type WicketDetails } from '@/features/cricket/CricketSheets';
+import { MoreRunsSheet, MoreSheet, PickPlayerSheet, ReduceOversSheet, ReplacePlayerSheet, WicketSheet, type MoreAction, type WicketDetails } from '@/features/cricket/CricketSheets';
 import MatchAwards from '@/features/cricket/MatchAwards';
 import RunPad, { type Extra, type RunsFrom } from '@/features/cricket/RunPad';
 import StartInnings from '@/features/cricket/StartInnings';
@@ -24,13 +23,13 @@ import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { haptic } from '@/lib/haptics';
 import { useSportTheme, useTypography } from '@/theme/SportTheme';
-import { radius, space } from '@/theme/theme';
+import { space } from '@/theme/theme';
 
 // The cricket scoring console. Every call answers with the whole match state — including what's
 // legal next — so this screen never decides a rule: it draws the scoreboard, the keypad when a
 // ball can be bowled, and a blocking picker when the match needs a new batter or bowler.
 
-type Open = { kind: 'wicket' | 'more' | 'reduce' | 'replace' | null; open: boolean; key: number };
+type Open = { kind: 'wicket' | 'moreRuns' | 'more' | 'reduce' | 'replace' | null; open: boolean; key: number };
 
 export default function CricketLive() {
   const { type } = useTypography();
@@ -82,8 +81,8 @@ export default function CricketLive() {
   const call = (id: Parameters<typeof api.call>[0], body?: unknown) =>
     api.call<CricketMatchState>(id, { routeParams: { matchId }, body });
 
-  /** The delivery the modifiers describe, with the runs put where the scorer said. */
-  const buildBall = (runs: number, more: Partial<RecordBallRequest> = {}): RecordBallRequest => {
+  /** The delivery the modifiers describe, with the runs put where the scorer said (a sheet may say otherwise). */
+  const buildBall = (runs: number, more: Partial<RecordBallRequest> = {}, from: RunsFrom = runsFrom): RecordBallRequest => {
     const base: RecordBallRequest = {
       runsOffBat: 0,
       isWide: extra === 'wide',
@@ -95,8 +94,8 @@ export default function CricketLive() {
       ...more,
     };
     if (extra === 'wide') return { ...base, wideExtraRuns: runs };
-    if (runsFrom === 'byes') return { ...base, byes: runs };
-    if (runsFrom === 'legByes') return { ...base, legByes: runs };
+    if (from === 'byes') return { ...base, byes: runs };
+    if (from === 'legByes') return { ...base, legByes: runs };
     return { ...base, runsOffBat: runs };
   };
 
@@ -112,9 +111,18 @@ export default function CricketLive() {
   const errorText = action.error?.message;
 
   const recordRuns = (runs: number) => act(() => call('CRICKET_BALL_RECORD', buildBall(runs)), runs >= 4 ? haptic.success : () => {});
+  const recordMoreRuns = async (runs: number, from: RunsFrom) => {
+    const ok = await act(() => call('CRICKET_BALL_RECORD', buildBall(runs, {}, from)), haptic.success);
+    if (ok) closeSheet();
+  };
   const recordWicket = async (w: WicketDetails) => {
-    const { runsCompleted, ...rest } = w;
-    const ok = await act(() => call('CRICKET_BALL_RECORD', buildBall(runsCompleted, rest)), haptic.heavy);
+    const { runsCompleted, runsFrom: from, ...rest } = w;
+    // Between balls nothing was bowled, so the wide / no-ball / byes modifiers don't apply to it.
+    const body: RecordBallRequest =
+      w.countsAsBall === false
+        ? { runsOffBat: 0, isWide: false, isNoBall: false, wideExtraRuns: 0, byes: 0, legByes: 0, penaltyRuns: 0, ...rest }
+        : buildBall(runsCompleted, rest, from);
+    const ok = await act(() => call('CRICKET_BALL_RECORD', body), w.wicketType === 'RetiredHurt' ? haptic.tap : haptic.heavy);
     if (ok) closeSheet();
   };
 
@@ -208,6 +216,7 @@ export default function CricketLive() {
       }}
       onRunsFrom={setRunsFrom}
       onRuns={recordRuns}
+      onMore={() => openSheet('moreRuns')}
       onWicket={() => openSheet('wicket')}
       onUndo={() => act(() => call('CRICKET_BALL_UNDO'), haptic.tap)}
       canUndo={a.canUndo}
@@ -273,15 +282,6 @@ export default function CricketLive() {
           </Card>
         )}
 
-        {live && a.canRecordBall && extra !== 'none' && (
-          <View style={[styles.modNote, { borderColor: theme.accent }]} accessibilityLiveRegion="polite">
-            <Icon name="information-outline" size={18} color={theme.accent} />
-            <Text style={[type.bodyStrong, { color: theme.accent, flex: 1 }]}>
-              {extra === 'wide' ? 'Wide: the number is extra runs taken on it.' : 'No ball: the number is runs off the bat (or byes).'}
-            </Text>
-          </View>
-        )}
-
         <DlsStrip state={state} />
 
         {signedOff && awards.data && <MatchAwards awards={awards.data} />}
@@ -296,7 +296,21 @@ export default function CricketLive() {
           state={state}
           busy={action.busy}
           error={errorText}
-          extraLabel={extra === 'wide' ? 'Wide' : extra === 'noBall' ? 'No ball' : undefined}
+          extra={extra}
+          runsFrom={runsFrom}
+        />
+      )}
+      {live && sheet.kind === 'moreRuns' && (
+        <MoreRunsSheet
+          key={sheet.key}
+          visible={sheet.open}
+          onClose={closeSheet}
+          onConfirm={recordMoreRuns}
+          state={state}
+          extra={extra}
+          runsFrom={runsFrom}
+          busy={action.busy}
+          error={errorText}
         />
       )}
       {sheet.kind === 'more' && <MoreSheet key={sheet.key} visible={sheet.open} onClose={closeSheet} state={state} onAction={more} />}
@@ -335,7 +349,25 @@ export default function CricketLive() {
           visible={a.needsBatter}
           title="Next batter in"
           subtitle={`${live.battingTeamName} ${live.scoreLine}`}
-          players={a.availableBatters.map((p) => ({ id: p.playerId, name: p.playerName, sub: p.battingOrder ? `Bats #${p.battingOrder}` : undefined }))}
+          players={a.availableBatters.map((p) => ({
+            id: p.playerId,
+            name: p.playerName,
+            // A batter who retired hurt may come back; say so, so they aren't taken for a new one.
+            sub: a.retiredHurtBatterIds?.includes(p.playerId) ? 'Retired hurt · can come back' : p.battingOrder ? `Bats #${p.battingOrder}` : undefined,
+          }))}
+          onEndInnings={
+            a.canEndInningsNoBatters
+              ? async () => {
+                  const ok = await confirm({
+                    title: 'End the innings?',
+                    message: `Nobody who retired hurt can come back, so ${live.battingTeamName} are all out for ${live.runs}.`,
+                    confirmLabel: 'End innings',
+                    destructive: true,
+                  });
+                  if (ok) await act(() => call('CRICKET_INNINGS_END', { reason: 'AllOut' }), haptic.heavy);
+                }
+              : undefined
+          }
           cta="Send in"
           busy={action.busy}
           error={a.needsBatter ? errorText : undefined}
@@ -374,5 +406,4 @@ function allOff(actions: CricketActions): CricketActions {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: space.sm },
-  modNote: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderRadius: radius.xl, borderWidth: 1.5, padding: space.sm, paddingHorizontal: space.md },
 });

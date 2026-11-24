@@ -700,6 +700,8 @@ export type BallSummary = {
   isBoundary: boolean;
   isExtra: boolean;
   isFreeHit: boolean;
+  /** A retirement between balls ("RH" / "RO"): shown in the over, but nothing was bowled. Older servers: absent. */
+  notABall?: boolean;
 };
 
 export type InningsLiveState = {
@@ -763,8 +765,15 @@ export type CricketActions = {
   nextBattingTeamId: number | null;
   nextBowlingTeamId: number | null;
   availableBatters: CricketSquadMember[];
+  /** Of availableBatters, the ones who retired hurt and would be coming back. Older servers: absent. */
+  retiredHurtBatterIds?: number[];
+  /** Only retired-hurt batters are left to come in: if they can't, the innings may end (CRICKET_INNINGS_END, reason AllOut). */
+  canEndInningsNoBatters?: boolean;
   availableBowlers: CricketSquadMember[];
   possibleDismissals: string[];
+  /** Of those, what can happen off a wide / off a no-ball (no bowler's wickets off a no-ball). Older servers leave them out. */
+  possibleDismissalsOffWide?: string[];
+  possibleDismissalsOffNoBall?: string[];
   /** Corrections: the batters at the crease may be swapped for anyone in the XI yet to bat (their whole stay
    *  moves); this over's bowler for anyone allowed to bowl it. Empty / null when nothing can be corrected. */
   replaceableBatters: CricketSquadMember[];
@@ -821,6 +830,8 @@ export type RecordBallRequest = {
   isDirectHit?: boolean;
   runOutReceiverId?: number | null;
   battersCrossed?: boolean;
+  /** Retirements only: false = between balls (nothing bowled, no runs); left out = on this ball. */
+  countsAsBall?: boolean;
 };
 
 export type BattingCardRow = {

@@ -11,7 +11,7 @@ import EmptyState from '@/components/EmptyState';
 import ErrorBanner from '@/components/ErrorBanner';
 import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
-import HubPage from '@/features/hub/HubPage';
+import HubPage, { StickyBand } from '@/features/hub/HubPage';
 import { Champion } from '@/features/hub/TableTab';
 import Skeleton from '@/components/Skeleton';
 import { LiveMatchCard, MatchRow } from '@/features/matches/MatchCards';
@@ -80,25 +80,29 @@ export default function MatchesTab({ tournamentId, active }: { tournamentId: num
       : openMatch(router, tournamentId, m, access.canScore);
 
   return (
-    <HubPage onRefresh={matches.refresh} refreshing={matches.refreshing}>
+    // The filter is pinned under the tabs, like the Stats page's header: it stays in reach down a long
+    // fixture list. It must be the first child (stickyIndex 0).
+    <HubPage onRefresh={matches.refresh} refreshing={matches.refreshing} stickyIndex={0}>
+      <StickyBand>
+        {theme.mode === 'dark' ? (
+          // Glass: one glass track with the counts beside the words.
+          <SegmentedControl
+            accessibilityLabel="Filter matches"
+            segments={FILTERS.map((f) => ({ key: f.key, label: f.label, badge: count(f.key) }))}
+            value={filter}
+            onChange={setFilter}
+          />
+        ) : (
+          <GestureScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+            {FILTERS.map((f) => (
+              <Chip key={f.key} label={f.label} count={count(f.key)} selected={filter === f.key} onPress={() => setFilter(f.key)} />
+            ))}
+          </GestureScrollView>
+        )}
+      </StickyBand>
+
       <ErrorBanner message={matches.error?.message} actionLabel="Try again" onAction={matches.refresh} />
       {knockoutOver && <Champion name={stage.data?.championName} />}
-
-      {theme.mode === 'dark' ? (
-        // Glass: one glass track with the counts beside the words.
-        <SegmentedControl
-          accessibilityLabel="Filter matches"
-          segments={FILTERS.map((f) => ({ key: f.key, label: f.label, badge: count(f.key) }))}
-          value={filter}
-          onChange={setFilter}
-        />
-      ) : (
-        <GestureScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-          {FILTERS.map((f) => (
-            <Chip key={f.key} label={f.label} count={count(f.key)} selected={filter === f.key} onPress={() => setFilter(f.key)} />
-          ))}
-        </GestureScrollView>
-      )}
 
       {pinLive && live.map((m) => <LiveMatchCard key={`live-${m.id}`} match={m} onOpen={() => open(m)} canScore={access.canScore} />)}
 

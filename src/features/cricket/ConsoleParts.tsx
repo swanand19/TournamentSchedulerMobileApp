@@ -332,7 +332,7 @@ function LightCrease({ live, bowlerStyle }: { live: InningsLiveState; bowlerStyl
       )}
       {live.partnershipBalls > 0 && (
         <Text style={[type.caption, { color: theme.muted, paddingTop: space.sm }]}>
-          Partnership {live.partnershipRuns} ({live.partnershipBalls} balls), extras {live.extrasTotal}
+          Partnership {live.partnershipRuns} ({live.partnershipBalls} {live.partnershipBalls === 1 ? 'ball' : 'balls'}), extras {live.extrasTotal}
         </Text>
       )}
     </View>
@@ -373,7 +373,7 @@ export function CreaseCard({ live, bowlerStyle }: { live: InningsLiveState; bowl
       )}
       {live.partnershipBalls > 0 && (
         <Text style={[type.caption, styles.partnership, { color: theme.muted, borderTopColor: theme.cardDivider }]}>
-          Partnership {live.partnershipRuns} ({live.partnershipBalls} balls), extras {live.extrasTotal}
+          Partnership {live.partnershipRuns} ({live.partnershipBalls} {live.partnershipBalls === 1 ? 'ball' : 'balls'}), extras {live.extrasTotal}
         </Text>
       )}
     </Card>
@@ -402,17 +402,19 @@ function BallChip({ ball, fresh }: { ball: BallSummary; fresh: boolean }) {
   const enter = fresh && !reduced && { animationName: BALL_IN, animationDuration: 200, animationTimingFunction: EASE_OUT };
   if (theme.mode === 'light') {
     const look = lightBall(ball, theme);
+    // "nb+4", "1+W": too long for a round chip, so a pill that keeps the ball's ring.
+    const pill = look.pill || ball.display.length > 2;
     return (
       <Animated.View
         accessible
         accessibilityLabel={`${ball.display}${ball.isFreeHit ? ', free hit' : ''}`}
         style={[
-          look.pill ? styles.lightPillBall : styles.lightBall,
+          pill ? styles.lightPillBall : styles.lightBall,
           { backgroundColor: look.bg, borderColor: ball.isFreeHit ? theme.accent : look.border, borderWidth: look.width },
           enter,
         ]}
       >
-        <Text style={{ fontFamily: look.strong ? fonts.bodySemiBold : fonts.body, fontSize: look.pill ? 12 : 14, color: look.fg }}>
+        <Text style={{ fontFamily: look.strong ? fonts.bodySemiBold : fonts.body, fontSize: pill ? 12 : 14, color: look.fg }}>
           {ball.display === '0' ? '•' : ball.display}
         </Text>
       </Animated.View>
@@ -422,6 +424,8 @@ function BallChip({ ball, fresh }: { ball: BallSummary; fresh: boolean }) {
   // is for wickets), a wide or no-ball a small pill — each kind reads apart at a glance.
   const six = ball.isBoundary && /6/.test(ball.display);
   const extra = ball.isExtra && !ball.isBoundary && !ball.isWicket;
+  // "nb+4", "1+W": too long for a round bead, so a pill with the same colours.
+  const pill = extra || ball.display.length > 2;
   const look = ball.isWicket
     ? { bg: theme.dangerSolid, fg: '#FFFFFF', ring: 'transparent' }
     : six
@@ -436,12 +440,12 @@ function BallChip({ ball, fresh }: { ball: BallSummary; fresh: boolean }) {
       accessible
       accessibilityLabel={`${ball.display}${ball.isFreeHit ? ', free hit' : ''}`}
       style={[
-        extra ? styles.extraBall : styles.ball,
+        pill ? styles.extraBall : styles.ball,
         { backgroundColor: look.bg, borderColor: ball.isFreeHit ? theme.accent : look.ring },
         enter,
       ]}
     >
-      <Text style={[extra ? styles.extraText : styles.ballText, { color: look.fg }]}>{ball.display}</Text>
+      <Text style={[pill ? styles.extraText : styles.ballText, { color: look.fg }]}>{ball.display}</Text>
     </Animated.View>
   );
 }
@@ -452,7 +456,8 @@ export function OverStrip({ live, ballsPerOver }: { live: InningsLiveState; ball
   const theme = useSportTheme();
   // The newest ball seen when the console opened; later ones settle in.
   const [seenUpTo] = useState(() => live.thisOver.reduce((m, b) => Math.max(m, b.sequenceNumber), 0));
-  const legal = live.thisOver.filter((b) => !b.display.startsWith('wd') && !b.display.startsWith('nb')).length;
+  // A retirement between balls (RH / RO) is shown but takes no ball's place.
+  const legal = live.thisOver.filter((b) => !b.notABall && !b.display.startsWith('wd') && !b.display.startsWith('nb')).length;
   const runs = live.thisOver.reduce((n, b) => n + b.runs, 0);
   const remaining = Math.max(0, ballsPerOver - legal);
   const overNumber = Math.floor(parseFloat(live.overs)) + (legal < ballsPerOver ? 1 : 0);

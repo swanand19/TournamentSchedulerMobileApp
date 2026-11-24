@@ -244,20 +244,20 @@ function StartedHub() {
             <Image source={{ uri: banner }} cachePolicy="memory-disk" contentFit="cover" transition={150} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
             <View style={[StyleSheet.absoluteFill, styles.bannerWash]} />
             <View style={styles.bannerText}>
-              {!!query.data?.logoUrl && <PhotoBadge link={query.data.logoUrl} name={name} size={48} square />}
+              {!!query.data?.logoUrl && <PhotoBadge link={query.data.logoUrl} name={name} size={40} square />}
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={[type.title, { color: '#FFFFFF' }]} accessibilityRole="header" numberOfLines={2}>
+                <Text style={[type.title, styles.hubTitle, { color: '#FFFFFF' }]} accessibilityRole="header" numberOfLines={2}>
                   {name}
                 </Text>
-                {!!dates && <Text style={[type.body, { color: 'rgba(255,255,255,0.88)' }]}>{dates}</Text>}
+                {!!dates && <Text style={[type.caption, { color: 'rgba(255,255,255,0.88)' }]}>{dates}</Text>}
               </View>
             </View>
           </View>
         ) : (
           <View style={[styles.titleRow, { marginBottom: light ? space.sm : 0 }]}>
-            {!!query.data?.logoUrl && <PhotoBadge link={query.data.logoUrl} name={name} size={48} square />}
+            {!!query.data?.logoUrl && <PhotoBadge link={query.data.logoUrl} name={name} size={40} square />}
             <View style={{ flex: 1, gap: 4 }}>
-              <Text style={[type.title, { color: theme.ink }]} accessibilityRole="header" numberOfLines={2}>
+              <Text style={[type.title, styles.hubTitle, { color: theme.ink }]} accessibilityRole="header" numberOfLines={2}>
                 {name}
               </Text>
               {!!dates && <Text style={[type.body, { color: theme.muted }]}>{dates}</Text>}
@@ -300,7 +300,10 @@ const styles = StyleSheet.create({
   glassTop: { borderBottomWidth: 0, paddingTop: 0, paddingHorizontal: space.lg + 4 },
   headerRow: { flexDirection: 'row', gap: space.sm },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  banner: { aspectRatio: 2, borderRadius: radius.lg, borderCurve: 'continuous', overflow: 'hidden', justifyContent: 'flex-end' },
+  // The header stays put while the pages scroll, so it's kept short: a wider banner (still the
+  // middle of the 16:9 picture) and a smaller name than a screen title (2026-11-24, the user's note).
+  hubTitle: { fontSize: 26, lineHeight: 31 },
+  banner: { aspectRatio: 2.5, borderRadius: radius.lg, borderCurve: 'continuous', overflow: 'hidden', justifyContent: 'flex-end' },
   bannerWash: { backgroundColor: 'rgba(0,0,0,0.42)' },
   bannerText: { flexDirection: 'row', alignItems: 'flex-end', gap: space.md, padding: space.md },
   prompt: { borderWidth: 1, borderRadius: radius.xl, borderCurve: 'continuous', padding: space.md, gap: space.sm },
