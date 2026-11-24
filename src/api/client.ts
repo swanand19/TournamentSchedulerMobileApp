@@ -74,7 +74,7 @@ export async function request<T>(
 
   let envelope: unknown;
   try {
-    envelope = openResponse(outer, sealed.contentKey);
+    envelope = await openResponse(outer, sealed.contentKey);
   } catch {
     throw unreadableAnswer(res.status);
   } finally {

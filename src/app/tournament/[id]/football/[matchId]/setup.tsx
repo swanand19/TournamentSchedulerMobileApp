@@ -10,6 +10,7 @@ import Button from '@/components/Button';
 import { Card, Deck } from '@/components/Card';
 import ErrorBanner from '@/components/ErrorBanner';
 import PressableScale from '@/components/PressableScale';
+import ScoringBanner, { isScoringLocked } from '@/components/ScoringBanner';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
@@ -58,7 +59,9 @@ export default function FootballSetup() {
   const glass = theme.mode === 'dark';
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { id: tournamentId } = useTournament();
-  const data = useFootballMatch(Number(matchId));
+  // Opening setup takes the match if nobody has it. Polled now and then: it keeps the holder "seen"
+  // while they fill the form, and moves anyone else on to the live screen once it kicks off.
+  const data = useFootballMatch(Number(matchId), { pollMs: 30000, claim: true });
   const action = useAction();
   const [liveMatchId, setLiveMatchId] = useState<number | null>(null);
 
@@ -121,6 +124,9 @@ export default function FootballSetup() {
     return <Screen error={data.error} onRetry={data.refresh}>{data.loading && <Skeleton rows={5} />}</Screen>;
   }
 
+  // Someone else is setting it up: who, and Watch / Ask / Take over, instead of a form for nothing.
+  const locked = isScoringLocked(match.scoring, false);
+
   const teams = [
     { key: 'home' as const, team: match.homeTeam, name: match.homeTeamName, id: match.homeTeamId },
     { key: 'away' as const, team: match.awayTeam, name: match.awayTeamName, id: match.awayTeamId },
@@ -161,7 +167,7 @@ export default function FootballSetup() {
   return (
     <Screen
       footer={
-        <>
+        locked ? undefined : <>
           {!ready && short && (
             <Text style={[type.caption, { color: theme.onDarkSoft, textAlign: 'center' }]}>
               {short.name} has {startersOf(short)} of {maxPlayers} starters picked
@@ -212,6 +218,15 @@ export default function FootballSetup() {
         </View>
       </Deck>
 
+      <ScoringBanner
+        sport="football"
+        matchId={matchId}
+        scoring={match.scoring}
+        onChanged={data.reload}
+        onWatch={() => router.push({ pathname: '/tournament/[id]/football/[matchId]/watch', params })}
+      />
+
+      {!locked && <>
       <Card>
         <SectionHeader title="Match rules" onCard />
         <Stepper label="Players per side" value={maxPlayers} min={1} max={11} onChange={(n) => { setMaxPlayers(n); setMinPlayers((m) => Math.min(m, n)); }} />
@@ -313,6 +328,7 @@ export default function FootballSetup() {
           );
         })
       )}
+      </>}
     </Screen>
   );
 }

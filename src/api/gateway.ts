@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import * as ExpoCrypto from 'expo-crypto';
 import { Platform } from 'react-native';
 
-import { base64UrlDecode, decryptResponse, encryptRequest } from './gatewayCrypto';
+import { agreeKey, base64UrlDecode, decryptResponse, encryptRequest, type AgreedKey } from './gatewayCrypto';
 import type { ServiceRequestId } from './services';
 
 // The phone's half of the secure gateway: builds the { requestHeader, requestBody } envelope,
@@ -49,6 +49,38 @@ function serverPublicKey(): { keyId: string; key: Uint8Array } {
   }
   return { keyId: KEY_ID, key: serverKey };
 }
+
+// Keys agreed ahead of time. Agreeing a one-time key with the server is the slow part of a request
+// (elliptic-curve arithmetic in JavaScript, on the same thread that answers taps and starts
+// animations), so a few are prepared while the app is idle and a request just takes one — its
+// sealing then costs almost nothing at the moment of the tap. Every request still gets a key of its
+// own, made once and never reused; an empty pool simply falls back to agreeing on the spot.
+const POOL_SIZE = 4;
+const pool: AgreedKey[] = [];
+let filling = false;
+
+const whenIdle = (work: () => void) => {
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(work, { timeout: 3000 });
+  else setTimeout(work, 100);
+};
+
+/** Tops the pool up, one key per idle moment so no single turn holds the thread for long. */
+function refill() {
+  if (filling || pool.length >= POOL_SIZE) return;
+  filling = true;
+  whenIdle(() => {
+    filling = false;
+    try {
+      pool.push(agreeKey({ serverPublicKey: serverPublicKey().key, randomBytes: (length) => ExpoCrypto.getRandomBytes(length) }));
+    } catch {
+      return; // no usable server key: the request itself reports that
+    }
+    refill();
+  });
+}
+
+// The first keys (and the tables behind them) are made as the app starts, before anyone taps.
+refill();
 
 // Groups this launch's requests in the server's logs. Named user flows can refine it later.
 const journeyId = ExpoCrypto.randomUUID();
@@ -111,7 +143,9 @@ export async function sealRequest(
     claims: { serviceRequestId, requestUUID, timestamp, channel, appVersion },
     plaintext: utf8ToBytes(JSON.stringify(session ? { ...payload, session: session.token } : payload)),
     randomBytes: (length) => ExpoCrypto.getRandomBytes(length),
+    agreed: pool.pop(),
   });
+  refill();
 
   return {
     envelope: {
@@ -134,13 +168,51 @@ export async function sealRequest(
   };
 }
 
+/** base64url as the padded base64 the phone's own AES takes, without decoding it in JavaScript. */
+function toBase64(text: string): string {
+  const plain = text.replace(/-/g, '+').replace(/_/g, '/');
+  return plain + '='.repeat((4 - (plain.length % 4)) % 4);
+}
+
+let warnedAboutFallback = false;
+
+/**
+ * Opens an answer with the phone's own AES-GCM (expo-crypto): the same check and the same bytes as
+ * gatewayCrypto's decryptResponse, but done natively and off the JavaScript thread. In JavaScript a
+ * large answer (a scorecard, a stats page) held that thread — the one that answers taps and starts
+ * animations — for as long as it took to decrypt; natively it costs it almost nothing.
+ */
+async function openNatively(token: string, contentKey: Uint8Array): Promise<Uint8Array> {
+  const parts = token.split('.');
+  if (parts.length !== 5) throw new Error('A compact JWE has five parts.');
+  const header = JSON.parse(bytesToUtf8(base64UrlDecode(parts[0]))) as { alg?: unknown; enc?: unknown };
+  if (header.alg !== 'dir' || header.enc !== 'A256GCM') throw new Error('Unexpected response algorithm.');
+
+  const key = await ExpoCrypto.AESEncryptionKey.import(contentKey);
+  const sealed = ExpoCrypto.AESSealedData.fromParts(toBase64(parts[2]), toBase64(parts[3]), toBase64(parts[4]));
+  // The protected header is the additional data, exactly as it was sent (RFC 7516 §5.1 step 14).
+  return ExpoCrypto.aesDecryptAsync(sealed, key, { additionalData: utf8ToBytes(parts[0]) });
+}
+
 /**
  * The { status, data } envelope inside an encrypted answer, or undefined when the answer wasn't
  * encrypted (the server refused the request before it could decrypt it, so it had no key to reply with).
  * Throws GatewayCryptoError when an encrypted answer can't be opened.
  */
-export function openResponse(outer: unknown, contentKey: Uint8Array): unknown {
+export async function openResponse(outer: unknown, contentKey: Uint8Array): Promise<unknown> {
   const token = (outer as { responseBody?: { encryptedData?: unknown } } | null)?.responseBody?.encryptedData;
   if (typeof token !== 'string') return undefined;
-  return JSON.parse(bytesToUtf8(decryptResponse(token, contentKey)));
+  let plain: Uint8Array;
+  try {
+    plain = await openNatively(token, contentKey);
+  } catch (e) {
+    // Whatever went wrong natively, the JavaScript implementation decides: it opens the answer, or
+    // refuses it with the error the app reports. (It is the one checked against the shared vectors.)
+    plain = decryptResponse(token, contentKey);
+    if (__DEV__ && !warnedAboutFallback) {
+      warnedAboutFallback = true;
+      console.warn('Gateway: native AES could not open an answer the JavaScript one could; answers are being decrypted in JavaScript.', e);
+    }
+  }
+  return JSON.parse(bytesToUtf8(plain));
 }

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
@@ -8,6 +8,7 @@ import Button from '@/components/Button';
 import { Card, Deck } from '@/components/Card';
 import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
+import ScoringBanner, { isScoringLocked } from '@/components/ScoringBanner';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
@@ -19,6 +20,7 @@ import { useAction } from '@/hooks/useAction';
 import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
 import { haptic } from '@/lib/haptics';
+import { claimScoring } from '@/lib/scoringClaim';
 import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
 import { radius, space, type Typography } from '@/theme/theme';
 
@@ -42,14 +44,21 @@ export default function CricketSetup() {
   const { id: tournamentId } = useTournament();
   const action = useAction();
 
+  // Opening setup takes the match if nobody has it (lib/scoringClaim). Polled now and then: it keeps
+  // the holder "seen" while they pick the XIs, and moves anyone else on once the match starts.
+  const claimed = useRef(false);
   const fetcher = useCallback(async (): Promise<Loaded> => {
+    if (!claimed.current) {
+      claimed.current = true;
+      await claimScoring('cricket', matchId);
+    }
     const [state, options] = await Promise.all([
       api.call<CricketMatchState>('CRICKET_MATCH_GET', { routeParams: { matchId } }),
       api.call<CricketSetupOptions>('CRICKET_SETUP_OPTIONS', { routeParams: { matchId } }),
     ]);
     return { state, options };
   }, [matchId]);
-  const data = useQuery(fetcher);
+  const data = useQuery(fetcher, { pollMs: 30000, live: { kind: 'match', sport: 'cricket', matchId: Number(matchId) } });
 
   const [preset, setPreset] = useState<string>('');
   const [rules, setRules] = useState<CricketRules | null>(null);
@@ -140,11 +149,14 @@ export default function CricketSetup() {
     ...o.presets.map((p) => ({ ...p, note: undefined as string | undefined })),
   ];
 
+  // Someone else is setting it up: who, and Watch / Ask / Take over, instead of a form for nothing.
+  const locked = isScoringLocked(loaded.state.scoring, false);
+
   return (
     <Screen
       error={action.error}
       footer={
-        <>
+        locked ? undefined : <>
           {!ready && (
             <Text style={[type.caption, { color: theme.onDarkSoft, textAlign: 'center' }]}>
               {!tossWinner
@@ -168,6 +180,15 @@ export default function CricketSetup() {
         </Text>
       </Deck>
 
+      <ScoringBanner
+        sport="cricket"
+        matchId={matchId}
+        scoring={loaded.state.scoring}
+        onChanged={data.reload}
+        onWatch={() => router.push({ pathname: '/tournament/[id]/cricket/[matchId]/watch', params: { id: String(tournamentId), matchId: String(matchId) } })}
+      />
+
+      {!locked && <>
       <SectionHeader eyebrow="Step 1" title="Match format" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.sm, paddingRight: space.lg }}>
         {presets.map((p) => {
@@ -302,6 +323,7 @@ export default function CricketSetup() {
           )}
         </>
       ) : null}
+      </>}
     </Screen>
   );
 }

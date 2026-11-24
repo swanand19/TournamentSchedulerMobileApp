@@ -48,7 +48,7 @@ export default function FootballLive() {
   const theme = useSportTheme();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { id: tournamentId } = useTournament();
-  const data = useFootballMatch(Number(matchId), { pollMs: 5000 });
+  const data = useFootballMatch(Number(matchId), { pollMs: 5000, claim: true });
   const action = useAction();
   const [sheet, setSheet] = useState<SheetState>({ kind: null, open: false, key: 0, side: 'home', colour: 'yellow' });
 

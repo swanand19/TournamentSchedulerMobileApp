@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -50,15 +50,34 @@ export default function GlassMenu<K extends string>({ visible, onClose, title, i
   if (!visible && mounted && reduced) setMounted(false);
 
   const open = useSharedValue(0);
+  // Android puts a modal's window on screen a frame or two after React mounts it, so growing the
+  // menu from the mount lost the start of the motion. It grows once the window reports itself shown.
+  const shown = useRef(false);
+  const grow = () => {
+    shown.current = true;
+    open.set(reduced ? withTiming(1, { duration: 150 }) : withSpring(1, MATERIALIZE));
+  };
   useEffect(() => {
-    if (!mounted) return;
-    if (visible) open.set(reduced ? withTiming(1, { duration: 150 }) : withSpring(1, MATERIALIZE));
-    else if (!reduced)
+    if (!mounted) {
+      shown.current = false;
+      return undefined;
+    }
+    if (visible) {
+      // Reopened while it was still closing: the window is already there.
+      if (shown.current) grow();
+      // A platform that never reports the window as shown must not leave the menu invisible.
+      const fallback = setTimeout(() => !shown.current && grow(), 200);
+      return () => clearTimeout(fallback);
+    }
+    if (!reduced)
       open.set(
         withTiming(0, { duration: 170, easing: EASE_OUT }, (finished) => {
           if (finished) scheduleOnRN(setMounted, false);
         }),
       );
+    return undefined;
+    // grow reads the motion setting and the value above; listing it would re-run this on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, mounted, reduced, open]);
 
   const panelStyle = useAnimatedStyle(() => ({
@@ -90,7 +109,15 @@ export default function GlassMenu<K extends string>({ visible, onClose, title, i
   );
 
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+    <Modal
+      visible
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onShow={() => !shown.current && visible && grow()}
+      onRequestClose={onClose}
+    >
       <Animated.View style={[StyleSheet.absoluteFill, styles.dim, dimStyle]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close menu" />
       </Animated.View>

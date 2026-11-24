@@ -7,15 +7,16 @@
     "azure": {
       "env": {
         "EXPO_PUBLIC_SERVER_LOCKED": "true",
-        "EXPO_PUBLIC_API_BASE_URL": "https://<api-default-domain>",
-        "EXPO_PUBLIC_WEB_URL": "https://<web-default-domain>",
-        "EXPO_PUBLIC_GATEWAY_KEY_ID": "<production-key-id>",
-        "EXPO_PUBLIC_GATEWAY_PUBLIC_KEY": "<production-public-key>"
+        "EXPO_PUBLIC_API_BASE_URL": "https://kickcricket-api-bxdpaxf6a5cthzbg.centralindia-01.azurewebsites.net",
+        "EXPO_PUBLIC_WEB_URL": "https://ambitious-coast-06d7fac00.3.azurestaticapps.net",
+        "EXPO_PUBLIC_GATEWAY_KEY_ID": "20261119",
+        "EXPO_PUBLIC_GATEWAY_PUBLIC_KEY": "BDfiRsinGi--bojc9zypWaFwjcsoUZm0tWJkitIjAd3VallDB_SM86bwp6LE68U_iOVNllYMUyR5HU11s195ZeE"
       }
     },
     "preview": {
       "extends": "azure",
       "distribution": "internal",
+      "autoIncrement": true,
       "android": {
         "buildType": "apk"
       }

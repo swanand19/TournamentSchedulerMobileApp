@@ -10,17 +10,19 @@ import { Outfit_200ExtraLight, Outfit_300Light, Outfit_400Regular, Outfit_500Med
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { loadSession, useSessionState } from '@/auth/session';
+import { usePendingInvite } from '@/features/invite/pendingInvite';
 import ConfirmHost from '@/components/ConfirmHost';
 import ThemeTransition from '@/components/ThemeTransition';
 import { themedScreenLayout } from '@/components/ThemedScreen';
 import { ServerProvider, useServer } from '@/config/server';
 import { useClientUpdate } from '@/features/update/clientUpdate';
+import OpeningScreen from '@/features/opening/OpeningScreen';
 import { UpdateRequiredScreen, useUpdateCheck } from '@/features/update/UpdateParts';
 import { loadAppearance, useAppearance } from '@/theme/appearance';
 import { useSportTheme, useTypography } from '@/theme/SportTheme';
@@ -29,6 +31,9 @@ import { neutralWall } from '@/theme/theme';
 // Keeps the splash up until the fonts (and the icon font) are in, so the first screen never flashes
 // in the system font and then jumps.
 SplashScreen.preventAutoHideAsync();
+// The opening (features/opening) draws the still screen's own picture underneath, so the still
+// screen just fades away over it before the animation starts.
+SplashScreen.setOptions({ fade: true, duration: 150 });
 
 // The tournament holds its own stack, which rebuilds its screens on a theme change itself.
 const screenLayout = themedScreenLayout('tournament/[id]');
@@ -50,6 +55,9 @@ export default function RootLayout() {
   });
 
   const { loaded: sessionLoaded } = useSessionState();
+  // Plays once per start of the app, in the theme saved on the phone; coming back from the
+  // background doesn't start the app again, so it doesn't replay.
+  const [opening, setOpening] = useState(true);
   const appearance = useAppearance();
   useEffect(() => {
     loadSession();
@@ -68,6 +76,7 @@ export default function RootLayout() {
       <ServerProvider>
         <StatusBar style={appearance.mode === 'light' ? 'dark' : 'light'} />
         <AppStack reduced={reduced} />
+        {opening && <OpeningScreen mode={appearance.mode} onDone={() => setOpening(false)} />}
         <ConfirmHost />
         <ThemeTransition />
       </ServerProvider>
@@ -85,6 +94,9 @@ function AppStack({ reduced }: { reduced: boolean }) {
   const { session } = useSessionState();
   // A session belongs to the server that issued it; on another server the phone is signed out.
   const signedIn = !!session && ready && session.server === baseUrl;
+  // An invite link opened signed out waits here until sign-in or sign-up finishes (only in memory, so closing the app
+  // halfway joins nobody); signed in, it opens at once.
+  usePendingInvite(signedIn);
   // Where this app version stands (HLD P-25): an update the server requires covers everything.
   const recheck = useUpdateCheck(ready && !!baseUrl);
   const { required } = useClientUpdate();
@@ -121,8 +133,18 @@ function AppStack({ reduced }: { reduced: boolean }) {
             <Stack.Screen name="profile/index" options={{ title: 'Profile', headerBackButtonDisplayMode: 'minimal' }} />
             <Stack.Screen name="profile/[sport]" options={{ title: '', headerBackButtonDisplayMode: 'minimal' }} />
             <Stack.Screen name="join" options={{ title: 'Join a team' }} />
-            <Stack.Screen name="find" options={{ title: 'Find a tournament' }} />
+            <Stack.Screen name="invite/[code]" options={{ title: 'Joining the team', headerBackButtonDisplayMode: 'minimal' }} />
+            <Stack.Screen name="find" options={{ title: 'Find' }} />
+            <Stack.Screen name="profile/follows" options={{ title: '', headerBackButtonDisplayMode: 'minimal' }} />
             <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
+            {/* Lasting teams (people see "team"): they colour their own headers by the team's sport, like a career. */}
+            <Stack.Screen name="club/[clubId]/index" options={{ title: '', headerBackButtonDisplayMode: 'minimal' }} />
+            <Stack.Screen name="club/[clubId]/settings" options={{ title: 'Team settings', headerBackButtonDisplayMode: 'minimal' }} />
+            <Stack.Screen name="club/[clubId]/enter" options={{ title: 'Enter a tournament', headerBackButtonDisplayMode: 'minimal' }} />
+            {/* Leagues and seasons (2026-11-24). */}
+            <Stack.Screen name="league/new" options={{ title: 'New league', headerBackButtonDisplayMode: 'minimal' }} />
+            <Stack.Screen name="league/[leagueId]/index" options={{ title: '', headerBackButtonDisplayMode: 'minimal' }} />
+            <Stack.Screen name="league/[leagueId]/settings" options={{ title: 'League settings', headerBackButtonDisplayMode: 'minimal' }} />
             {/* A tournament has its own stack (and its own sport colours) — see tournament/[id]/_layout. */}
             <Stack.Screen name="tournament/[id]" options={{ headerShown: false }} />
           </Stack.Protected>

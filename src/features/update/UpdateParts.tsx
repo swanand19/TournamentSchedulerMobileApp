@@ -92,7 +92,7 @@ export function UpdateRequiredScreen({ onCheckAgain }: { onCheckAgain: () => Pro
         {update?.storeUrl ? (
           <Button label={`Update from ${STORE_NAME}`} icon="open-in-new" size="lg" onPress={() => openStore(update.storeUrl)} />
         ) : (
-          <Text style={[type.body, { color: theme.onDark, textAlign: 'center' }]}>Open {STORE_NAME} and update Tournament Scheduler.</Text>
+          <Text style={[type.body, { color: theme.onDark, textAlign: 'center' }]}>Open {STORE_NAME} and update KickCricket.</Text>
         )}
         <Button label={checking ? 'Checking…' : "I've updated — check again"} variant="deck" busy={checking} onPress={again} />
       </View>

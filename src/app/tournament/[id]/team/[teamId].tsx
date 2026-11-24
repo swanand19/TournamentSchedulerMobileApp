@@ -4,7 +4,7 @@ import { ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
 import type { Player, Team } from '@/api/types';
-import { JerseyBadge } from '@/components/Badges';
+import { JerseyBadge, PhotoBadge } from '@/components/Badges';
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
 import Chip from '@/components/Chip';
@@ -17,7 +17,9 @@ import SectionHeader from '@/components/SectionHeader';
 import Sheet from '@/components/Sheet';
 import Skeleton from '@/components/Skeleton';
 import TextField from '@/components/TextField';
+import { KeepTeamCard } from '@/features/clubs/KeepTeam';
 import PlayerSheet from '@/features/teams/PlayerSheet';
+import { LeftPlayersCard, TeamAdminsCard } from '@/features/teams/TeamAdmins';
 import { lineOf, LINES, type Line } from '@/features/teams/positions';
 import { useAction } from '@/hooks/useAction';
 import { useQuery } from '@/hooks/useQuery';
@@ -30,19 +32,20 @@ import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportThem
 import { lip, radius, space, type Typography } from '@/theme/theme';
 
 // A team's squad: who's in it, sorted by shirt number, with a line-count summary on top and a
-// filter by position (football) or role (cricket). Owners tap a player to edit, add from the footer,
-// and share the team's join code; everyone else sees the squad read-only, and a player can leave
-// their own place in it.
+// filter by position (football) or role (cricket). Whoever may change the squad — the owners and the
+// team's admins (team.canManage, 2026-11-20) — taps a player to edit, adds from the footer and shares
+// the team's join code; everyone else sees it read-only, and a player can leave their own place in it.
+// Below the squad: who runs the team (owners name them) and the players left out after playing; its admins may keep it
+// for other tournaments (a lasting team, step 2 of the lasting-teams plan), and a kept one links to its page.
 
 type Filter = 'ALL' | Line | string;
 
 export default function TeamScreen() {
   const { type } = useTypography();
   const styles = useThemedStyles(makeStyles);
-  const { teamId } = useLocalSearchParams<{ teamId: string }>();
+  const { teamId, keep } = useLocalSearchParams<{ teamId: string; keep?: string }>();
   const router = useRouter();
   const { id: tournamentId, name: tournamentName, sport, access, closed } = useTournament();
-  const canEdit = access.canEdit;
   const theme = useSportTheme();
   // Light ("B · Team"): no tiles or boxes — a dashed code panel, plain words for roles, thin numbers.
   const light = theme.mode === 'light';
@@ -63,19 +66,26 @@ export default function TeamScreen() {
   const leaveAction = useAction();
 
   const t = team.data;
+  // The server says who may change this squad: an owner, or one of the team's admins.
+  const canEdit = t?.canManage ?? false;
   const mine = t?.players.find((p) => p.isMe);
 
+  // The invite link when there is one (2026-11-23): one tap joins, after signing in or up. Otherwise the code.
   const shareCode = (code: string) =>
     Share.share({
-      message: `Join ${t?.name} in ${tournamentName}: open Tournament Scheduler, tap "Join a team" and enter ${code}.`,
+      message: t?.invite?.url
+        ? `Join ${t.name} in ${tournamentName} on KickCricket: ${t.invite.url}`
+        : `Join ${t?.name} in ${tournamentName}: open KickCricket, tap "Join a team" and enter ${code}.`,
     });
 
   const newCode = async () => {
     if (!t) return;
     const ok = await confirm({
-      title: 'Make a new join code?',
-      message: `The old code for ${t.name} stops working. Anyone who already joined stays in the team.`,
-      confirmLabel: 'New code',
+      title: t.invite?.url ? 'Make a new invite link?' : 'Make a new join code?',
+      message: t.invite?.url
+        ? `The old link and code for ${t.name} stop working. Anyone who already joined stays in the team.`
+        : `The old code for ${t.name} stops working. Anyone who already joined stays in the team.`,
+      confirmLabel: t.invite?.url ? 'New link' : 'New code',
     });
     if (!ok) return;
     const res = await codeAction.run(() => api.call<Team>('TEAM_JOIN_CODE_RESET', { routeParams: { id: tournamentId, teamId: t.id } }));
@@ -154,11 +164,14 @@ export default function TeamScreen() {
                 {t.joinCode}
               </Text>
               <Text style={[type.caption, { color: theme.muted }]}>
-                Players enter it under “Join a team”, then pick their name — or join as a new player.
+                {t.invite?.url
+                  ? 'Share the invite link: whoever opens it joins. Or they enter the code under “Join a team”.'
+                  : 'Players enter it under “Join a team”, then pick their name — or join as a new player.'}
               </Text>
+              {t.invite && <Text style={[type.caption, { color: theme.muted }]}>{t.invite.note}</Text>}
               <View style={styles.codeActions}>
-                <Button label="Share" icon="share-variant" onPress={() => shareCode(t.joinCode!)} style={{ flex: 2 }} />
-                <Button label="New code" variant="secondary" onPress={newCode} busy={codeAction.busy} style={{ flex: 1 }} />
+                <Button label={t.invite?.url ? 'Share invite link' : 'Share'} icon="share-variant" onPress={() => shareCode(t.joinCode!)} style={{ flex: 2 }} />
+                <Button label={t.invite?.url ? 'New link' : 'New code'} variant="secondary" onPress={newCode} busy={codeAction.busy} style={{ flex: 1 }} />
               </View>
             </Card>
           )}
@@ -226,13 +239,15 @@ export default function TeamScreen() {
                   style={[styles.row, { backgroundColor: theme.cream }, lip(theme), captain && !light && { borderWidth: 2, borderColor: theme.accent }]}
                 >
                   <JerseyBadge number={p.jerseyNumber} highlight={captain} />
+                  {/* A linked player's own photo (HLD P-26), beside the number scorers pick by. */}
+                  {!!p.photoUrl && <PhotoBadge link={p.photoUrl} name={p.name} size={36} />}
                   <View style={{ flex: 1, gap: 2 }}>
                     <View style={styles.nameRow}>
                       <Text style={[styles.name, { color: theme.ink }]} numberOfLines={1}>
                         {p.name}
                       </Text>
                       {captain && (
-                        <View style={[styles.capt, { backgroundColor: light ? theme.tint : theme.deep }]}>
+                        <View style={[styles.capt, { backgroundColor: theme.tint }]}>
                           <Text style={[type.label, { color: light ? theme.deep : theme.accent }]}>Captain</Text>
                         </View>
                       )}
@@ -258,6 +273,10 @@ export default function TeamScreen() {
               );
             })
           )}
+
+          <KeepTeamCard team={t} tournamentName={tournamentName} askNow={keep === '1'} />
+          <TeamAdminsCard team={t} tournamentId={tournamentId} onChanged={team.reload} />
+          <LeftPlayersCard team={t} tournamentId={tournamentId} onChanged={team.reload} />
 
           <PlayerSheet
             key={sheet.key}

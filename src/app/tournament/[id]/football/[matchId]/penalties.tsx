@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated';
 
@@ -22,6 +22,7 @@ import { useQuery } from '@/hooks/useQuery';
 import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { haptic } from '@/lib/haptics';
+import { claimScoring } from '@/lib/scoringClaim';
 import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
 import { radius, space, type Typography } from '@/theme/theme';
 
@@ -50,7 +51,13 @@ export default function PenaltiesScreen() {
   const { id: tournamentId } = useTournament();
   const action = useAction();
 
+  // A scoring screen: take the match first if nobody is scoring it (lib/scoringClaim).
+  const claimed = useRef(false);
   const fetcher = useCallback(async (): Promise<Data> => {
+    if (!claimed.current) {
+      claimed.current = true;
+      await claimScoring('football', matchId);
+    }
     const [match, pens] = await Promise.all([
       api.call<FootballMatch>('MATCH_GET', { routeParams: { matchId } }),
       api.call<PenaltyState>('MATCH_PENALTIES_GET', { routeParams: { matchId } }),

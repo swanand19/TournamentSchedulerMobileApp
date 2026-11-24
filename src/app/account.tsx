@@ -11,6 +11,7 @@ import type {
   BowlingType,
   CricketRole,
   LogoutAllResponse,
+  PictureResult,
   SendOtpResponse,
 } from '@/api/types';
 import { clearSession, updateSessionUser } from '@/auth/session';
@@ -18,6 +19,7 @@ import Button from '@/components/Button';
 import { Card } from '@/components/Card';
 import Chip from '@/components/Chip';
 import ErrorBanner from '@/components/ErrorBanner';
+import PictureField from '@/components/PictureField';
 import Screen from '@/components/Screen';
 import Skeleton from '@/components/Skeleton';
 import Stepper from '@/components/Stepper';
@@ -34,7 +36,7 @@ import { resetAppearance } from '@/theme/appearance';
 import { useTypography } from '@/theme/SportTheme';
 import { footballTheme as theme, space } from '@/theme/theme';
 
-// The signed-in person's account: their name and cricket profile (both copied to every team place
+// The signed-in person's account: their photo (HLD P-26), their name and cricket profile (both copied to every team place
 // linked to them), the email and mobile number they sign in with, signing out — of this phone, or
 // of every device at once (for a lost phone) — and deleting the account, confirmed with a code sent
 // to them.
@@ -93,6 +95,21 @@ export default function AccountScreen() {
         account.error ? null : <Skeleton rows={2} height={96} />
       ) : (
         <>
+          <Card>
+            <PictureField
+              label="Profile photo"
+              hint="Shown on your profile and beside your name in your teams. Never on the public pages."
+              shape="square"
+              link={account.data.photoUrl}
+              name={account.data.name}
+              upload={async (image) => (await api.call<PictureResult>('ACCOUNT_PHOTO_SET', { body: { image } })).url}
+              remove={async () => {
+                await api.call<PictureResult>('ACCOUNT_PHOTO_REMOVE');
+              }}
+              onChanged={account.reload}
+            />
+          </Card>
+
           <Card>
             <TextField
               label="Name"

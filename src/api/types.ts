@@ -16,6 +16,8 @@ export type Account = {
   roleId: number;
   roleName: string | null;
   memberSince: string;
+  /** Their profile photo: a signed link that lasts a day or two (HLD P-26); load it with lib/pictures' pictureUri. */
+  photoUrl: string | null;
   /** Their own cricket profile, copied to every cricket team place linked to them. */
   cricket: CricketProfile | null;
   /** Admin accounts are removed by another admin, not from the app. */
@@ -64,7 +66,7 @@ export type LogoutAllResponse = { signedOutDevices: number };
 export type TournamentStatus = 'Upcoming' | 'Live' | 'Completed' | 'Cancelled';
 
 /** What the signed-in person is in a tournament: "creator", "owner", "scorer", "player", "follower" (6E: follows it while it's public). */
-export type TournamentRole = 'creator' | 'owner' | 'scorer' | 'player' | 'follower';
+export type TournamentRole = 'creator' | 'owner' | 'scorer' | 'player' | 'follower' | 'auction' | 'teamAdmin';
 
 export type TournamentListItem = {
   id: number;
@@ -78,7 +80,11 @@ export type TournamentListItem = {
   endDate: string | null;
   hasSchedule: boolean;
   latestScheduleId: number | null;
+  /** The tournament's logo (signed link, HLD P-26), or null. */
+  logoUrl: string | null;
   myRoles: TournamentRole[];
+  /** "Season 3" of a league (2026-11-24); null for a one-off. */
+  league: LeagueBadge | null;
 };
 
 /** What the signed-in person may do in this tournament (Models/Accounts/TournamentAccessModels.cs). */
@@ -97,6 +103,8 @@ export type TournamentAccess = {
   allMatchesPlayed: boolean;
   /** They follow it (6E) — offer "Stop following". */
   isFollowing: boolean;
+  /** The teams they run here as a team admin (owners change every squad through canEdit). */
+  managedTeamIds: number[];
 };
 
 export type Tournament = {
@@ -110,11 +118,19 @@ export type Tournament = {
   startDate: string | null;
   endDate: string | null;
   access: TournamentAccess | null;
-  /** The owners' switch (6E): anyone with the link may watch, no account needed. */
+  /** Anyone with the link may watch, no account needed (6E). Always true since 2026-11-23 unless an admin hid it. */
   isPublic: boolean;
-  /** The public link while it is public: the code, and the whole address when the server knows the web app's. */
+  /** The public link unless an admin hid it: the code, and the whole address when the server knows the web app's. */
   share: PublicShare | null;
+  /** The tournament's square logo and 16:9 banner (owners set them; signed links, HLD P-26). */
+  logoUrl: string | null;
+  bannerUrl: string | null;
+  /** The league it's a season of (2026-11-24); left out for a one-off. */
+  league?: LeagueBadge;
 };
+
+/** ACCOUNT_PHOTO_SET / REMOVE, TOURNAMENT_PICTURE_SET / REMOVE: the picture's new link, null once removed. */
+export type PictureResult = { url: string | null };
 
 export type PublicShare = { code: string; url: string | null };
 
@@ -209,16 +225,51 @@ export type Player = {
   /** Owners only: the mobile number that links (or will link) it, E.164. */
   phone: string | null;
   cricket: CricketProfile | null;
+  /** The linked person's profile photo (signed link); null when not linked or no photo. */
+  photoUrl?: string | null;
+  /** Left out of the squad after they had played (2026-11-20): only on a team's leftPlayers. */
+  leftOn?: string | null;
 };
+
+/** Someone who runs a team inside a tournament (2026-11-20). */
+export type TeamAdmin = {
+  userId: number;
+  name: string;
+  isMe: boolean;
+  /** Owners may remove anyone; an admin may step down. */
+  canRemove: boolean;
+};
+
+/**
+ * A team's invite link (2026-11-23): its join code as an address; whoever opens it joins straight in. `note` says
+ * when it stops working; `url` is null for an organiser looking at a lasting team's side (its admins share it).
+ */
+export type InviteLink = { url: string | null; note: string };
 
 export type Team = {
   id: number;
   name: string;
   tournamentId: number;
   defaultCaptainPlayerId: number | null;
-  /** Owners only: what players type under "Join a team". */
+  /** Owners and this team's admins only: what players type under "Join a team". */
   joinCode: string | null;
+  /** Owners and this team's admins only, until the tournament is over. */
+  invite?: InviteLink;
+  /** The squad (players who left are in leftPlayers). */
   players: Player[];
+  /** The next four come only on team answers (TEAM_GET / TEAM_LIST and changes), not inside a match. */
+  /** Left out after they had played: kept for the scorecards; admins can bring them back. */
+  leftPlayers?: Player[];
+  /** The people who run this team here. */
+  admins?: TeamAdmin[];
+  /** May change this squad: an owner, or one of its admins (and the tournament isn't over). */
+  canManage?: boolean;
+  /** May add or remove its admins: owners. */
+  canManageAdmins?: boolean;
+  /** The lasting team this squad belongs to (step 2 of the lasting-teams plan): kept from here, or entered with a code. */
+  clubId?: number | null;
+  /** The caller may keep it for other tournaments: one of its admins, while it isn't kept yet (C-23). */
+  canKeep?: boolean;
 };
 
 /** PLAYER_CONTACT_LOOKUP: who an email or number belongs to, before adding them to a team. */
@@ -259,6 +310,8 @@ export type JoinTeamResult = {
   teamId: number;
   teamName: string;
   playerId: number;
+  /** An invite link opened by someone already in the team: nothing changed. */
+  alreadyIn?: boolean;
 };
 
 export type AccountDeletionPreview = {
@@ -875,6 +928,29 @@ export type PlayerStatRow = {
   rank: number;
 };
 
+/** One match's line under a leaderboard row: "45* (32)", "4-0-28-2" or a goal's minute. */
+export type PlayerMatchLine = {
+  matchId: number;
+  matchNumber: number;
+  opponent: string;
+  value: string;
+  /** "6 fours · 2 sixes", "from Arjun", "for Ravi". */
+  detail: string | null;
+  /** The match is still being played. */
+  inPlay: boolean;
+};
+
+/** TOURNAMENT_PLAYER_LINES: one player's innings and spells (cricket) or goals and assists (football). */
+export type PlayerMatchLines = {
+  playerId: number;
+  playerName: string;
+  teamName: string;
+  batting: PlayerMatchLine[];
+  bowling: PlayerMatchLine[];
+  goals: PlayerMatchLine[];
+  assists: PlayerMatchLine[];
+};
+
 export type StatBoard = {
   key: string;
   title: string;
@@ -1042,9 +1118,36 @@ export type Profile = {
   /** Your own profile only. */
   email: string | null;
   phone: string | null;
+  /** Their profile photo (signed link). */
+  photoUrl: string | null;
   tournamentsRun: number;
   sports: SportCard[];
+  /** Followers, following, and how you and they follow each other (2026-11-23). */
+  follow?: FollowSummary;
+  /** Matches they're in now that you may watch. */
+  playingNow?: PlayingNow[];
 };
+
+// --- Following people (2026-11-23, item 6) -------------------------------------------------------------------
+
+export type FollowSummary = { followers: number; following: number; isFollowing: boolean; followsMe: boolean };
+
+/** Someone in a search or a followers list. `line` is "Cricket · Karve Nagar Falcons" (their latest team). */
+export type PersonRow = {
+  userId: number;
+  name: string;
+  photoUrl: string | null;
+  line: string | null;
+  isFollowing: boolean;
+  followsMe: boolean;
+  isMe: boolean;
+};
+
+export type PersonList = { userId: number; name: string; followers: number; following: number; isMine: boolean; items: PersonRow[] };
+
+export type FollowResult = { userId: number; follow: FollowSummary };
+
+export type PlayingNow = { tournamentId: number; tournamentName: string; sport: Sport; matchId: number; match: string };
 
 export type StatGroup = { key: string; title: string; stats: ProfileStat[] };
 
@@ -1109,7 +1212,15 @@ export type NotificationKind =
   | 'InviteAccepted'
   | 'LinkedToTeam'
   | 'AllMatchesPlayed'
-  | 'EndDateReminder';
+  | 'EndDateReminder'
+  | 'Auction'
+  | 'Draw'
+  | 'Club'
+  | 'Social'
+  | 'League';
+
+/** The inbox's chips (2026-11-23). */
+export type NotificationCategory = 'Social' | 'Scoring' | 'Tournaments' | 'Teams';
 
 /** One line in your inbox. The words come from the server; the ids say where tapping it goes. */
 export type AppNotification = {
@@ -1120,12 +1231,214 @@ export type AppNotification = {
   tournamentId: number | null;
   sport: 'Football' | 'Cricket' | null;
   matchId: number | null;
+  /** A team inside the tournament (KeepTeam opens its page with the keep sheet). */
+  teamId?: number | null;
+  /** A lasting team: opens its page. */
+  clubId?: number | null;
+  /** Someone who joined a lasting team with its code: its page opens with the live-tournaments question for them. */
+  clubPlayerId?: number | null;
+  /** Someone who followed you: opens their profile. */
+  profileUserId?: number | null;
+  /** A league you were made an organiser of: opens its page. */
+  leagueId?: number | null;
+  category: NotificationCategory;
   createdAt: string;
   isRead: boolean;
 };
 
+// --- Lasting teams (2026-11-20, step 2 of docs/reusable-teams-plan.md) -------------------------------------
+// People only ever see "team" (C-21); the API and these types say club.
+
+/** A row on Home's Teams tab: a team the person runs or plays for. */
+export type ClubListItem = {
+  clubId: number;
+  name: string;
+  sport: 'Football' | 'Cricket';
+  area: string | null;
+  logoUrl: string | null;
+  isAdmin: boolean;
+  isPlayer: boolean;
+  players: number;
+  tournaments: number;
+  /** Tournaments it's playing in now. */
+  live: number;
+};
+
+export type ClubAdmin = { userId: number; name: string; isMe: boolean; canRemove: boolean };
+
+export type ClubPlayer = {
+  clubPlayerId: number;
+  name: string;
+  jerseyNumber: number | null;
+  position: string | null;
+  isCaptain: boolean;
+  isLinked: boolean;
+  /** An email or number is waiting for this person to sign up. */
+  isWaiting: boolean;
+  isMe: boolean;
+  isAdmin: boolean;
+  cricket: CricketProfile | null;
+  photoUrl: string | null;
+  /** The team's admins only. */
+  email: string | null;
+  phone: string | null;
+};
+
+export type ClubTournament = {
+  tournamentId: number;
+  name: string;
+  sport: 'Football' | 'Cricket';
+  status: 'Upcoming' | 'Live' | 'Completed' | 'Cancelled';
+  startDate: string | null;
+  endDate: string | null;
+  logoUrl: string | null;
+  teamId: number;
+  teamName: string;
+  /** Being played, still to play, played (C-12). */
+  section: 'live' | 'upcoming' | 'past';
+  played: number;
+  won: number;
+  champion: boolean;
+  squad: number;
+  /** "Champions · 5 played, 5 won", "Played 4 · won 3", "Starts 12 Dec · 14 in the squad". */
+  line: string;
+  canOpen: boolean;
+  /** An entry still waiting for the organiser (admins only): opens the entry to change or withdraw it. */
+  entryId?: number;
+};
+
+/** A lasting team's page: anyone signed in sees it (C-15); emails, numbers and the code only its admins. */
+export type Club = {
+  clubId: number;
+  name: string;
+  sport: 'Football' | 'Cricket';
+  area: string | null;
+  logoUrl: string | null;
+  joinCode: string | null;
+  /** Its admins only. */
+  invite?: InviteLink;
+  canManage: boolean;
+  myClubPlayerId: number | null;
+  admins: ClubAdmin[];
+  players: ClubPlayer[];
+  tournaments: ClubTournament[];
+  totals: { tournaments: number; matches: number; won: number; titles: number };
+  /** The public page's link (signed out, names and results only); `url` only when the server knows the website's address. */
+  share: { code: string; url: string | null } | null;
+  /** After a player is added or leaves: the live tournaments to ask about (C-6). */
+  question?: ClubSquadQuestion;
+};
+
+/** The one-sheet question after a team's player is added or leaves (C-5, C-6, C-20). */
+export type ClubSquadQuestion = {
+  change: 'add' | 'remove';
+  clubPlayerId: number | null;
+  playerName: string;
+  /** Upcoming tournaments already changed by themselves. */
+  done: string[];
+  live: {
+    tournamentId: number;
+    tournamentName: string;
+    teamId: number;
+    teamName: string;
+    /** For "remove": the squad place to leave out. */
+    playerId: number | null;
+    /** Why this one can't be ticked. */
+    reason: string | null;
+  }[];
+};
+
+// --- Entering a tournament with its code (2026-11-21, step 3) ------------------------------------------------
+
+export type EntryPlayer = {
+  clubPlayerId: number;
+  name: string;
+  detail: string | null;
+  isCaptain: boolean;
+  ticked: boolean;
+  /** Why they can't play here ("Plays for Tigers in this tournament"). */
+  reason: string | null;
+};
+
+/** What a team's admin sees after typing the code, or opening an entry already sent. */
+export type EntryPreview = {
+  tournamentId: number;
+  tournamentName: string;
+  sport: 'Football' | 'Cricket';
+  status: 'Upcoming' | 'Live' | 'Completed' | 'Cancelled';
+  startDate: string | null;
+  endDate: string | null;
+  logoUrl: string | null;
+  organiser: string;
+  teams: string[];
+  clubId: number;
+  clubName: string;
+  teamName: string;
+  teamNameProblem: string | null;
+  players: EntryPlayer[];
+  entryId: number | null;
+  entryStatus: 'Waiting' | 'Accepted' | 'Declined' | 'Withdrawn' | 'Cancelled' | null;
+  code: string | null;
+};
+
+/** The organiser's side (board Org-Entries): the code and the entries waiting for an answer. */
+export type TournamentEntries = {
+  open: boolean;
+  code: string | null;
+  shareText: string | null;
+  url: string | null;
+  /** Why the switch can't be turned on. */
+  closed: string | null;
+  waiting: EntryRow[];
+  notice?: string;
+};
+
+export type EntryRow = {
+  entryId: number;
+  clubId: number;
+  clubName: string;
+  area: string | null;
+  logoUrl: string | null;
+  teamName: string;
+  requestedBy: string;
+  requestedAt: string;
+  /** "3 tournaments on KickCricket". */
+  record: string;
+  players: EntryPlayer[];
+  /** Why it can't be accepted as it is. */
+  problem: string | null;
+};
+
+export type ClubPlayerLookup = {
+  kind: 'Email' | 'Phone';
+  contact: string;
+  display: string;
+  found: boolean;
+  name: string | null;
+  /** They're in this team already. */
+  alreadyIn: boolean;
+};
+
+export type ClubJoinPreview = {
+  clubId: number;
+  name: string;
+  sport: 'Football' | 'Cricket';
+  area: string | null;
+  logoUrl: string | null;
+  players: number;
+  places: { clubPlayerId: number; name: string; detail: string | null }[];
+};
+
+export type ClubJoinResult = { clubId: number; name: string; sport: 'Football' | 'Cricket'; alreadyIn?: boolean };
+
 /** A page of the inbox, newest first; ask again with `before` = the last id while `hasMore`. */
-export type NotificationPage = { items: AppNotification[]; unreadCount: number; hasMore: boolean };
+export type NotificationPage = {
+  items: AppNotification[];
+  unreadCount: number;
+  hasMore: boolean;
+  /** Unread per chip, whichever chip was asked for. */
+  unreadByCategory: Record<NotificationCategory, number>;
+};
 
 export type UnreadCount = { unreadCount: number };
 
@@ -1275,4 +1588,382 @@ export type KnockoutPreset = {
   description: string;
   offersThirdPlace: boolean;
   fixtures: { round: KnockoutRound; label: string; home: string; away: string }[];
+};
+
+// --- The player pool and the auction (2026-11-17) ------------------------------
+
+export type PoolTier = {
+  id: number;
+  name: string;
+  order: number;
+  basePrice: number;
+  /** The most one team may buy from this tier; null = no limit. */
+  maxPerTeam: number | null;
+  players: number;
+};
+
+export type PoolPlayerStatus = 'Available' | 'InAuction' | 'Sold' | 'Unsold' | 'Drawn';
+
+/** How the pool fills the teams; null until chosen. Fixed once that way starts. */
+export type PoolMethod = 'Draw' | 'Auction';
+
+export type PoolPlayer = {
+  id: number;
+  name: string;
+  /** "Batter", "All-rounder", "Defender" — what they play, if known. */
+  role: string | null;
+  position: string | null;
+  cricketRole: CricketRole | null;
+  tierId: number | null;
+  isLinked: boolean;
+  joinedByCode: boolean;
+  isWithdrawn: boolean;
+  isMe: boolean;
+  /** Owners only. */
+  email: string | null;
+  phone: string | null;
+  status: PoolPlayerStatus;
+  teamId: number | null;
+  teamName: string | null;
+  price: number | null;
+};
+
+export type Pool = {
+  /** The registration code, owners only. */
+  joinCode: string | null;
+  registrationOpen: boolean;
+  canEdit: boolean;
+  canAdd: boolean;
+  tiers: PoolTier[];
+  players: PoolPlayer[];
+  teams: number;
+  keptPlayers: number;
+  myPoolPlayerId: number | null;
+  method: PoolMethod | null;
+  canChooseMethod: boolean;
+  drawStatus: DrawStatus;
+  /** 'None' or the auction's status: with drawStatus, whether there are results to show. */
+  auctionStatus: AuctionStatus | 'None';
+};
+
+// --- The team draw (2026-11-17) -------------------------------------------------
+
+export type DrawStatus = 'None' | 'Setup' | 'Live' | 'Confirmed';
+export type DrawKind = 'ByTier' | 'Random';
+
+export type DrawPick = {
+  pickId: number;
+  poolPlayerId: number;
+  name: string;
+  role: string | null;
+  tierName: string | null;
+  teamId: number;
+  teamName: string;
+  order: number;
+  landedAt: string;
+  movedFromTeamName: string | null;
+  isMe: boolean;
+};
+
+export type DrawTeam = {
+  teamId: number;
+  name: string;
+  /** 1, 2, 3… round the table once started. */
+  turn: number | null;
+  players: number;
+  /** In the team before the draw (the captain, anyone added by hand). */
+  kept: string[];
+  drawn: DrawPick[];
+  /** A name is being drawn for this team right now. */
+  isDrawing: boolean;
+};
+
+/** A name being drawn: the team and the pot are known, the name isn't until `landsAt`. */
+export type DrawSpin = {
+  pickId: number;
+  teamId: number;
+  teamName: string;
+  pickedAt: string;
+  landsAt: string;
+  potName: string;
+  names: string[];
+};
+
+export type DrawActions = {
+  canChooseMethod: boolean;
+  canEditKind: boolean;
+  canEditPace: boolean;
+  canStart: boolean;
+  canQuickDraw: boolean;
+  canDrawNext: boolean;
+  canDrawRestOfPot: boolean;
+  canDrawAll: boolean;
+  canRestart: boolean;
+  canTakeOver: boolean;
+  canMove: boolean;
+  canConfirm: boolean;
+  confirmProblem: string | null;
+};
+
+export type DrawState = {
+  status: DrawStatus;
+  allDrawn: boolean;
+  serverNow: string;
+  method: PoolMethod | null;
+  kind: DrawKind;
+  autoSeconds: number | null;
+  times: number;
+  drawer: { userId: number; name: string } | null;
+  me: { isOwner: boolean; isDrawer: boolean; poolPlayerId: number | null; drawnForTeamId: number | null };
+  teams: DrawTeam[];
+  spin: DrawSpin | null;
+  last: DrawPick | null;
+  pot: { name: string; players: { poolPlayerId: number; name: string; role: string | null }[]; nextName: string | null; nextCount: number } | null;
+  nextTeamId: number | null;
+  counts: { players: number; drawn: number; left: number };
+  preview: {
+    line: string;
+    note: string | null;
+    teams: { teamId: number; name: string; has: number; gets: number; endsWith: number; orOneMore: boolean }[];
+    tiers: { name: string; players: number }[];
+  } | null;
+  startProblem: string | null;
+  actions: DrawActions;
+};
+
+export type PoolJoinPreview = { tournamentId: number; tournamentName: string; sport: Sport; players: number };
+export type PoolJoinResult = { tournamentId: number; tournamentName: string; sport: Sport; poolPlayerId: number };
+
+export type AuctionStatus = 'None' | 'Setup' | 'Live' | 'Paused' | 'RoundOver' | 'Finished' | 'Confirmed';
+export type BidStep = { upTo: number | null; step: number };
+
+export type AuctionSettings = {
+  unit: string;
+  purse: number;
+  minSquad: number;
+  maxSquad: number;
+  keptPlayerPrice: number;
+  noTierBasePrice: number;
+  bidSteps: BidStep[];
+  clockOn: boolean;
+  firstBidSeconds: number;
+  nextBidSeconds: number;
+  order: 'ByTier' | 'ListOrder';
+  unsoldPlan: 'AnotherRound' | 'AssignByHand';
+};
+
+export type AuctionTeam = {
+  teamId: number;
+  name: string;
+  bidder: { userId: number; name: string } | null;
+  bidderIsCaptain: boolean;
+  captainName: string | null;
+  captainPlayerId: number | null;
+  captainWithoutAccount: boolean;
+  players: number;
+  spent: number;
+  purseLeft: number;
+  needs: number;
+  isFull: boolean;
+  maxBid: number;
+  canBid: boolean;
+  cantBidReason: string | null;
+  isHighest: boolean;
+};
+
+export type AuctionBidRow = { bidId: number; teamId: number; teamName: string; amount: number; at: string; fromRoom: boolean };
+
+export type AuctionLot = {
+  lotId: number;
+  player: { poolPlayerId: number; name: string; role: string | null; tierName: string | null; isLinked: boolean; isMe: boolean };
+  basePrice: number;
+  currentBid: number | null;
+  currentTeamId: number | null;
+  currentTeamName: string | null;
+  nextBid: number;
+  twoStepsBid: number;
+  fiveStepsBid: number;
+  openedAt: string | null;
+  /** UTC; count down from the server's clock (`serverNow`), not the phone's. Null with the clock off or paused. */
+  closesAt: string | null;
+  secondsLeftWhenPaused: number | null;
+  number: number;
+  ofTotal: number;
+  bids: AuctionBidRow[];
+};
+
+export type AuctionResult = {
+  lotId: number;
+  playerName: string;
+  sold: boolean;
+  teamId: number | null;
+  teamName: string | null;
+  price: number | null;
+  at: string;
+  isMe: boolean;
+};
+
+export type AuctionActions = {
+  canEditSettings: boolean;
+  canEditClock: boolean;
+  canSetBidders: boolean;
+  canStart: boolean;
+  canOpenNext: boolean;
+  canSell: boolean;
+  canMarkUnsold: boolean;
+  canUndoBid: boolean;
+  canUndoSale: boolean;
+  canPause: boolean;
+  canResume: boolean;
+  canTakeOver: boolean;
+  canStartRound: boolean;
+  canFinish: boolean;
+  canAssign: boolean;
+  canConfirm: boolean;
+  canCancel: boolean;
+  /** Bought players may be moved or swapped (finished, before confirming). */
+  canMoveSales: boolean;
+  /** Teams are short and players unsold: "Fill the gaps by draw". */
+  canFill: boolean;
+  confirmProblem: string | null;
+};
+
+export type AuctionSale = {
+  lotId: number;
+  poolPlayerId: number;
+  name: string;
+  role: string | null;
+  tierName: string | null;
+  teamId: number;
+  price: number;
+  round: number;
+  assigned: boolean;
+  /** Dealt by "Fill the gaps by draw". */
+  byDraw: boolean;
+  /** Moved or swapped after the auction: the team that bought them. */
+  movedFromTeamName: string | null;
+};
+
+/** What "Fill the gaps by draw" will do: how many each short team gets (who goes where is drawn when it's done). */
+export type AuctionFillPreview = {
+  line: string;
+  note: string;
+  teams: { teamId: number; name: string; has: number; gets: number; purseLeft: number }[];
+  left: number;
+};
+
+export type AuctionUnsold = { poolPlayerId: number; name: string; role: string | null; tierId: number | null; tierName: string | null; basePrice: number };
+
+export type AuctionState = {
+  status: AuctionStatus;
+  /** The pool's chosen way: a "Draw" means there's no auction. */
+  method: PoolMethod | null;
+  serverNow: string;
+  settings: AuctionSettings;
+  round: number;
+  auctioneer: { userId: number; name: string } | null;
+  me: { isOwner: boolean; isAuctioneer: boolean; bidderForTeamId: number | null; poolPlayerId: number | null };
+  teams: AuctionTeam[];
+  lot: AuctionLot | null;
+  upNext: { lotId: number; name: string; role: string | null; tierName: string | null; basePrice: number }[];
+  last: AuctionResult | null;
+  counts: { players: number; sold: number; unsold: number; waiting: number };
+  actions: AuctionActions;
+  sales: AuctionSale[] | null;
+  unsold: AuctionUnsold[] | null;
+  startProblem: string | null;
+  startWarning: string | null;
+  tiers: PoolTier[];
+};
+
+// --- Leagues and seasons (2026-11-24, Models/Leagues/LeagueModels.cs) ------------------------------------------------------
+
+/** "Season 3 of Corporate Premier League" on a season's tournament (and its Home row). */
+export type LeagueBadge = {
+  leagueId: number;
+  name: string;
+  shortName: string;
+  season: number;
+  logoUrl: string | null;
+  leagueCode: string;
+  /** "Last season: Kothrud Kings won · all-time stats" — on the tournament's own answer only. */
+  line?: string;
+};
+
+/** LEAGUE_LIST: the leagues the caller runs. */
+export type LeagueListItem = {
+  leagueId: number;
+  name: string;
+  shortName: string;
+  sport: Sport;
+  logoUrl: string | null;
+  seasons: number;
+  line: string;
+};
+
+/** LEAGUE_CANDIDATES: a tournament the caller could tick in as an earlier season. */
+export type LeagueCandidate = { tournamentId: number; name: string; status: TournamentStatus; startDate: string | null; line: string };
+
+export type LeagueSeason = {
+  number: number;
+  tournamentId: number;
+  name: string;
+  status: TournamentStatus;
+  startDate: string | null;
+  endDate: string | null;
+  logoUrl: string | null;
+  section: 'live' | 'upcoming' | 'past';
+  /** The champions' name once it has them, else the tournament's. */
+  title: string;
+  line: string;
+  championName: string | null;
+  teams: number;
+  /** In it already: opens straight away. Otherwise the app follows it first (every tournament is public). */
+  canOpen: boolean;
+  liveCode: string | null;
+  /** An admin hid it (only organisers see such a season). */
+  hidden: boolean;
+};
+
+export type League = {
+  leagueId: number;
+  name: string;
+  shortName: string;
+  sport: Sport;
+  area: string | null;
+  logoUrl: string | null;
+  runBy: string[];
+  organisers: { userId: number; name: string; isMe: boolean; canRemove: boolean }[];
+  totals: { seasons: number; teams: number; matches: number; champions: number };
+  /** Newest first. */
+  seasons: LeagueSeason[];
+  nextSeason: number;
+  canManage: boolean;
+  share: PublicShare | null;
+};
+
+export type LeagueBoardRow = { rank: number; name: string; line: string; value: string; userId: number | null; playerId: number };
+
+export type LeagueBoard = { key: string; title: string; valueLabel: string; qualification: string | null; total: number; rows: LeagueBoardRow[] };
+
+/** LEAGUE_STATS: Batting · Bowling · Fielding · MVP (football: Scoring · Playing · Discipline), each a set of boards. */
+export type LeagueStats = {
+  leagueId: number;
+  sport: Sport;
+  seasons: { number: number; name: string }[];
+  season: number | null;
+  basis: string;
+  groups: { key: string; title: string; boards: LeagueBoard[] }[];
+  notes: string[];
+};
+
+export type LeagueTeams = {
+  titles: { name: string; seasons: number[]; count: number }[];
+  teams: { name: string; seasons: number; played: number; won: number; lost: number; drawn: number; winPercent: number; titles: number }[];
+  note: string;
+};
+
+/** LEAGUE_BRING_BACK_OPTIONS: every earlier season's teams. */
+export type BringBackOptions = {
+  seasons: { tournamentId: number; number: number; name: string; teams: { teamId: number; name: string; line: string; players: number; reason: string | null }[] }[];
 };

@@ -44,6 +44,9 @@ function TournamentStack() {
       <Stack.Screen name="index" options={{ title: '' }} />
       <Stack.Screen name="people" options={{ title: 'People & settings' }} />
       <Stack.Screen name="knockout" options={{ title: 'Knockouts' }} />
+      <Stack.Screen name="pool" options={{ title: 'Player pool' }} />
+      <Stack.Screen name="auction" options={{ title: 'Auction' }} />
+      <Stack.Screen name="draw" options={{ title: 'Team draw' }} />
       <Stack.Screen name="teams" options={{ title: 'Teams' }} />
       <Stack.Screen name="team/[teamId]" options={{ title: 'Squad' }} />
       <Stack.Screen name="schedule" options={{ title: 'Build the schedule' }} />

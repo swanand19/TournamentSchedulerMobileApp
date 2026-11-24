@@ -9,6 +9,8 @@ import { Card } from '@/components/Card';
 import ErrorBanner from '@/components/ErrorBanner';
 import Icon from '@/components/Icon';
 import Screen from '@/components/Screen';
+import SegmentedControl from '@/components/SegmentedControl';
+import PeopleSearch from '@/features/people/PeopleSearch';
 import { formatDay } from '@/components/DateField';
 import { useAction } from '@/hooks/useAction';
 import { haptic } from '@/lib/haptics';
@@ -17,9 +19,14 @@ import { useThemedStyles, useTypography } from '@/theme/SportTheme';
 import { lip, radius, space, themeFor, type Typography } from '@/theme/theme';
 
 // Finding a public tournament to follow (6E): by its name (3 letters or more), or its code or the
-// link someone shared. Only tournaments their owners made public are found. Several may share a
+// link someone shared. Every tournament is public, but by name only once its schedule or knockout stage is set. Several may share a
 // name, so each shows its sport, dates, status and number of teams. Following opens it — to watch,
-// never to score; one already followed or played in just opens.
+// never to score; one already followed or played in just opens. The People tab (2026-11-23) finds players to follow.
+
+const TABS = [
+  { key: 'tournaments' as const, label: 'Tournaments' },
+  { key: 'people' as const, label: 'People' },
+];
 
 const STATUS: Record<string, string> = { Upcoming: 'Not started yet', Live: 'In play', Completed: 'Completed', Cancelled: 'Cancelled' };
 
@@ -37,6 +44,7 @@ export default function FindScreen() {
   const [opening, setOpening] = useState<number | null>(null);
   const mode = useThemeMode();
   const theme = themeFor('Football', mode);
+  const [tab, setTab] = useState<'tournaments' | 'people'>('tournaments');
 
   const find = async () => {
     if (!query.trim()) return;
@@ -55,6 +63,8 @@ export default function FindScreen() {
 
   return (
     <Screen>
+      <SegmentedControl accessibilityLabel="Find" segments={TABS} value={tab} onChange={setTab} />
+      {tab === 'people' ? <PeopleSearch /> : <>
       <Card>
         <Text style={[type.headline, { color: theme.ink }]} nativeID="find-label">
           Tournament name, code or link
@@ -73,13 +83,13 @@ export default function FindScreen() {
           style={[styles.input, { backgroundColor: theme.chip, color: theme.ink }]}
         />
         <Button label="Search" icon="magnify" onPress={find} busy={search.busy} disabled={!query.trim()} size="lg" />
-        <Text style={[type.caption, { color: theme.muted }]}>Only tournaments their organisers have made public show up.</Text>
+        <Text style={[type.caption, { color: theme.muted }]}>Tournaments show up here once their schedule or knockout stage is set. A code or link finds any.</Text>
       </Card>
 
       <ErrorBanner message={(search.error ?? follow.error)?.message} />
 
       {results?.length === 0 && (
-        <Text style={[type.body, { color: theme.onDarkSoft }]}>No public tournament matches that. Check the spelling, or ask the organiser for its code.</Text>
+        <Text style={[type.body, { color: theme.onDarkSoft }]}>No tournament matches that. Check the spelling, or ask the organiser for its code or link.</Text>
       )}
 
       {results?.map((r) => {
@@ -111,6 +121,7 @@ export default function FindScreen() {
           </View>
         );
       })}
+      </>}
     </Screen>
   );
 }

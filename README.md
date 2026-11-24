@@ -1,4 +1,4 @@
-# Tournament Scheduler — mobile app
+# KickCricket — mobile app
 
 The scorer's app for football and cricket tournaments, built with Expo (SDK 57) and Expo Router.
 It talks to the same ASP.NET Core API as the website, hosted in IIS on the laptop.

@@ -132,7 +132,7 @@ function ServerForm() {
           disabled={!normalised || !result?.ok}
           style={[styles.primary, { backgroundColor: theme.deep }]}
         >
-          <Text style={styles.primaryText}>Save</Text>
+          <Text style={[styles.primaryText, { color: theme.accentInk }]}>Save</Text>
         </PressableScale>
         {!!normalised && result && !result.ok && (
           <PressableScale onPress={saveAndClose} style={styles.link}>
@@ -171,6 +171,6 @@ const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   resultOk: { backgroundColor: 'rgba(99,153,34,0.15)' },
   resultBad: { backgroundColor: 'rgba(226,75,74,0.12)' },
   primary: { minHeight: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', marginTop: space.sm },
-  primaryText: { fontFamily: fonts.bodyBold, fontSize: 16, color: '#F7F5EF' },
+  primaryText: { fontFamily: fonts.bodyBold, fontSize: 16 },
   link: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: space.md },
 });

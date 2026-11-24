@@ -25,7 +25,7 @@ type TournamentContextValue = {
 
 const NO_ACCESS: TournamentAccess = {
   myRoles: [], myPlayerId: null, myTeamId: null, canEdit: false, canScore: false, canManageMembers: false, canDelete: false, canLeave: false,
-  canComplete: false, allMatchesPlayed: false, isFollowing: false,
+  canComplete: false, allMatchesPlayed: false, isFollowing: false, managedTeamIds: [],
 };
 
 const TournamentContext = createContext<TournamentContextValue | null>(null);

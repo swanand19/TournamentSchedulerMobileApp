@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Glass from '@/components/Glass';
 import Icon, { type IconName } from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
+import { useMorphPill } from '@/components/useMorphPill';
 import { haptic } from '@/lib/haptics';
 import { useSportTheme, useThemedStyles } from '@/theme/SportTheme';
 import { space, type Typography } from '@/theme/theme';
 
 // The glass theme's tab bar: a capsule of clear glass floating above the content, as iOS 26 draws
 // it, with the chosen tab lifted on a brighter pill in the sport's colour. The pill morphs between
-// tabs — the leading edge springs ahead, the trailing edge follows — the way Liquid Glass shapes flow
-// into each other. The pages underneath swap instantly: tabs are peers.
+// tabs, starting in the tap itself (see useMorphPill). The pages underneath swap instantly: tabs are
+// peers.
 // Pages under it end with TAB_BAR_ROOM of space so their last row scrolls clear of it.
 
 export type GlassTab<K extends string> = { key: K; label: string; icon: IconName };
@@ -35,38 +35,7 @@ export default function GlassTabBar<K extends string>({
   const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const insets = useSafeAreaInsets();
-  const reduced = useReducedMotion();
-  const [layouts, setLayouts] = useState<Partial<Record<K, { x: number; width: number }>>>({});
-  const left = useSharedValue(0);
-  const right = useSharedValue(0);
-  const shown = useSharedValue(0);
-
-  useEffect(() => {
-    const l = layouts[value];
-    if (!l) return;
-    if (reduced || shown.get() === 0) {
-      left.set(l.x);
-      right.set(l.x + l.width);
-      shown.set(1);
-      return;
-    }
-    const lead = { duration: 320, dampingRatio: 0.78 };
-    const trail = { duration: 460, dampingRatio: 0.86 };
-    const goingRight = l.x > left.get();
-    right.set(withSpring(l.x + l.width, goingRight ? lead : trail));
-    left.set(withSpring(l.x, goingRight ? trail : lead));
-  }, [value, layouts, reduced, left, right, shown]);
-
-  const pillStyle = useAnimatedStyle(() => ({
-    opacity: shown.get(),
-    width: Math.max(0, right.get() - left.get()),
-    transform: [{ translateX: left.get() }],
-  }));
-
-  const onItemLayout = (key: K) => (e: LayoutChangeEvent) => {
-    const { x, width } = e.nativeEvent.layout;
-    setLayouts((prev) => (prev[key]?.x === x && prev[key]?.width === width ? prev : { ...prev, [key]: { x, width } }));
-  };
+  const { pillStyle, onItemLayout, moveTo } = useMorphPill(value);
 
   return (
     <View pointerEvents="box-none" style={[styles.anchor, { bottom: Math.max(insets.bottom, space.md) + space.sm }]}>
@@ -84,6 +53,7 @@ export default function GlassTabBar<K extends string>({
               onPress={() => {
                 if (on) return;
                 haptic.select();
+                moveTo(t.key); // the pill leaves now, ahead of the page's render
                 onChange(t.key);
               }}
               accessibilityRole="tab"

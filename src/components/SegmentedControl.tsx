@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import Glass from '@/components/Glass';
 import PressableScale from '@/components/PressableScale';
+import { useMorphPill } from '@/components/useMorphPill';
 import { haptic } from '@/lib/haptics';
 import { useSportTheme, useThemedStyles } from '@/theme/SportTheme';
 import { radius, space, type Typography } from '@/theme/theme';
@@ -25,8 +25,6 @@ type Props<K extends string> = {
   variant?: 'pills' | 'tabs';
   accessibilityLabel?: string;
 };
-
-type Layout = { x: number; width: number };
 
 export default function SegmentedControl<K extends string>(props: Props<K>) {
   const theme = useSportTheme();
@@ -92,52 +90,14 @@ function LightSegments<K extends string>({ segments, value, onChange, style, var
 
 /**
  * The glass version: a clear glass track with a brighter glass pill under the chosen segment. The
- * pill morphs rather than slides — its leading edge springs ahead and its trailing edge follows, so
- * it stretches toward the new segment and gathers itself there, the way Liquid Glass shapes flow
- * into each other. The content underneath swaps instantly: tabs are peers, and sliding them would
- * imply a depth that isn't there.
- *
- * Measured once with onLayout; then only the pill's two edges animate. It is absolutely positioned
- * with no children, so its width change never re-lays-out the labels.
+ * pill morphs to the new segment, starting in the tap itself (see useMorphPill). The content
+ * underneath swaps instantly: tabs are peers, and sliding them would imply a depth that isn't there.
  */
 function GlassSegments<K extends string>({ segments, value, onChange, style, accessibilityLabel }: Props<K>) {
   const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
-  const reduced = useReducedMotion();
-  const [layouts, setLayouts] = useState<Partial<Record<K, Layout>>>({});
-  const left = useSharedValue(0);
-  const right = useSharedValue(0);
-  const shown = useSharedValue(0);
+  const { pillStyle, onItemLayout, moveTo } = useMorphPill(value);
   const crowded = segments.length > 3;
-
-  useEffect(() => {
-    const l = layouts[value];
-    if (!l) return;
-    const to = { left: l.x, right: l.x + l.width };
-    // First placement jumps; after that it morphs. Reduce Motion always jumps.
-    if (reduced || shown.get() === 0) {
-      left.set(to.left);
-      right.set(to.right);
-      shown.set(1);
-      return;
-    }
-    const lead = { duration: 320, dampingRatio: 0.78 };
-    const trail = { duration: 460, dampingRatio: 0.86 };
-    const goingRight = to.left > left.get();
-    right.set(withSpring(to.right, goingRight ? lead : trail));
-    left.set(withSpring(to.left, goingRight ? trail : lead));
-  }, [value, layouts, reduced, left, right, shown]);
-
-  const pillStyle = useAnimatedStyle(() => ({
-    opacity: shown.get(),
-    width: Math.max(0, right.get() - left.get()),
-    transform: [{ translateX: left.get() }],
-  }));
-
-  const onItemLayout = (key: K) => (e: LayoutChangeEvent) => {
-    const { x: lx, width } = e.nativeEvent.layout;
-    setLayouts((prev) => (prev[key]?.x === lx && prev[key]?.width === width ? prev : { ...prev, [key]: { x: lx, width } }));
-  };
 
   return (
     <Glass radius={24} style={[styles.track, style]} accessibilityRole="tablist" accessibilityLabel={accessibilityLabel}>
@@ -154,6 +114,7 @@ function GlassSegments<K extends string>({ segments, value, onChange, style, acc
             onPress={() => {
               if (active) return;
               haptic.select(); // on the press, not when the pill lands
+              moveTo(s.key); // and the pill leaves now, ahead of the re-render
               onChange(s.key);
             }}
             accessibilityRole="tab"

@@ -27,6 +27,8 @@ type Options = {
   enabled?: boolean;
   /** Reload when the live line says this changed. */
   live?: LiveTopic | null;
+  /** Nudges this close together make one reload (default 500 ms; the auction wants a bid on screen sooner). */
+  bunchMs?: number;
 };
 
 export type Query<T> = {
@@ -44,7 +46,7 @@ export type Query<T> = {
 };
 
 /** `fetcher` must be stable (wrap it in useCallback); a new fetcher means a fresh load. */
-export function useQuery<T>(fetcher: () => Promise<T>, { pollMs, enabled: wanted = true, live }: Options = {}): Query<T> {
+export function useQuery<T>(fetcher: () => Promise<T>, { pollMs, enabled: wanted = true, live, bunchMs = BUNCH_MS }: Options = {}): Query<T> {
   // Nothing loads until the saved server address has been read — otherwise a screen opened
   // straight from a link (or restored by Android) asks "(no server set)" and fails. A new
   // address means a fresh load, so it's part of the effect below.
@@ -58,12 +60,21 @@ export function useQuery<T>(fetcher: () => Promise<T>, { pollMs, enabled: wanted
   // previous state can then never land on top of a newer one.
   const ticket = useRef(0);
 
+  // What the screen is showing, as text. A reload that brings back exactly the same answer (most
+  // polls, and most returns to a screen) is dropped here: a new object with the same contents would
+  // still redraw the whole screen, on the thread that also has to answer the next tap.
+  const showing = useRef<string | undefined>(undefined);
+
   const run = useCallback(async () => {
     const mine = ++ticket.current;
     try {
       const value = await fetcher();
       if (mine !== ticket.current) return;
-      setDataState(value);
+      const text = JSON.stringify(value);
+      if (text === undefined || text !== showing.current) {
+        showing.current = text;
+        setDataState(value);
+      }
       setError(null);
     } catch (e) {
       if (mine !== ticket.current) return;
@@ -104,13 +115,13 @@ export function useQuery<T>(fetcher: () => Promise<T>, { pollMs, enabled: wanted
         timer = setTimeout(() => {
           timer = undefined;
           if (AppState.currentState === 'active') run();
-        }, BUNCH_MS);
+        }, bunchMs);
       });
       return () => {
         clearTimeout(timer);
         unsubscribe();
       };
-    }, [enabled, liveKey, run]),
+    }, [enabled, liveKey, run, bunchMs]),
   );
 
   const refresh = useCallback(async () => {
@@ -121,6 +132,7 @@ export function useQuery<T>(fetcher: () => Promise<T>, { pollMs, enabled: wanted
 
   const setData = useCallback((value: T) => {
     ticket.current++; // an action's answer is newer than any request still in flight
+    showing.current = undefined; // not worth comparing: the next reload simply draws
     setDataState(value);
     setError(null);
   }, []);

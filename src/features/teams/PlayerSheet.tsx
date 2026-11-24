@@ -216,7 +216,7 @@ export default function PlayerSheet({ visible, onClose, onSaved, tournamentId, t
     if (!player) return;
     const ok = await confirm({
       title: `Remove ${player.name}?`,
-      message: `They'll be taken off ${team.name}'s squad.`,
+      message: `They'll be taken off ${team.name}'s squad. If they've already played, they stay on the scorecards and can be brought back.`,
       confirmLabel: 'Remove',
       destructive: true,
     });

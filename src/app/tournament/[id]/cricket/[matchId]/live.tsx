@@ -38,7 +38,7 @@ export default function CricketLive() {
   const theme = useSportTheme();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { id: tournamentId } = useTournament();
-  const match = useCricketMatch(Number(matchId), { pollMs: 5000 });
+  const match = useCricketMatch(Number(matchId), { pollMs: 5000, claim: true });
   const action = useAction();
 
   const [extra, setExtra] = useState<Extra>('none');

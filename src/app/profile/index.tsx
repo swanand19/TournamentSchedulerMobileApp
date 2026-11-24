@@ -1,12 +1,15 @@
+import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SERVER_ACTION_LABEL } from '@/config/server';
 import { api } from '@/api/client';
 import { ApiError, NetworkError } from '@/api/errors';
-import type { Profile } from '@/api/types';
+import type { FollowSummary, Profile } from '@/api/types';
+import { Card } from '@/components/Card';
+import { FollowButton } from '@/features/people/PeopleParts';
 import EmptyState from '@/components/EmptyState';
 import ErrorBanner from '@/components/ErrorBanner';
 import Glass from '@/components/Glass';
@@ -20,11 +23,13 @@ import { formatPhone, initials, monthYear, plural } from '@/lib/format';
 import { switchThemeMode, useThemeMode } from '@/theme/appearance';
 import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
 import { radius, space, type ThemeMode, type Typography } from '@/theme/theme';
+import { pictureUri } from '@/lib/pictures';
 
 // The base profile: who someone is, and a card per sport that opens their career in it. Opened
 // from the account button on Home (yours: with email, phone, Edit and the app's appearance) or
 // from a player's name (`playerId`, the squad place tapped; or `userId`). It belongs to no sport,
-// so it sits on the neutral night ground; each sport's card brings its own colours.
+// so it sits on the neutral night ground; each sport's card brings its own colours. Following (2026-11-23): the
+// counts open the lists, someone else's profile has Follow, and a match they're in now that you may watch shows on top.
 
 const APPEARANCES: { key: ThemeMode; label: string }[] = [
   { key: 'dark', label: 'Dark' },
@@ -47,6 +52,17 @@ export default function ProfileScreen() {
 
   // An unlinked squad place, or someone who isn't a player: a calm empty state, not a red banner.
   const missing = !p && profile.error instanceof ApiError && profile.error.status === 404;
+  // The counts after a tap on Follow, until the next load.
+  const [followHere, setFollowHere] = useState<{ userId: number; follow: FollowSummary } | null>(null);
+  const follow = p && followHere?.userId === p.userId ? followHere.follow : p?.follow;
+  const tournaments = p ? p.sports.reduce((n, s) => n + s.tournaments, 0) : 0;
+  const openList = (tab: 'followers' | 'following') =>
+    p && router.push({ pathname: '/profile/follows', params: { userId: String(p.userId), tab } });
+  const watch = (m: { tournamentId: number; sport: string; matchId: number }) =>
+    router.push({
+      pathname: m.sport === 'Cricket' ? '/tournament/[id]/cricket/[matchId]/watch' : '/tournament/[id]/football/[matchId]/watch',
+      params: { id: String(m.tournamentId), matchId: String(m.matchId), sport: m.sport },
+    });
 
   const openSport = (sport: string) =>
     router.push({ pathname: '/profile/[sport]', params: p && !p.isMe ? { sport, userId: String(p.userId) } : { sport } });
@@ -105,7 +121,19 @@ export default function ProfileScreen() {
                   light && { borderWidth: 1, borderColor: theme.fieldBorder, width: 72, height: 72 },
                 ]}
               >
-                <Text style={[styles.avatarText, light && { fontSize: 26, letterSpacing: 0 }, { color: theme.onDark }]}>{initials(p.name)}</Text>
+                {pictureUri(p.photoUrl) ? (
+                  // Their photo (HLD P-26) fills the circle; initials while there's none.
+                  <Image
+                    source={{ uri: pictureUri(p.photoUrl)! }}
+                    cachePolicy="memory-disk"
+                    contentFit="cover"
+                    transition={150}
+                    accessibilityIgnoresInvertColors
+                    style={StyleSheet.absoluteFill}
+                  />
+                ) : (
+                  <Text style={[styles.avatarText, light && { fontSize: 26, letterSpacing: 0 }, { color: theme.onDark }]}>{initials(p.name)}</Text>
+                )}
               </View>
               <View style={{ flex: 1, gap: 4 }}>
                 <Text
@@ -121,6 +149,54 @@ export default function ProfileScreen() {
                 ) : null}
               </View>
             </View>
+
+            {follow ? (
+              <View style={styles.counts}>
+                {[
+                  { label: 'Followers', value: follow.followers, onPress: () => openList('followers') },
+                  { label: 'Following', value: follow.following, onPress: () => openList('following') },
+                  { label: 'Tournaments', value: tournaments, onPress: undefined },
+                ].map((c) => (
+                  <PressableScale
+                    key={c.label}
+                    onPress={c.onPress}
+                    disabled={!c.onPress}
+                    accessibilityRole={c.onPress ? 'button' : 'text'}
+                    accessibilityLabel={`${c.value} ${c.label}${c.onPress ? '. Opens the list' : ''}`}
+                    style={[styles.count, light ? { borderTopWidth: 1, borderColor: theme.cardDivider } : { backgroundColor: theme.cream, borderRadius: radius.lg }]}
+                  >
+                    <Text style={[type.title, { color: theme.onDark, fontSize: 22, lineHeight: 28 }]}>{c.value}</Text>
+                    <Text style={[type.caption, { color: theme.onDarkSoft }]}>{c.label}</Text>
+                  </PressableScale>
+                ))}
+              </View>
+            ) : null}
+
+            {follow && !p.isMe ? (
+              <View style={{ gap: space.xs }}>
+                <FollowButton userId={p.userId} name={p.name} state={follow} size="md" onChanged={(next) => setFollowHere({ userId: p.userId, follow: next })} />
+                <Text style={[type.caption, { color: theme.onDarkSoft, textAlign: 'center' }]}>
+                  {follow.isFollowing
+                    ? `You’ll hear when ${p.name.split(' ')[0]} starts a match you can watch.`
+                    : follow.followsMe
+                      ? 'Follows you.'
+                      : `Follow to hear when ${p.name.split(' ')[0]} starts a match you can watch.`}
+                </Text>
+              </View>
+            ) : null}
+
+            {p.playingNow?.map((m) => (
+              <Card key={`${m.sport}-${m.matchId}`}>
+                <PressableScale onPress={() => watch(m)} accessibilityRole="button" accessibilityLabel={`Playing now: ${m.match}, ${m.tournamentName}. Watch live`} style={styles.now}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={[type.label, { color: theme.muted }]}>Playing now</Text>
+                    <Text style={[type.bodyStrong, { color: theme.ink }]}>{m.match}</Text>
+                    <Text style={[type.caption, { color: theme.muted }]}>{m.tournamentName}</Text>
+                  </View>
+                  <Icon name="chevron-right" size={22} color={theme.muted} />
+                </PressableScale>
+              </Card>
+            ))}
 
             {p.isMe && (p.email || p.phone) ? (
               <View style={{ gap: space.sm }}>
@@ -179,11 +255,14 @@ export default function ProfileScreen() {
 const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   edit: { height: 44, paddingHorizontal: space.lg, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
   identity: { flexDirection: 'row', alignItems: 'center', gap: space.lg, marginTop: space.sm },
-  avatar: { width: 76, height: 76, borderRadius: 38, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 76, height: 76, borderRadius: 38, borderWidth: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarText: { fontFamily: fonts.display, fontSize: 28 },
   name: { fontFamily: fonts.display, fontSize: 28, lineHeight: 34, letterSpacing: -0.4 },
   contact: { borderRadius: radius.lg },
   contactRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.md, paddingHorizontal: space.md + 2 },
   privacy: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: space.xs },
   lightContactRow: { paddingHorizontal: 0, minHeight: 52 },
+  counts: { flexDirection: 'row', gap: space.sm },
+  count: { flex: 1, alignItems: 'center', paddingVertical: space.sm, minHeight: 64, justifyContent: 'center' },
+  now: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48 },
 });

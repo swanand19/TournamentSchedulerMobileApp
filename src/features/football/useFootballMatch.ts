@@ -1,8 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { api } from '@/api/client';
 import type { FootballMatch, MatchEvent, Player } from '@/api/types';
 import { useQuery } from '@/hooks/useQuery';
+import { claimScoring } from '@/lib/scoringClaim';
 
 // A football match and its timeline, fetched together so the scoreboard and the event list can't
 // disagree. Football's action endpoints answer with small payloads, so after every action the
@@ -10,8 +11,14 @@ import { useQuery } from '@/hooks/useQuery';
 
 export type FootballMatchData = { match: FootballMatch; events: MatchEvent[] };
 
-export function useFootballMatch(matchId: number, { pollMs }: { pollMs?: number } = {}) {
+/** `claim`: a scoring screen — take the match first if nobody is scoring it (lib/scoringClaim). */
+export function useFootballMatch(matchId: number, { pollMs, claim }: { pollMs?: number; claim?: boolean } = {}) {
+  const claimed = useRef(!claim);
   const fetcher = useCallback(async (): Promise<FootballMatchData> => {
+    if (!claimed.current) {
+      claimed.current = true;
+      await claimScoring('football', matchId);
+    }
     const [match, events] = await Promise.all([
       api.call<FootballMatch>('MATCH_GET', { routeParams: { matchId } }),
       api.call<MatchEvent[]>('MATCH_EVENTS', { routeParams: { matchId } }),

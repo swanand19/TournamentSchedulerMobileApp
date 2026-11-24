@@ -181,6 +181,26 @@ export const neutralWall = {
 };
 
 /**
+ * The opening screen's colours (2026-11-20, the canvas's "Centre strip" icon and its two openings).
+ * `ground` and the marks' starting colours are the app icon's and the phone's still screen's
+ * (app.json's splash), so the animation starts from exactly that picture; the dark opening ends on
+ * the glass theme's own accents and the neutral wallpaper, which Home is drawn on.
+ */
+export const openingColours = {
+  ground: '#17402E',
+  stripe: '#1D4D38',
+  pitch: '#E3CF9A',
+  lines: '#FFFFFF',
+  night: neutralWall.page,
+  nightLines: footballTheme.accent,
+  nightPitch: cricketTheme.accent,
+  nightCrease: 'rgba(11,16,32,0.5)',
+  nightStripe: 'rgba(255,255,255,0.035)',
+  name: '#FFFFFF',
+  tagline: 'rgba(255,255,255,0.8)',
+};
+
+/**
  * The glass theme outside any tournament (sign-in, Home's frame, the profile, the inbox): the
  * neutral wallpaper with periwinkle light. It still answers to football's key, as the default
  * sport always has, so nothing that asks "which sport" changes.

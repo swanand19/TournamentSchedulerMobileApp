@@ -3,14 +3,14 @@ import { useCallback, useState } from 'react';
 import { Share, StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
-import type { Tournament, TournamentInvite, TournamentMember, TournamentPeople } from '@/api/types';
+import type { PictureResult, Tournament, TournamentInvite, TournamentMember, TournamentPeople } from '@/api/types';
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
 import DateField, { formatDay, todayValue } from '@/components/DateField';
+import PictureField from '@/components/PictureField';
 import Screen from '@/components/Screen';
 import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
-import SwitchRow from '@/components/SwitchRow';
 import Skeleton from '@/components/Skeleton';
 import TextField from '@/components/TextField';
 import { useAction } from '@/hooks/useAction';
@@ -147,19 +147,14 @@ export default function PeopleScreen() {
     if (res.ok) router.dismissTo('/');
   };
 
-  // Public live scores (6E): the owners' switch and the one link it has for good; followers stop following.
-  const switchPublic = async (on: boolean) => {
-    const res = await action.run(() => api.call<Tournament>('TOURNAMENT_PUBLIC_SET', { routeParams: { id: t.id }, body: { isPublic: on } }));
-    if (res.ok) t.query.setData(res.value);
-  };
-
+  // Public live scores (6E): the one link every tournament has for good; followers stop following.
   const shareLink = () => {
     const share = tournament.share;
     if (!share) return;
     Share.share({
       message: share.url
         ? `Follow ${tournament.name} live: ${share.url}`
-        : `Follow ${tournament.name} live in Tournament Scheduler: Home → Find a tournament, code ${share.code}.`,
+        : `Follow ${tournament.name} live in KickCricket: Home → Find tournaments and people, code ${share.code}.`,
     });
   };
 
@@ -204,20 +199,51 @@ export default function PeopleScreen() {
         )}
       </Card>
 
-      {/* --- Public live scores (6E) --- */}
-      {(access.canManageMembers || tournament.share) && (
+      {/* --- Pictures (HLD P-26): owners give the tournament a logo (Home, the hub) and a banner (top of the hub). --- */}
+      {access.canEdit && (
         <Card>
-          <SectionHeader onCard title="Public live scores" />
-          {access.canManageMembers && (
-            <SwitchRow
-              label="Anyone can find and watch this tournament"
-              hint="Scores, tables, stats and knockouts in a browser, no account needed. People find it by name or link and can follow it. No emails or numbers are shown."
-              value={tournament.isPublic}
-              onChange={switchPublic}
-              disabled={action.busy}
-            />
-          )}
-          {tournament.share && (
+          <SectionHeader onCard title="Pictures" />
+          <PictureField
+            label="Logo"
+            hint="Square. Shown beside the name on everyone's Home."
+            shape="square"
+            link={tournament.logoUrl}
+            name={tournament.name}
+            upload={async (image) => (await api.call<PictureResult>('TOURNAMENT_PICTURE_SET', { routeParams: { id: tournament.id, kind: 'logo' }, body: { image } })).url}
+            remove={async () => {
+              await api.call<PictureResult>('TOURNAMENT_PICTURE_REMOVE', { routeParams: { id: tournament.id, kind: 'logo' } });
+            }}
+            onChanged={t.query.reload}
+          />
+          <PictureField
+            label="Banner"
+            hint="Landscape, 16:9. Shown across the top of the tournament, and on its public page."
+            shape="banner"
+            link={tournament.bannerUrl}
+            name={tournament.name}
+            upload={async (image) => (await api.call<PictureResult>('TOURNAMENT_PICTURE_SET', { routeParams: { id: tournament.id, kind: 'banner' }, body: { image } })).url}
+            remove={async () => {
+              await api.call<PictureResult>('TOURNAMENT_PICTURE_REMOVE', { routeParams: { id: tournament.id, kind: 'banner' } });
+            }}
+            onChanged={t.query.reload}
+          />
+        </Card>
+      )}
+
+      {/* --- Public live scores (6E): every tournament is public since 2026-11-23; only an admin can hide one. --- */}
+      <Card>
+        <SectionHeader onCard title="Public live scores" />
+        {tournament.isPublic ? (
+          <Text style={[type.body, { color: theme.muted }]}>
+            Anyone can watch this tournament with its link: scores, tables, stats and knockouts, no account needed. People can
+            also find it by name in the app once its schedule or knockout stage is set. No emails or numbers are shown.
+          </Text>
+        ) : (
+          <Text style={[type.body, { color: theme.muted }]}>
+            KickCricket has hidden this tournament from the public, so only the people in it can see it.
+          </Text>
+        )}
+        {tournament.share && (
             <View style={{ gap: space.sm }}>
               <Text style={[type.caption, { color: theme.muted }]}>
                 {tournament.share.url ? 'The link' : 'The code (open the website’s /live/ address with it)'}
@@ -227,12 +253,11 @@ export default function PeopleScreen() {
               </Text>
               <Button label="Share" icon="share-variant" variant="secondary" onPress={shareLink} />
               <Text style={[type.caption, { color: theme.muted }]}>
-                Code {tournament.share.code}. Friends with the app find it on Home → Find a tournament.
+                Code {tournament.share.code}. Friends with the app find it on Home → Find tournaments and people.
               </Text>
             </View>
           )}
-        </Card>
-      )}
+      </Card>
 
       {/* --- People --- */}
       <Card>

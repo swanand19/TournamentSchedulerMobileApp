@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
   Modal,
+  type LayoutChangeEvent,
   Platform,
   Pressable,
   ScrollView,
@@ -13,7 +14,6 @@ import {
 } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
-  Easing,
   Extrapolation,
   interpolate,
   useAnimatedStyle,
@@ -28,6 +28,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { BlurView } from 'expo-blur';
 
 import { haptic } from '@/lib/haptics';
+import { EASE_OUT } from '@/lib/motion';
 import { useGlassSupport } from '@/theme/glass';
 import { useSportTheme, useTypography } from '@/theme/SportTheme';
 import { radius, space } from '@/theme/theme';
@@ -38,9 +39,15 @@ import { radius, space } from '@/theme/theme';
 //
 // Motion, per the animate-expo rules:
 //  - Opening: a critically damped spring (no bounce — no finger threw it). Closing: 220ms ease-out.
+//  - It travels its own height, not the screen's. A short picker that started a whole screen below
+//    spent most of its opening out of sight and then shot into place; measured, the motion the eye
+//    sees is the whole curve, and the backdrop dims in step with it.
+//  - It starts once the sheet has been laid out and its window is on screen (Android shows a modal
+//    a frame or two after React mounts it — an animation begun at mount lost its first frames).
 //  - Dragging the grabber down follows the finger on the UI thread; upward past the top resists
 //    (rubber band). Release decides by projected momentum, so a flick dismisses even a short drag,
-//    and the release velocity is handed to the spring so there's no seam.
+//    and the release velocity is handed to the spring so there's no seam — the closing that follows
+//    leaves that spring alone.
 //  - The backdrop's opacity is derived from the same value, so it can never drift out of sync.
 //  - Reduce Motion: no travel, just appear and disappear.
 // Glass theme: Apple's inset sheet — it floats 8pt in from the screen's edges with the display's
@@ -49,7 +56,9 @@ import { radius, space } from '@/theme/theme';
 // A blocking sheet (`dismissible={false}`) has no grabber, ignores the backdrop and back button —
 // used when the match cannot continue without an answer (next batter, next bowler).
 
-const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+const OPEN = { duration: 300, dampingRatio: 1 } as const;
+/** Past its own height, so the glass sheet's edge inset and shadow leave the screen too. */
+const EXIT_ROOM = 48;
 
 // A plain function reference for the worklet to hand back to the RN runtime (it snapped home).
 const snapHaptic = () => haptic.tap();
@@ -115,19 +124,59 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
   const offscreen = screenHeight;
   const y = useSharedValue(offscreen);
   const dragStart = useSharedValue(0);
+  // How far the sheet travels: its measured height. Until the first layout it waits off screen.
+  const travel = useSharedValue(offscreen);
+  // A flick has already sent it away on a spring carrying the finger's speed.
+  const flung = useSharedValue(false);
+  const measured = useRef(false);
+  const shown = useRef(false);
+
+  // Opens once both are true: the sheet has a height, and its window is on screen.
+  const openWhenReady = () => {
+    if (!measured.current || !shown.current || !visible || reduced) return;
+    y.set(travel.get());
+    y.set(withSpring(0, OPEN));
+  };
+
+  const onSheetLayout = (e: LayoutChangeEvent) => {
+    travel.set(Math.ceil(e.nativeEvent.layout.height) + EXIT_ROOM);
+    if (measured.current) return; // a later change of height (keyboard, content) only updates the travel
+    measured.current = true;
+    openWhenReady();
+  };
+
+  const onShown = () => {
+    if (shown.current) return;
+    shown.current = true;
+    openWhenReady();
+  };
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {
+      measured.current = false;
+      shown.current = false;
+      return undefined;
+    }
     if (visible) {
-      y.set(reduced ? 0 : withSpring(0, { duration: 300, dampingRatio: 1 }));
-    } else if (!reduced) {
+      flung.set(false);
+      if (reduced) y.set(0);
+      // Reopened while it was still closing: it is measured and on screen, so it just comes back.
+      else if (measured.current && shown.current) y.set(withSpring(0, OPEN));
+      // A platform that never reports the window as shown must not leave the sheet off screen.
+      const fallback = setTimeout(onShown, 200);
+      return () => clearTimeout(fallback);
+    }
+    if (!reduced && !flung.get()) {
       y.set(
-        withTiming(offscreen, { duration: 220, easing: EASE_OUT }, (finished) => {
+        withTiming(measured.current ? travel.get() : offscreen, { duration: 220, easing: EASE_OUT }, (finished) => {
           if (finished) scheduleOnRN(setMounted, false);
         }),
       );
     }
-  }, [visible, mounted, reduced, offscreen, y]);
+    return undefined;
+    // openWhenReady / onShown read refs and the values above; listing them would re-run this on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, mounted, reduced, offscreen, y, travel, flung]);
 
   const pan = useMemo(
     () =>
@@ -143,9 +192,16 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
         })
         .onEnd((e) => {
           const projected = y.get() + project(e.velocityY);
-          if (projected > 160) {
+          if (projected > Math.min(160, travel.get() * 0.4)) {
+            flung.set(true);
             y.set(
-              withSpring(offscreen, { duration: 300, dampingRatio: 1, velocity: e.velocityY, overshootClamping: true }),
+              withSpring(
+                travel.get(),
+                { duration: 300, dampingRatio: 1, velocity: e.velocityY, overshootClamping: true },
+                (finished) => {
+                  if (finished) scheduleOnRN(setMounted, false);
+                },
+              ),
             );
             scheduleOnRN(onClose);
           } else {
@@ -153,12 +209,12 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
             scheduleOnRN(snapHaptic);
           }
         }),
-    [dismissible, dragStart, y, offscreen, onClose],
+    [dismissible, dragStart, y, travel, flung, onClose],
   );
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: y.get() }] }));
   const backdropStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(y.get(), [0, 400], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(y.get(), [0, travel.get()], [1, 0], Extrapolation.CLAMP),
   }));
 
   if (!mounted) return null;
@@ -176,6 +232,7 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
       animationType="none"
       statusBarTranslucent
       navigationBarTranslucent
+      onShow={onShown}
       onRequestClose={dismissible ? onClose : () => {}}
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -196,6 +253,7 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
         >
           <Animated.View
             accessibilityViewIsModal
+            onLayout={onSheetLayout}
             style={[
               styles.sheet,
               { backgroundColor: bg, maxHeight: Math.min(screenHeight * 0.9, screenHeight - lift - insets.top - space.lg) },

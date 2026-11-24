@@ -110,7 +110,7 @@ export default function SignInScreen() {
         >
           <View style={styles.titleRow}>
             <View style={{ flex: 1 }}>
-              <Text style={[type.eyebrow, { color: theme.accent }]}>Matchday scheduler</Text>
+              <Text style={[type.eyebrow, { color: theme.accent }]}>KickCricket</Text>
               <Text style={[type.title, { color: theme.onDark }]} accessibilityRole="header">
                 {step === 'name' ? 'Welcome' : 'Sign in'}
               </Text>

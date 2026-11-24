@@ -1,11 +1,14 @@
+import { Image } from 'expo-image';
 import { Stack, useRouter } from 'expo-router';
 import { useCallback, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
-import type { CricketStats, FootballStats } from '@/api/types';
+import type { CricketStats, FootballStats, Pool } from '@/api/types';
+import { PhotoBadge } from '@/components/Badges';
 import Button from '@/components/Button';
 import EmptyState from '@/components/EmptyState';
+import AuctionBanner, { DrawBanner } from '@/features/auction/AuctionBanner';
 import ErrorBanner from '@/components/ErrorBanner';
 import GlassTabBar, { type GlassTab } from '@/components/GlassTabBar';
 import HeaderButton from '@/components/HeaderButton';
@@ -20,6 +23,7 @@ import MatchesTab from '@/features/hub/MatchesTab';
 import PreStartHub from '@/features/hub/PreStartHub';
 import { CricketStatsPage, FootballStatsPage } from '@/features/hub/StatsTab';
 import { CricketSummaryPage, FootballSummaryPage } from '@/features/hub/SummaryTab';
+import { LeagueLink } from '@/features/leagues/LeagueParts';
 import { CricketTable, FootballTable } from '@/features/hub/TableTab';
 import TeamsList from '@/features/teams/TeamsList';
 import { useAction } from '@/hooks/useAction';
@@ -29,6 +33,7 @@ import { useTournament } from '@/hooks/useTournament';
 import { confirm } from '@/lib/confirm';
 import { dateRange } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
+import { pictureUri } from '@/lib/pictures';
 import { useSportTheme, useTypography } from '@/theme/SportTheme';
 import { radius, space } from '@/theme/theme';
 
@@ -73,6 +78,7 @@ export default function TournamentHub() {
         large
         right={loaded ? <StatusChip label={status === 'Cancelled' ? 'Cancelled' : 'Not started'} tone="setup" onDark /> : undefined}
       />
+      {t.query.data?.league && <LeagueLink league={t.query.data.league} sport={t.sport} />}
       {loaded && (
         <Button
           label="People & settings"
@@ -86,7 +92,10 @@ export default function TournamentHub() {
       ) : t.access.canEdit ? (
         <PreStartHub key={refreshKey} onStarted={t.query.reload} />
       ) : (
-        // Groups and fixtures are the owners' to build; scorers and players wait for kick-off.
+        // Groups and fixtures are the owners' to build; scorers and players wait for kick-off (or watch the auction).
+        <>
+        <AuctionBanner tournamentId={t.id} />
+        <DrawBanner tournamentId={t.id} />
         <EmptyState
           icon="timer-sand"
           title={status === 'Cancelled' ? 'This tournament was cancelled' : 'Not started yet'}
@@ -98,6 +107,7 @@ export default function TournamentHub() {
           actionLabel="See the teams"
           onAction={() => router.push({ pathname: '/tournament/[id]/teams', params: { id: String(t.id) } })}
         />
+        </>
       )}
     </Screen>
   );
@@ -112,6 +122,7 @@ function StartedHub() {
   const [promptDismissed, setPromptDismissed] = useState(false);
   const light = theme.mode === 'light';
   const dates = dateRange(query.data?.startDate, query.data?.endDate);
+  const banner = pictureUri(query.data?.bannerUrl);
 
   // Asked once, when the last match finishes.
   const completeNow = async () => {
@@ -141,6 +152,10 @@ function StartedHub() {
   );
   const stats = useQuery<FootballStats | CricketStats>(statsFetcher, { enabled: seen.has('table') || seen.has('summary') || seen.has('stats') });
   const teams = useTeams(id, seen.has('teams'));
+  // Teams filled from a pool keep their draw or auction results to look back on.
+  const poolFetcher = useCallback(() => api.call<Pool>('POOL_GET', { routeParams: { id } }), [id]);
+  const pool = useQuery<Pool>(poolFetcher, { enabled: seen.has('teams') });
+  const filledBy = pool.data?.auctionStatus === 'Confirmed' ? 'auction' : pool.data?.drawStatus === 'Confirmed' ? 'draw' : null;
 
   const statsBody = (render: (s: FootballStats | CricketStats) => ReactNode) =>
     stats.data ? (
@@ -181,6 +196,14 @@ function StartedHub() {
       case 'teams':
         return (
           <HubPage onRefresh={teams.refresh} refreshing={teams.refreshing}>
+            {filledBy && (
+              <Button
+                label={filledBy === 'auction' ? 'Auction results' : 'Draw results'}
+                icon={filledBy === 'auction' ? 'gavel' : 'shuffle-variant'}
+                variant="secondary"
+                onPress={() => router.push({ pathname: filledBy === 'auction' ? '/tournament/[id]/auction' : '/tournament/[id]/draw', params: { id: String(id) } })}
+              />
+            )}
             {teams.data ? (
               <TeamsList tournamentId={id} teams={teams.data} editable={false} onChanged={teams.reload} />
             ) : (
@@ -214,12 +237,34 @@ function StartedHub() {
         }}
       />
       <View style={[styles.tabBar, light ? styles.lightTabBar : styles.glassTop]}>
-        <View style={{ gap: 4, marginBottom: light ? space.sm : 0 }}>
-          <Text style={[type.title, { color: theme.ink }]} accessibilityRole="header" numberOfLines={2}>
-            {name}
-          </Text>
-          {!!dates && <Text style={[type.body, { color: theme.muted }]}>{dates}</Text>}
-        </View>
+        {banner ? (
+          // The owners' banner (HLD P-26) behind the name: 2:1 keeps the middle of the 16:9 picture
+          // without taking a third of the screen, and the wash keeps white text readable on any photo.
+          <View style={[styles.banner, { marginBottom: light ? space.sm : 0 }]}>
+            <Image source={{ uri: banner }} cachePolicy="memory-disk" contentFit="cover" transition={150} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
+            <View style={[StyleSheet.absoluteFill, styles.bannerWash]} />
+            <View style={styles.bannerText}>
+              {!!query.data?.logoUrl && <PhotoBadge link={query.data.logoUrl} name={name} size={48} square />}
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={[type.title, { color: '#FFFFFF' }]} accessibilityRole="header" numberOfLines={2}>
+                  {name}
+                </Text>
+                {!!dates && <Text style={[type.body, { color: 'rgba(255,255,255,0.88)' }]}>{dates}</Text>}
+              </View>
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.titleRow, { marginBottom: light ? space.sm : 0 }]}>
+            {!!query.data?.logoUrl && <PhotoBadge link={query.data.logoUrl} name={name} size={48} square />}
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={[type.title, { color: theme.ink }]} accessibilityRole="header" numberOfLines={2}>
+                {name}
+              </Text>
+              {!!dates && <Text style={[type.body, { color: theme.muted }]}>{dates}</Text>}
+            </View>
+          </View>
+        )}
+        {query.data?.league && <LeagueLink league={query.data.league} sport={sport} />}
         {closed && (
           <Text style={[type.caption, { color: theme.onDarkSoft, paddingVertical: space.xs }]}>
             {query.data?.status === 'Completed'
@@ -254,6 +299,10 @@ const styles = StyleSheet.create({
   lightTabs: { justifyContent: 'space-between', gap: space.md },
   glassTop: { borderBottomWidth: 0, paddingTop: 0, paddingHorizontal: space.lg + 4 },
   headerRow: { flexDirection: 'row', gap: space.sm },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  banner: { aspectRatio: 2, borderRadius: radius.lg, borderCurve: 'continuous', overflow: 'hidden', justifyContent: 'flex-end' },
+  bannerWash: { backgroundColor: 'rgba(0,0,0,0.42)' },
+  bannerText: { flexDirection: 'row', alignItems: 'flex-end', gap: space.md, padding: space.md },
   prompt: { borderWidth: 1, borderRadius: radius.xl, borderCurve: 'continuous', padding: space.md, gap: space.sm },
   promptRow: { flexDirection: 'row', gap: space.sm },
 });

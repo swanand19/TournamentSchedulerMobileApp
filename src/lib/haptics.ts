@@ -30,6 +30,10 @@ export const haptic = {
   heavy() {
     safe(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
   },
+  /** Something the person needs to notice happened without them: outbid at the auction. */
+  warn() {
+    safe(Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning));
+  },
   /** The server refused. */
   error() {
     safe(

@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/api/client';
 import { ApiError } from '@/api/errors';
-import type { KnockoutStage, SavedSchedule } from '@/api/types';
+import type { AuctionState, DrawState, KnockoutStage, SavedSchedule } from '@/api/types';
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
 import ErrorBanner from '@/components/ErrorBanner';
@@ -47,6 +47,10 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
   const schedule = useQuery(fetchSchedule);
   const knockoutFetcher = useCallback(() => api.call<KnockoutStage>('KNOCKOUT_GET', { routeParams: { id } }), [id]);
   const knockout = useQuery(knockoutFetcher);
+  const auctionFetcher = useCallback(() => api.call<AuctionState>('AUCTION_GET', { routeParams: { id } }), [id]);
+  const auction = useQuery(auctionFetcher, { live: { kind: 'tournament', tournamentId: id } });
+  const drawFetcher = useCallback(() => api.call<DrawState>('DRAW_GET', { routeParams: { id } }), [id]);
+  const draw = useQuery(drawFetcher, { live: { kind: 'tournament', tournamentId: id } });
 
   if (teams.loading || schedule.loading || knockout.loading) return <Skeleton rows={3} height={140} />;
 
@@ -121,8 +125,14 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
         />
       </Step>
 
+      <PoolStep
+        auction={auction.data}
+        draw={draw.data}
+        onOpen={(screen) => router.push({ pathname: screen === 'pool' ? '/tournament/[id]/pool' : screen === 'draw' ? '/tournament/[id]/draw' : '/tournament/[id]/auction', params })}
+      />
+
       <Step
-        n={2}
+        n={3}
         done={scheduleDone}
         title="Groups & schedule"
         status={scheduleDone ? { label: 'Schedule ready', tone: 'ready' } : { label: 'Not built', tone: 'setup' }}
@@ -154,7 +164,7 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
       </Step>
 
       <Step
-        n={3}
+        n={4}
         done={knockoutMatches > 0}
         title="Knockout stage"
         status={knockoutMatches > 0 ? { label: plural(knockoutMatches, 'match', 'matches'), tone: 'ready' } : { label: 'Optional', tone: 'done' }}
@@ -174,7 +184,7 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
       </Step>
 
       <Step
-        n={4}
+        n={5}
         done={false}
         title="Start tournament"
         status={fixturesDone ? { label: 'Ready to start', tone: 'accent' } : { label: 'Waiting', tone: 'done' }}
@@ -205,6 +215,50 @@ export default function PreStartHub({ onStarted }: { onStarted: () => void }) {
         </View>
       )}
     </View>
+  );
+}
+
+/** Filling the teams from a pool, by a draw or an auction, instead of by hand: optional, for any sport. */
+function PoolStep({ auction, draw, onOpen }: { auction: AuctionState | undefined; draw: DrawState | undefined; onOpen: (screen: 'pool' | 'auction' | 'draw') => void }) {
+  const styles = useThemedStyles(makeStyles);
+  const s = auction?.status ?? 'None';
+  const d = draw?.status ?? 'None';
+  const players = auction?.counts.players ?? 0;
+  const drawing = draw?.method === 'Draw' || d === 'Live' || d === 'Confirmed';
+  const auctionLive = s === 'Live' || s === 'Paused';
+  const made = s === 'Confirmed' || d === 'Confirmed';
+
+  const status: { label: string; tone: ChipTone } =
+    auctionLive ? { label: s === 'Paused' ? 'Auction paused' : 'Auction live', tone: 'live' }
+    : d === 'Live' && !draw?.allDrawn ? { label: 'Drawing now', tone: 'live' }
+    : s === 'RoundOver' || s === 'Finished' || (d === 'Live' && draw?.allDrawn) ? { label: 'Waiting to confirm', tone: 'setup' }
+    : made ? { label: 'Teams made', tone: 'ready' }
+    : players > 0 ? { label: plural(players, 'player') + ' in the pool', tone: 'accent' }
+    : { label: 'Optional', tone: 'done' };
+  const body =
+    d === 'Confirmed' ? `${plural(draw?.counts.drawn ?? 0, 'player')} drawn and placed in their squads.`
+    : s === 'Confirmed' ? `${plural(auction?.counts.sold ?? 0, 'player')} bought and placed in their squads.`
+    : d === 'Live' ? (draw?.allDrawn ? 'Everyone is drawn. Move anyone you need to, then confirm the teams.' : `${draw?.counts.drawn ?? 0} of ${draw?.counts.players ?? 0} drawn. Finish it and confirm the teams before the start.`)
+    : auctionLive ? `${auction?.counts.sold ?? 0} sold so far. Finish it and confirm the teams before the start.`
+    : s === 'RoundOver' || s === 'Finished' ? 'Check the squads, assign anyone unsold, then confirm the teams.'
+    : drawing ? 'Put players in a pool, then draw them into the teams live, tier by tier, with everyone watching.'
+    : 'Put players in a pool, then draw them into the teams, or let each team buy them at an auction.';
+  const live = auctionLive || (d === 'Live' && !draw?.allDrawn);
+  return (
+    <Step n={2} done={made} title="Fill the teams from a pool" status={status} body={body}>
+      <View style={styles.btnRow}>
+        {!made && (
+          <Button label="Player pool" icon="account-multiple-outline" variant="secondary" onPress={() => onOpen('pool')} style={{ flex: 1 }} />
+        )}
+        <Button
+          label={drawing ? (d === 'Live' ? 'Open draw' : made ? 'Results' : 'Draw') : auctionLive ? 'Open auction' : made ? 'Results' : 'Auction'}
+          icon={drawing ? 'shuffle-variant' : 'gavel'}
+          variant={live ? 'primary' : 'secondary'}
+          onPress={() => onOpen(drawing ? 'draw' : 'auction')}
+          style={{ flex: 1 }}
+        />
+      </View>
+    </Step>
   );
 }
 

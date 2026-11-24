@@ -110,6 +110,54 @@ function newEphemeralSecret(randomBytes: RandomBytes): Uint8Array {
 
 export type SealedRequest = { token: string; contentKey: Uint8Array };
 
+/**
+ * One request's key agreement, done: the throwaway public key that goes in the header and the
+ * one-time AES key it agreed with the server. Each is used for exactly one request.
+ */
+export type AgreedKey = { epk: { x: string; y: string }; contentKey: Uint8Array };
+
+// The server's key never changes while the app runs, so its point is parsed once and given a small
+// multiplication table (window 4: built in about the time of two and a half agreements, and each
+// agreement after that takes under a third of the time). The agreed key is the same either way.
+let prepared: { bytes: Uint8Array; point: ReturnType<typeof p256.Point.fromBytes> } | null = null;
+
+function serverPoint(serverPublicKey: Uint8Array) {
+  const same = prepared !== null && prepared.bytes.length === serverPublicKey.length && prepared.bytes.every((b, i) => b === serverPublicKey[i]);
+  if (!prepared || !same) {
+    const point = p256.Point.fromBytes(serverPublicKey); // checks it is on the curve
+    if (point.is0()) throw new GatewayCryptoError('Not a server key.');
+    prepared = { bytes: serverPublicKey.slice(), point: point.precompute(4, false) };
+  }
+  return prepared.point;
+}
+
+/**
+ * The slow half of sealing a request: a new throwaway key pair and its agreement with the server's
+ * key. Separate from encryptRequest so an app can do it ahead of time, while nothing is happening,
+ * and seal the request itself in an instant.
+ */
+export function agreeKey(args: {
+  /** 65-byte uncompressed P-256 point. */
+  serverPublicKey: Uint8Array;
+  randomBytes: RandomBytes;
+  /** Only the shared test vectors fix this. */
+  ephemeralSecretKey?: Uint8Array;
+}): AgreedKey {
+  const secret = args.ephemeralSecretKey ?? newEphemeralSecret(args.randomBytes);
+  const ephemeralPublic = p256.getPublicKey(secret, false); // 0x04 || X || Y
+
+  // The shared secret is the x-coordinate of the agreed point.
+  const shared = serverPoint(args.serverPublicKey).multiply(p256.Point.Fn.fromBytes(secret)).toBytes(true).slice(1);
+  const contentKey = concatKdf(shared, ENC, new Uint8Array(0), new Uint8Array(0));
+  shared.fill(0);
+  if (!args.ephemeralSecretKey) secret.fill(0);
+
+  return {
+    epk: { x: base64UrlEncode(ephemeralPublic.slice(1, 33)), y: base64UrlEncode(ephemeralPublic.slice(33, 65)) },
+    contentKey,
+  };
+}
+
 export function encryptRequest(args: {
   /** 65-byte uncompressed P-256 point, as `dotnet run -- gateway-keys show` prints it (base64url-decoded). */
   serverPublicKey: Uint8Array;
@@ -118,31 +166,21 @@ export function encryptRequest(args: {
   claims: Record<string, string>;
   plaintext: Uint8Array;
   randomBytes: RandomBytes;
+  /** An agreement made ahead of time with agreeKey, for this request alone. */
+  agreed?: AgreedKey;
   /** Only the shared test vectors fix these. */
   ephemeralSecretKey?: Uint8Array;
   iv?: Uint8Array;
 }): SealedRequest {
-  const secret = args.ephemeralSecretKey ?? newEphemeralSecret(args.randomBytes);
-  const ephemeralPublic = p256.getPublicKey(secret, false); // 0x04 || X || Y
+  const { epk, contentKey } = args.agreed ?? agreeKey(args);
 
   const header: Record<string, unknown> = {
     alg: 'ECDH-ES',
     enc: ENC,
     kid: args.keyId,
-    epk: {
-      kty: 'EC',
-      crv: 'P-256',
-      x: base64UrlEncode(ephemeralPublic.slice(1, 33)),
-      y: base64UrlEncode(ephemeralPublic.slice(33, 65)),
-    },
+    epk: { kty: 'EC', crv: 'P-256', x: epk.x, y: epk.y },
     ...args.claims,
   };
-
-  // The shared secret is the x-coordinate of the agreed point.
-  const shared = p256.getSharedSecret(secret, args.serverPublicKey, true).slice(1);
-  const contentKey = concatKdf(shared, ENC, new Uint8Array(0), new Uint8Array(0));
-  shared.fill(0);
-  if (!args.ephemeralSecretKey) secret.fill(0);
 
   return { token: seal(header, contentKey, args.plaintext, args.iv ?? args.randomBytes(IV_BYTES)), contentKey };
 }

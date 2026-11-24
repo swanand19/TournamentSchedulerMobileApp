@@ -1,9 +1,12 @@
+import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { initials } from '@/lib/format';
+import { pictureUri } from '@/lib/pictures';
 import { useSportTheme, useTypography } from '@/theme/SportTheme';
 
-// The little round markers beside names: a team's initials, a player's shirt number.
+// The little round markers beside names: a team's initials, a player's shirt number, a person's photo
+// or a tournament's logo (falling back to initials when there's no picture).
 // Glass: initials sit in a small glass bead (the home side's tinted); a shirt number is just the
 // figure in the sport's colour, as the design's squad lists draw it.
 
@@ -37,6 +40,33 @@ export function TeamBadge({ name, size = 36, home }: { name: string; size?: numb
         {initials(name)}
       </Text>
     </View>
+  );
+}
+
+/**
+ * A person's photo or a tournament's logo (`link` from the answer, HLD P-26), in the same round marker as
+ * TeamBadge — whose initials it shows instead when there's no picture. `square`: a logo's rounded square.
+ */
+export function PhotoBadge({ link, name, size = 36, square }: { link: string | null | undefined; name: string; size?: number; square?: boolean }) {
+  const theme = useSportTheme();
+  const uri = pictureUri(link);
+  if (!uri) return <TeamBadge name={name} size={size} />;
+  return (
+    <Image
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      source={{ uri }}
+      // The link stays the same all day and the file behind it never changes: keep it on the phone.
+      cachePolicy="memory-disk"
+      contentFit="cover"
+      transition={150}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: square ? Math.round(size * 0.24) : size / 2,
+        backgroundColor: theme.mode === 'light' ? theme.tint : theme.glassFill,
+      }}
+    />
   );
 }
 

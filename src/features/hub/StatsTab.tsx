@@ -11,7 +11,9 @@ import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
 import Sheet from '@/components/Sheet';
 import PressableScale from '@/components/PressableScale';
+import Icon from '@/components/Icon';
 import HubPage, { StickyBand } from '@/features/hub/HubPage';
+import PlayerLines, { type LineKind } from '@/features/hub/PlayerLines';
 import { useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
 import { radius, space, type Typography } from '@/theme/theme';
 
@@ -43,9 +45,25 @@ function BoardChips<K extends string>({ boards, value, onChange }: { boards: { k
 // as they are on the website's tables.
 const SHORT: Record<string, string> = { Batting: 'Bat', Bowling: 'Bowl', Fielding: 'Field' };
 
-/** "Bat 45  ·  Bowl 30  ·  Field 8  ·  Mat 4": a board's supporting figures, in column order. */
-function summary(parts: [string, string | number | null | undefined][], note?: string | null) {
-  return [...parts.map(([c, v]) => (v != null ? `${SHORT[c] ?? c} ${v}` : null)), note].filter(Boolean).join('  ·  ');
+/** "Avg 45.50  ·  SR 132.00  ·  HS 78": a board's supporting figures, in column order. */
+function summary(parts: [string, string | number | null | undefined][], note?: string | null, separator = '  ·  ') {
+  return [...parts.map(([c, v]) => (v != null ? `${SHORT[c] ?? c} ${v}` : null)), note].filter(Boolean).join(separator);
+}
+
+/** The MVP's points split the way the user asked for it: "Bat 45  |  Bowl 30  |  Field 8" (nothing else, so it fits a 360-wide phone). */
+function mvpSummary(detail: Record<string, string>) {
+  return summary([['Batting', detail.Batting], ['Bowling', detail.Bowling], ['Fielding', detail.Fielding]], null, '  |  ');
+}
+
+/** What a row unfolds into, and the word for it. */
+type Unfold = { tournamentId: number; kinds: LineKind[]; noun: string };
+
+/** Which of a player's lines each football board unfolds into; the others just open the profile. */
+function footballUnfold(boardKey: string): Omit<Unfold, 'tournamentId'> | null {
+  if (boardKey === 'goals') return { kinds: ['goals'], noun: 'goals' };
+  if (boardKey === 'assists') return { kinds: ['assists'], noun: 'assists' };
+  if (boardKey === 'goalContributions') return { kinds: ['goals', 'assists'], noun: 'goals and assists' };
+  return null;
 }
 
 /** One player on a board: name, team, and one faint line of supporting figures that is cut short
@@ -58,6 +76,7 @@ function LeaderRow({
   valueLabel,
   detail,
   playerId,
+  unfold,
 }: {
   rank: number;
   name: string;
@@ -66,39 +85,59 @@ function LeaderRow({
   valueLabel: string;
   detail?: string;
   playerId: number;
+  /** When set, a chevron beside the row shows the player's lines under it. */
+  unfold?: Unfold | null;
 }) {
   const { type } = useTypography();
   const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const top = rank === 1;
   return (
-    <PressableScale
-      onPress={() => router.push({ pathname: '/profile', params: { playerId: String(playerId) } })}
-      style={[styles.leader, { backgroundColor: theme.deck, borderColor: theme.mode === 'dark' ? 'transparent' : top ? theme.accentSoft : theme.borderOnDark }, theme.mode === 'dark' && styles.glassTile, theme.mode === 'light' && [styles.lightLeader, { borderColor: theme.cardDivider }]]}
-      accessibilityRole="button"
-      accessibilityHint="Opens their profile"
-      accessibilityLabel={`Rank ${rank}, ${name}, ${team}, ${value} ${valueLabel}${detail ? `, ${detail}` : ''}`}
-    >
-      <Text style={[styles.rank, { color: top ? theme.accent : theme.onDarkSoft }]}>{rank}</Text>
-      <View style={{ flex: 1, gap: 2 }}>
-        <Text style={[type.lead, { color: theme.onDark }]} numberOfLines={1}>
-          {name}
-        </Text>
-        <Text style={[type.caption, { color: theme.onDarkSoft }]} numberOfLines={1}>
-          {team}
-        </Text>
-        {detail ? (
-          <Text style={[type.caption, styles.meta, { color: theme.onDarkSoft }]} numberOfLines={1}>
-            {detail}
-          </Text>
+    <View style={[styles.leader, { backgroundColor: theme.deck, borderColor: theme.mode === 'dark' ? 'transparent' : top ? theme.accentSoft : theme.borderOnDark }, theme.mode === 'dark' && styles.glassTile, theme.mode === 'light' && [styles.lightLeader, { borderColor: theme.cardDivider }]]}>
+      <View style={styles.leaderLine}>
+        <PressableScale
+          onPress={() => router.push({ pathname: '/profile', params: { playerId: String(playerId) } })}
+          style={styles.leaderMain}
+          accessibilityRole="button"
+          accessibilityHint="Opens their profile"
+          accessibilityLabel={`Rank ${rank}, ${name}, ${team}, ${value} ${valueLabel}${detail ? `, ${detail}` : ''}`}
+        >
+          <Text style={[styles.rank, { color: top ? theme.accent : theme.onDarkSoft }]}>{rank}</Text>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={[type.lead, { color: theme.onDark }]} numberOfLines={1}>
+              {name}
+            </Text>
+            <Text style={[type.caption, { color: theme.onDarkSoft }]} numberOfLines={1}>
+              {team}
+            </Text>
+            {detail ? (
+              <Text style={[type.caption, styles.meta, { color: theme.onDarkSoft }]} numberOfLines={1}>
+                {detail}
+              </Text>
+            ) : null}
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={[styles.leaderValue, { color: top ? theme.accent : theme.onDark }]}>{value}</Text>
+            <Text style={[type.caption, { color: theme.onDarkSoft }]}>{valueLabel.toLowerCase()}</Text>
+          </View>
+        </PressableScale>
+        {unfold ? (
+          <PressableScale
+            onPress={() => setOpen((o) => !o)}
+            style={styles.chevron}
+            hitSlop={4}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: open }}
+            accessibilityLabel={`${open ? 'Hide' : 'Show'} ${name}'s ${unfold.noun}`}
+          >
+            <Icon name={open ? 'chevron-up' : 'chevron-down'} size={22} color={theme.onDarkSoft} />
+          </PressableScale>
         ) : null}
       </View>
-      <View style={{ alignItems: 'flex-end' }}>
-        <Text style={[styles.leaderValue, { color: top ? theme.accent : theme.onDark }]}>{value}</Text>
-        <Text style={[type.caption, { color: theme.onDarkSoft }]}>{valueLabel.toLowerCase()}</Text>
-      </View>
-    </PressableScale>
+      {open && unfold ? <PlayerLines tournamentId={unfold.tournamentId} playerId={playerId} kinds={unfold.kinds} /> : null}
+    </View>
   );
 }
 
@@ -127,6 +166,8 @@ export function FootballStatsPage({ stats, refreshing, onRefresh }: PageProps<Fo
   const board: StatBoard | undefined = stats.playerBoards.find((b) => b.key === boardKey) ?? stats.playerBoards[0];
 
   const rows = board?.rows.slice(0, 25) ?? [];
+  const lines = board ? footballUnfold(board.key) : null;
+  const unfold = lines ? { ...lines, tournamentId: stats.tournamentId } : null;
 
   return (
     <HubPage refreshing={refreshing} onRefresh={onRefresh} stickyIndex={0}>
@@ -152,6 +193,7 @@ export function FootballStatsPage({ stats, refreshing, onRefresh }: PageProps<Fo
               [...board!.detailColumns.map((c): [string, number] => [c, r.detail[c] ?? 0]), ['Apps', r.appearances]],
               board!.showPerMatch && r.perMatch != null ? `${r.perMatch.toFixed(2)} a match` : null,
             )}
+            unfold={unfold}
           />
         ))
       )}
@@ -177,6 +219,13 @@ export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<Cri
   const board = boards.find((b) => b.key === boardKey) ?? boards[0];
   const [pointsOpen, setPointsOpen] = useState({ open: false, key: 0 });
   const rows = board?.rows.slice(0, 25) ?? [];
+  // Batting boards unfold into the player's innings, bowling boards into their spells.
+  const unfold: Unfold | null =
+    category === 'batting'
+      ? { tournamentId: stats.tournamentId, kinds: ['batting'], noun: 'innings' }
+      : category === 'bowling'
+        ? { tournamentId: stats.tournamentId, kinds: ['bowling'], noun: 'spells' }
+        : null;
 
   return (
     <HubPage refreshing={refreshing} onRefresh={onRefresh} stickyIndex={0}>
@@ -212,7 +261,8 @@ export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<Cri
             team={r.teamName}
             value={r.value}
             valueLabel={board!.valueLabel}
-            detail={summary(board!.columns.map((c) => [c, r.detail[c]]), r.note)}
+            detail={category === 'mvp' ? mvpSummary(r.detail) : summary(board!.columns.map((c) => [c, r.detail[c]]), r.note)}
+            unfold={unfold}
           />
         ))
       )}
@@ -250,14 +300,15 @@ export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<Cri
 
 const makeStyles = ({ figures, fonts }: Typography) => StyleSheet.create({
   leader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.md,
     borderRadius: radius.lg,
     borderWidth: 1,
     paddingVertical: space.md,
     paddingHorizontal: space.lg,
   },
+  /** The row itself (opens the profile) and, when it unfolds, the chevron beside it. */
+  leaderLine: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  leaderMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.md },
+  chevron: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -space.sm },
   meta: { opacity: 0.8, fontVariant: figures },
   rank: { width: 24, fontFamily: fonts.display, fontSize: 22, textAlign: 'center', fontVariant: figures },
   leaderValue: { fontFamily: fonts.display, fontSize: 28, lineHeight: 32, fontVariant: figures },
