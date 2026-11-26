@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { BackHandler, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { api } from '@/api/client';
@@ -9,23 +9,25 @@ import { NetworkError } from '@/api/errors';
 import type { ClubListItem, LeagueListItem, TournamentListItem } from '@/api/types';
 import { useSessionState } from '@/auth/session';
 import { PhotoBadge } from '@/components/Badges';
+import BottomTabBar, { useBottomTabRoom } from '@/components/BottomTabBar';
 import Button from '@/components/Button';
-import { Card } from '@/components/Card';
 import EmptyState from '@/components/EmptyState';
 import ErrorBanner from '@/components/ErrorBanner';
 import Glass from '@/components/Glass';
-import Icon, { type IconName } from '@/components/Icon';
-import Wallpaper from '@/components/Wallpaper';
-import { UpdateBanner } from '@/features/update/UpdateParts';
-import { ClubRow, MakeTeamSheet } from '@/features/clubs/ClubParts';
-import { LeagueLogo, LeaguePickSheet } from '@/features/leagues/LeagueParts';
+import type { GlassTab } from '@/components/GlassTabBar';
+import Icon from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import SegmentedControl from '@/components/SegmentedControl';
 import Sheet from '@/components/Sheet';
 import Skeleton from '@/components/Skeleton';
 import StatusChip, { type ChipTone } from '@/components/StatusChip';
+import Wallpaper from '@/components/Wallpaper';
 import { SERVER_ACTION_LABEL, useServer } from '@/config/server';
+import { ClubRow, MakeTeamSheet } from '@/features/clubs/ClubParts';
+import FindContent from '@/features/find/FindContent';
+import { LeagueLogo, LeaguePickSheet } from '@/features/leagues/LeagueParts';
 import NotificationBell from '@/features/notifications/NotificationBell';
+import { UpdateBanner } from '@/features/update/UpdateParts';
 import { useAction } from '@/hooks/useAction';
 import { useKeyboardRoom } from '@/hooks/useKeyboardRoom';
 import { useQuery } from '@/hooks/useQuery';
@@ -36,9 +38,17 @@ import { useThemeMode } from '@/theme/appearance';
 import { SportThemeProvider, useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
 import { lip, radius, space, SPORTS, themeFor, type Sport, type Typography } from '@/theme/theme';
 
-// Home: the organiser's tournaments for one sport, and the place to start a new one. Beside them, the Teams tab (C-22,
-// 2026-11-20): the person's own lasting teams in that sport — ones they run or play for — with "Make a team" pinned at
-// the bottom. People only ever read "team"; the API calls them clubs.
+// Home, in three tabs at the bottom (2026-11-26, the user's pick "B5" on the design canvas, section "Home page: the
+// tournaments first"): Tournaments, Teams and Find. The tournaments used to start below the first screen behind the
+// count tiles, the new-tournament field, the league row and the join / find links; now the title is followed by two
+// buttons and the filter, then the list.
+// - Tournaments: New tournament (a sheet: the name and an optional league) and Join a team; the filter All · In play ·
+//   Upcoming · Past as underlined tabs with counts. All shows In play and Upcoming open, Past and the leagues the
+//   person runs folded until tapped.
+// - Teams (C-22, 2026-11-20): the person's own lasting teams in that sport — ones they run or play for. People only
+//   ever read "team"; the API calls them clubs.
+// - Find: what the /find screen shows (features/find/FindContent).
+// The sport switch sits in the top row with the bell and the profile, and applies to the first two tabs.
 //
 // The list loads every tournament once and filters by sport on the phone, which is what lets the
 // sport switch show a count for each side and flip instantly.
@@ -46,6 +56,13 @@ import { lip, radius, space, SPORTS, themeFor, type Sport, type Typography } fro
 // Remembered across launches, so someone running a cricket tournament isn't dropped back into
 // football every time they open the app. Same key as the website.
 const SPORT_KEY = 'tournamentScheduler.sport';
+
+type HomeTab = 'tournaments' | 'teams' | 'find';
+const HOME_TABS: GlassTab<HomeTab>[] = [
+  { key: 'tournaments', label: 'Tournaments', icon: 'trophy-outline' },
+  { key: 'teams', label: 'Teams', icon: 'account-group-outline' },
+  { key: 'find', label: 'Find', icon: 'magnify' },
+];
 
 function statusOf(t: TournamentListItem): { label: string; tone: ChipTone } {
   if (t.status === 'Completed') return { label: 'Completed', tone: 'done' };
@@ -55,28 +72,35 @@ function statusOf(t: TournamentListItem): { label: string; tone: ChipTone } {
   return { label: 'Setting up', tone: 'setup' };
 }
 
-// Live first, then what's coming, then the past — each under its own heading. Public tournaments I
-// only follow (6E) come last, under Following; one I also run or play in stays with mine.
-const SECTION_ORDER = { Live: 0, Upcoming: 1, Completed: 2, Cancelled: 2 } as const;
-const SECTION_TITLE = ['Live', 'Upcoming', 'Past', 'Following'];
-type HomeView = 'tournaments' | 'teams';
-type HomeRow = TournamentListItem | ClubListItem;
-const isClub = (row: HomeRow): row is ClubListItem => 'clubId' in row;
-
 const onlyFollowing = (t: TournamentListItem) => t.myRoles.length > 0 && t.myRoles.every((r) => r === 'follower');
-const sectionOf = (t: TournamentListItem) => (onlyFollowing(t) ? 3 : (SECTION_ORDER[t.status] ?? 1));
 
-// The counts on Home double as its filter (the user's 2026-11-20 ask): tap In play, Upcoming or Past
-// to see only those, tap it again — or Tournaments — for all of them. Followed ones are counted by
-// their own status too.
+// The filter (the count tiles before 2026-11-26): All, or only those in play, upcoming or past. Followed tournaments
+// go by their own status too, marked "following" on their line.
 type HomeFilter = 'all' | 'live' | 'upcoming' | 'past';
-const phaseOf = (t: TournamentListItem): Exclude<HomeFilter, 'all'> =>
+type Phase = Exclude<HomeFilter, 'all'>;
+const phaseOf = (t: TournamentListItem): Phase =>
   t.status === 'Live' ? 'live' : t.status === 'Completed' || t.status === 'Cancelled' ? 'past' : 'upcoming';
-const FILTER_EMPTY: Record<Exclude<HomeFilter, 'all'>, { title: string; message: string }> = {
+const PHASE_ORDER: Record<Phase, number> = { live: 0, upcoming: 1, past: 2 };
+const FILTERS: { key: HomeFilter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'live', label: 'In play' },
+  { key: 'upcoming', label: 'Upcoming' },
+  { key: 'past', label: 'Past' },
+];
+const FILTER_EMPTY: Record<Phase, { title: string; message: string }> = {
   live: { title: 'Nothing in play', message: 'None of these tournaments has started yet, or they have all finished.' },
   upcoming: { title: 'Nothing upcoming', message: 'Every one of these tournaments has started or finished.' },
   past: { title: 'Nothing finished yet', message: 'Tournaments land here once they are completed.' },
 };
+
+/** A line of Home's list: a heading, a tournament, the folded Past line, or a team. */
+type Row =
+  | { kind: 'head'; key: string; title: string; count: number }
+  | { kind: 'tournament'; key: string; t: TournamentListItem }
+  | { kind: 'fold'; key: string; title: string; detail: string; open: boolean; onToggle: () => void }
+  | { kind: 'club'; key: string; club: ClubListItem };
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 /** "12 Oct – 20 Oct 2026", or null for tournaments from before dates existed. */
 function dateRange(t: TournamentListItem): string | null {
@@ -129,11 +153,29 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { rootRef: keyboardRootRef, scrollRef: keyboardScrollRef, room: keyboardRoom, onScroll: onKeyboardScroll } = useKeyboardRoom<FlatList<HomeRow>>();
   const theme = useSportTheme();
   const { ready, baseUrl } = useServer();
-  const { session } = useSessionState();
   const light = theme.mode === 'light';
+  const barRoom = useBottomTabRoom();
+
+  // The tab at the bottom. Find is only built once it has been opened, then kept (its search stays put).
+  const [tab, setTab] = useState<HomeTab>('tournaments');
+  const [findOpened, setFindOpened] = useState(false);
+  const pickTab = (next: HomeTab) => {
+    if (next === 'find') setFindOpened(true);
+    setTab(next);
+  };
+  // Android's Back from Teams or Find returns to Tournaments before it leaves the app.
+  useFocusEffect(
+    useCallback(() => {
+      if (tab === 'tournaments') return undefined;
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        setTab('tournaments');
+        return true;
+      });
+      return () => sub.remove();
+    }, [tab]),
+  );
 
   const fetcher = useCallback(
     // baseUrl is a dependency on purpose: a new server address means a fresh list.
@@ -145,9 +187,9 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
 
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState('');
-  // Glass: the new-tournament form opens in a sheet from the floating + button.
+  // New tournament: a sheet with the name and its one optional question (leagues, 2026-11-24) — a season of a
+  // league the person runs, or a one-off.
   const [creating, setCreating] = useState(false);
-  // Its one optional question (leagues, 2026-11-24): a season of a league the person runs, or a one-off.
   const [league, setLeague] = useState<LeagueListItem | null>(null);
   const [pickingLeague, setPickingLeague] = useState({ open: false, key: 0 });
   const openLeaguePick = () => setPickingLeague((p) => ({ open: true, key: p.key + 1 }));
@@ -160,27 +202,18 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
   const leagueChoice = league?.sport === sport ? league : null;
 
   const all = list.data ?? [];
-  const mine = all.filter((t) => t.sport === sport).sort((a, b) => sectionOf(a) - sectionOf(b));
+  // In play, then upcoming, then past; within each, mine before the ones I only follow.
+  const mine = all
+    .filter((t) => t.sport === sport)
+    .sort((a, b) => PHASE_ORDER[phaseOf(a)] - PHASE_ORDER[phaseOf(b)] || Number(onlyFollowing(a)) - Number(onlyFollowing(b)));
   const [filter, setFilter] = useState<HomeFilter>('all');
   const shown = filter === 'all' ? mine : mine.filter((t) => phaseOf(t) === filter);
   const countOf = (f: HomeFilter) => (f === 'all' ? mine.length : mine.filter((t) => phaseOf(t) === f).length);
-  /** A tile pressed: its filter, or all of them again if it was already on. */
-  const pick = (f: HomeFilter) => {
-    haptic.select();
-    setFilter((current) => (current === f ? 'all' : f));
-  };
-  const tiles = (
-    <>
-      <Tile value={countOf('all')} label="Tournaments" selected={filter === 'all'} onPress={() => pick('all')} />
-      <Tile value={countOf('live')} label="In play" accent={light} divided selected={filter === 'live'} onPress={() => pick('live')} />
-      <Tile value={countOf('upcoming')} label="Upcoming" selected={filter === 'upcoming'} onPress={() => pick('upcoming')} />
-      <Tile value={countOf('past')} label="Past" divided selected={filter === 'past'} onPress={() => pick('past')} />
-    </>
-  );
-  const online = !!list.data && !(list.error instanceof NetworkError);
+  // Folded in All until tapped, so a long run of past seasons doesn't push the rest down.
+  const [pastOpen, setPastOpen] = useState(false);
+  const [leaguesOpen, setLeaguesOpen] = useState(false);
 
   // The Teams tab: the person's own lasting teams, every sport in one call (the sport switch filters, as for tournaments).
-  const [view, setView] = useState<HomeView>('tournaments');
   const [making, setMaking] = useState({ open: false, key: 0 });
   const clubsFetcher = useCallback(
     () => (baseUrl ? api.call<ClubListItem[]>('CLUB_LIST') : Promise.reject(new NetworkError('(no server set)'))),
@@ -188,17 +221,9 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
   );
   const clubs = useQuery(clubsFetcher, { enabled: ready });
   const myClubs = (clubs.data ?? []).filter((c) => c.sport === sport);
-  const teamsView = view === 'teams';
+  const teamsView = tab === 'teams';
   const openClub = (c: { clubId: number; name: string; sport: Sport }) =>
     router.push({ pathname: '/club/[clubId]', params: { clubId: String(c.clubId), sport: c.sport } });
-  const homeTabs = (
-    <HomeTabs
-      value={view}
-      onChange={setView}
-      tournaments={list.data ? mine.length : undefined}
-      teams={clubs.data ? myClubs.length : undefined}
-    />
-  );
 
   const create = async () => {
     const trimmed = name.trim();
@@ -242,6 +267,26 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
 
   const error = action.error ?? list.error;
 
+  // The list's lines. All: a heading over In play and over Upcoming, then Past folded (opened in place); a filter:
+  // just those tournaments.
+  const tRow = (t: TournamentListItem): Row => ({ kind: 'tournament', key: `t-${t.id}`, t });
+  const rows: Row[] = [];
+  if (teamsView) {
+    rows.push(...myClubs.map((club): Row => ({ kind: 'club', key: `club-${club.clubId}`, club })));
+  } else if (filter !== 'all') {
+    rows.push(...shown.map(tRow));
+  } else {
+    const live = mine.filter((t) => phaseOf(t) === 'live');
+    const upcoming = mine.filter((t) => phaseOf(t) === 'upcoming');
+    const past = mine.filter((t) => phaseOf(t) === 'past');
+    if (live.length) rows.push({ kind: 'head', key: 'h-live', title: 'In play', count: live.length }, ...live.map(tRow));
+    if (upcoming.length) rows.push({ kind: 'head', key: 'h-upcoming', title: 'Upcoming', count: upcoming.length }, ...upcoming.map(tRow));
+    if (past.length) {
+      rows.push({ kind: 'fold', key: 'f-past', title: 'Past', detail: plural(past.length, 'tournament'), open: pastOpen, onToggle: () => setPastOpen((o) => !o) });
+      if (pastOpen) rows.push(...past.map(tRow));
+    }
+  }
+
   const nameInput = (
     <TextInput
       value={name}
@@ -281,203 +326,74 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
     </PressableScale>
   );
 
-  // The leagues the person runs, as rows: a league with no season yet is reached here.
-  const leagueRows = !teamsView && myLeagues.length > 0 && (
+  // The leagues the person runs, folded at the end of All: a league with no season yet is reached here.
+  const leagueRows = !teamsView && filter === 'all' && myLeagues.length > 0 && (
     <View style={{ gap: light ? 0 : space.sm }}>
-      <Text style={[light ? type.eyebrow : type.bodyStrong, { color: light ? theme.muted : theme.onDarkSoft, marginLeft: light ? 0 : space.lg }]} accessibilityRole="header">
-        {light ? 'LEAGUES YOU RUN' : 'Leagues you run'}
-      </Text>
-      {myLeagues.map((l) => (
-        <PressableScale
-          key={l.leagueId}
-          onPress={() => router.push({ pathname: '/league/[leagueId]', params: { leagueId: String(l.leagueId), sport: l.sport } })}
-          accessibilityLabel={`${l.name}, ${l.line}`}
-          accessibilityHint="Opens the league"
-          style={light ? [styles.lightLink, { borderBottomColor: theme.cardDivider }] : [styles.joinRow, { backgroundColor: theme.cream }]}
-        >
-          <LeagueLogo name={l.shortName} link={l.logoUrl} size={36} />
-          <View style={{ flex: 1 }}>
-            <Text style={[type.bodyStrong, { color: light ? theme.ink : theme.onDark }]} numberOfLines={1}>
-              {l.name}
-            </Text>
-            <Text style={[type.caption, { color: light ? theme.muted : theme.onDarkSoft }]} numberOfLines={1}>
-              {l.line}
-            </Text>
-          </View>
-          <Icon name="chevron-right" size={20} color={light ? theme.muted : theme.onDarkSoft} />
-        </PressableScale>
-      ))}
-    </View>
-  );
-
-  // The light theme's home ("B · Sight-screen"): no panels — a quiet top row, the sports as
-  // underlined tabs, figures in a strip of hairlines, a line to write the new name on, and rows.
-  const lightHeader = (
-    <View style={{ gap: space.xl + 4, marginBottom: space.sm }}>
-      <View style={styles.lightTop}>
-        <PressableScale
-          onPress={() => router.push('/server')}
-          style={styles.lightOnline}
-          accessibilityLabel={`Server ${online ? 'connected' : 'not connected'}, ${baseUrl || 'not set'}. ${SERVER_ACTION_LABEL}`}
-        >
-          <View style={[styles.dot, { width: 7, height: 7, backgroundColor: online ? theme.success : theme.danger }]} />
-          <Text style={[type.body, { color: theme.muted }]}>{online ? 'Online' : 'Server'}</Text>
-        </PressableScale>
-        <NotificationBell style={styles.iconButton} />
-        <PressableScale
-          onPress={() => router.push('/profile')}
-          style={styles.iconButton}
-          accessibilityLabel={`Your profile, signed in as ${session?.user.name ?? 'you'}`}
-        >
-          <Icon name="account-circle-outline" size={24} color={theme.ink} />
-        </PressableScale>
-      </View>
-
-      <View style={{ gap: space.lg + 2 }}>
-        <Text style={[type.title, styles.lightTitle, { color: theme.ink }]} accessibilityRole="header">
-          {teamsView ? 'Your teams' : 'Your tournaments'}
-        </Text>
-        <SegmentedControl
-          variant="tabs"
-          accessibilityLabel="Sport"
-          segments={SPORTS.map((s) => ({
-            key: s.key,
-            label: s.label,
-            badge: teamsView
-              ? clubs.data ? clubs.data.filter((c) => c.sport === s.key).length : undefined
-              : list.data ? all.filter((t) => t.sport === s.key).length : undefined,
-          }))}
-          value={sport}
-          onChange={onSport}
-        />
-        {homeTabs}
-      </View>
-
-      <UpdateBanner />
-
-      {list.data && !teamsView && (
-        <View style={[styles.lightTiles, { borderColor: theme.cardDivider }]} accessibilityRole="tablist" accessibilityLabel="Show tournaments">
-          {tiles}
-        </View>
-      )}
-
-      <ErrorBanner
-        message={error?.message}
-        actionLabel={error instanceof NetworkError ? SERVER_ACTION_LABEL : 'Try again'}
-        onAction={error instanceof NetworkError ? () => router.push('/server') : list.refresh}
-      />
-
-      {!teamsView && <View style={{ gap: space.sm }}>
-        <Text style={[type.eyebrow, { color: theme.muted }]} nativeID="new-tournament-label">
-          New {theme.label.toLowerCase()} tournament
-        </Text>
-        <View style={[styles.lightField, { borderBottomColor: nameError ? theme.warnInk : theme.fieldBorder }]}>
-          {nameInput}
+      <Fold title="Leagues you run" detail={String(myLeagues.length)} open={leaguesOpen} onToggle={() => setLeaguesOpen((o) => !o)} />
+      {leaguesOpen &&
+        myLeagues.map((l) => (
           <PressableScale
-            onPress={create}
-            disabled={action.busy}
-            style={[styles.lightCreate, { backgroundColor: theme.accent }]}
-            accessibilityRole="button"
-            accessibilityLabel="Create tournament"
-            accessibilityState={{ busy: action.busy }}
+            key={l.leagueId}
+            onPress={() => router.push({ pathname: '/league/[leagueId]', params: { leagueId: String(l.leagueId), sport: l.sport } })}
+            accessibilityLabel={`${l.name}, ${l.line}`}
+            accessibilityHint="Opens the league"
+            style={light ? [styles.lightLink, { borderBottomColor: theme.cardDivider }] : [styles.glassRow, { backgroundColor: theme.cream }]}
           >
-            <Icon name="plus" size={26} color={theme.accentInk} />
+            <LeagueLogo name={l.shortName} link={l.logoUrl} size={36} />
+            <View style={{ flex: 1 }}>
+              <Text style={[type.bodyStrong, { color: light ? theme.ink : theme.onDark }]} numberOfLines={1}>
+                {l.name}
+              </Text>
+              <Text style={[type.caption, { color: light ? theme.muted : theme.onDarkSoft }]} numberOfLines={1}>
+                {l.line}
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={20} color={light ? theme.muted : theme.onDarkSoft} />
           </PressableScale>
-        </View>
-        {!!nameError && <Text style={[type.caption, { color: theme.warnInk }]}>{nameError}</Text>}
-        {leagueRow}
-      </View>}
-
-      <View>
-        <LinkRow icon="account-group-outline" title="Join a team" detail="with a code" onPress={() => router.push('/join')} label="Join a team with a code from its organiser or admin" />
-        {!teamsView && <LinkRow icon="star-outline" title="Find tournaments and people" detail="to follow" onPress={() => router.push('/find')} label="Find a tournament or a player to follow" />}
-        {!teamsView && mine.some((t) => t.myRoles.includes('creator')) && (
-          <Text style={[type.caption, { color: theme.muted, marginTop: space.sm }]}>Press and hold one you created to delete it.</Text>
-        )}
-      </View>
-      {leagueRows}
+        ))}
     </View>
   );
 
-  // The glass home ("N · Home"): round glass buttons along the top, the big title, the sports on a
-  // glass switch, the counts in one frosted panel spread evenly, then the tournaments. Joining a team
-  // follows the list; finding one and starting one float at the bottom, in the thumb zone.
-  const header = light ? (
-    lightHeader
-  ) : (
+  const header = (
     <View style={{ gap: space.lg, marginBottom: space.sm }}>
-      <View style={styles.glassTop}>
-        <PressableScale
-          onPress={() => router.push('/server')}
-          feel="glass"
-          glowRadius={22}
-          style={styles.glassChip}
-          accessibilityLabel={`Server ${online ? 'connected' : 'not connected'}, ${baseUrl || 'not set'}. ${SERVER_ACTION_LABEL}`}
-        >
-          <Glass pointerEvents="none" radius={22} interactive style={StyleSheet.absoluteFill} />
-          <View style={[styles.dot, { backgroundColor: online ? theme.successInk : theme.danger }]} />
-          <Text style={[styles.serverText, { color: theme.onDark }]}>{online ? 'Online' : 'Server'}</Text>
-        </PressableScale>
-        <View style={{ flex: 1 }} />
-        <NotificationBell />
-        <PressableScale
-          onPress={() => router.push('/profile')}
-          feel="glass"
-          glowRadius={22}
-          style={styles.glassCircle}
-          accessibilityLabel={`Your profile, signed in as ${session?.user.name ?? 'you'}`}
-        >
-          <Glass pointerEvents="none" radius={22} interactive style={StyleSheet.absoluteFill} />
-          <Icon name="account-circle-outline" size={22} color={theme.onDark} />
-        </PressableScale>
-      </View>
-
-      <Text style={[type.title, styles.glassTitle, { color: theme.onDark }]} accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit>
+      <TopRow
+        sport={sport}
+        onSport={onSport}
+        counts={
+          teamsView
+            ? clubs.data && SPORTS.map((s) => clubs.data!.filter((c) => c.sport === s.key).length)
+            : list.data && SPORTS.map((s) => all.filter((t) => t.sport === s.key).length)
+        }
+      />
+      <Text style={[type.title, light ? styles.lightTitle : styles.glassTitle, { color: theme.ink }]} accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit>
         {teamsView ? 'Your teams' : 'Your tournaments'}
       </Text>
-
       <UpdateBanner />
-
-      <SegmentedControl
-        accessibilityLabel="Sport"
-        segments={SPORTS.map((s) => ({
-          key: s.key,
-          label: s.label,
-          badge: teamsView
-              ? clubs.data ? clubs.data.filter((c) => c.sport === s.key).length : undefined
-              : list.data ? all.filter((t) => t.sport === s.key).length : undefined,
-        }))}
-        value={sport}
-        onChange={onSport}
-      />
-      {homeTabs}
-
-      {list.data && !teamsView && (
-        <Card style={styles.counts}>
-          <View style={styles.countsRow} accessibilityRole="tablist" accessibilityLabel="Show tournaments">
-            {tiles}
-          </View>
-        </Card>
+      <View style={styles.actions}>
+        {teamsView ? (
+          <Button label="Make a team" icon="account-multiple-plus" onPress={() => setMaking((m) => ({ open: true, key: m.key + 1 }))} style={styles.action} />
+        ) : (
+          <Button label="New tournament" icon="plus" onPress={() => setCreating(true)} style={styles.action} accessibilityLabel={`New ${theme.label.toLowerCase()} tournament`} />
+        )}
+        <Button
+          label="Join a team"
+          icon="account-group-outline"
+          variant="secondary"
+          onPress={() => router.push('/join')}
+          style={styles.action}
+          accessibilityLabel={teamsView ? "Join a team with a code from its admin" : 'Join a team with a code from its organiser or admin'}
+        />
+      </View>
+      {!teamsView && list.data && (
+        <FilterTabs
+          value={filter}
+          onChange={(f) => {
+            haptic.select();
+            setFilter(f);
+          }}
+          items={FILTERS.map((f) => ({ ...f, count: countOf(f.key) }))}
+        />
       )}
-
-      {/* Playing rather than organising: the team's code links you to your place in it. Up here, as in the
-          light theme, so a player with a long list doesn't scroll for it (2026-11-20). */}
-      <PressableScale
-        onPress={() => router.push('/join')}
-        style={[styles.joinRow, { backgroundColor: theme.cream }]}
-        accessibilityRole="button"
-        accessibilityLabel="Join a team with a code from its organiser or admin"
-      >
-        <Icon name="account-group-outline" size={22} color={theme.accent} />
-        <View style={{ flex: 1 }}>
-          <Text style={[type.lead, { color: theme.onDark }]}>Join a team</Text>
-          <Text style={[type.caption, { color: theme.onDarkSoft }]}>{teamsView ? "Got a code from a team's admin?" : 'Got a code from an organiser?'}</Text>
-        </View>
-        <Icon name="chevron-right" size={20} color={theme.onDarkSoft} />
-      </PressableScale>
-
-      {leagueRows}
-
       <ErrorBanner
         message={error?.message}
         actionLabel={error instanceof NetworkError ? SERVER_ACTION_LABEL : 'Try again'}
@@ -486,35 +402,32 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
     </View>
   );
 
-  const glassFooter = light || teamsView ? null : (
-    <View style={{ gap: space.sm, marginTop: space.md }}>
-      {mine.some((t) => t.myRoles.includes('creator')) && (
-        <Text style={[type.caption, { color: theme.onDarkSoft, paddingHorizontal: space.xs }]}>Press and hold one you created to delete it.</Text>
+  const footer = teamsView ? null : (
+    <View style={{ gap: space.sm, marginTop: light ? 0 : space.xs }}>
+      {leagueRows}
+      {shown.some((t) => t.myRoles.includes('creator')) && (
+        <Text style={[type.caption, { color: theme.muted, marginTop: space.sm, paddingHorizontal: light ? 0 : space.xs }]}>
+          Press and hold one you created to delete it.
+        </Text>
       )}
     </View>
   );
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {/* iOS: the KeyboardAvoidingView. Android: this (see useKeyboardRoom). */}
-      <View ref={keyboardRootRef} style={{ flex: 1, paddingBottom: keyboardRoom }}>
-        <Wallpaper />
+    <View style={{ flex: 1 }}>
+      <Wallpaper />
+      <View style={[styles.pane, tab === 'find' && styles.hidden]}>
         <FlatList
-          ref={keyboardScrollRef}
-          onScroll={onKeyboardScroll}
-          scrollEventThrottle={16}
-          data={teamsView ? myClubs : shown}
-          keyExtractor={(row) => (isClub(row) ? `club-${row.clubId}` : String(row.id))}
+          data={rows}
+          keyExtractor={(row) => row.key}
           ListHeaderComponent={header}
-          ListFooterComponent={glassFooter}
+          ListFooterComponent={footer}
           contentContainerStyle={{
             paddingTop: insets.top + (light ? space.md : space.sm),
-            // The list ends clear of the floating bar (glass), and of "Make a team" pinned on the Teams tab.
-            paddingBottom: insets.bottom + (light && !teamsView ? space.xxl : 110),
+            paddingBottom: barRoom,
             paddingHorizontal: light ? space.xl : space.lg,
             gap: light ? 0 : space.sm,
           }}
-          keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl
               refreshing={teamsView ? clubs.refreshing : list.refreshing}
@@ -537,7 +450,7 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
                 <ErrorBanner message={clubs.error?.message} actionLabel="Try again" onAction={clubs.refresh} />
               )
             ) : list.loading ? (
-              <Skeleton rows={3} height={112} />
+              <Skeleton rows={3} height={light ? 72 : 112} />
             ) : list.data && filter !== 'all' && mine.length > 0 ? (
               <EmptyState
                 icon="filter-variant"
@@ -550,76 +463,39 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
               <EmptyState
                 icon={sport === 'Cricket' ? 'cricket' : 'soccer'}
                 title={`No ${theme.label.toLowerCase()} tournaments`}
-                message="Name one above to start, join a team with its code — or ask an organiser to add you using the email you signed in with."
+                message="Start one with New tournament, join a team with its code — or ask an organiser to add you using the email you signed in with."
               />
             ) : null
           }
-          renderItem={({ item, index }) =>
-            isClub(item) ? (
-              <ClubRow club={item} onPress={() => openClub(item)} />
-            ) : (
-            <>
-              {(index === 0 || sectionOf(shown[index - 1]) !== sectionOf(item)) &&
-                (light ? (
-                  <Text
-                    style={[type.eyebrow, { color: theme.muted, marginTop: index === 0 ? space.md : space.xl, marginBottom: space.xs }]}
-                    accessibilityRole="header"
-                  >
-                    {SECTION_TITLE[sectionOf(item)]}
-                  </Text>
-                ) : (
-                  <Text
-                    style={[type.bodyStrong, { color: theme.onDarkSoft, marginTop: index === 0 ? space.xs : space.md, marginLeft: space.lg }]}
-                    accessibilityRole="header"
-                  >
-                    {SECTION_TITLE[sectionOf(item)]}
-                  </Text>
-                ))}
-              <TournamentCard item={item} onOpen={() => open(item)} onDelete={item.myRoles.includes('creator') ? () => remove(item) : undefined} />
-            </>
-            )
-          }
+          renderItem={({ item, index }) => {
+            switch (item.kind) {
+              case 'club':
+                return <ClubRow club={item.club} onPress={() => openClub(item.club)} />;
+              case 'head':
+                return (
+                  <View style={[styles.head, light ? { marginTop: index === 0 ? space.xs : space.xl } : { marginTop: index === 0 ? 0 : space.sm, marginHorizontal: space.xs }]}>
+                    <Text style={[light ? type.eyebrow : type.bodyStrong, { color: theme.muted, flex: 1 }]} accessibilityRole="header">
+                      {item.title}
+                    </Text>
+                    <Text style={[light ? type.eyebrow : type.bodyStrong, { color: theme.muted }]}>{item.count}</Text>
+                  </View>
+                );
+              case 'fold':
+                return <Fold title={item.title} detail={item.detail} open={item.open} onToggle={item.onToggle} spaced={index > 0} />;
+              default:
+                return <TournamentCard item={item.t} onOpen={() => open(item.t)} onDelete={item.t.myRoles.includes('creator') ? () => remove(item.t) : undefined} />;
+            }
+          }}
         />
-
-        {teamsView && (
-          <View style={[styles.dock, { bottom: insets.bottom + space.md }]} pointerEvents="box-none">
-            <Button
-              label="Make a team"
-              icon="account-multiple-plus"
-              size="lg"
-              onPress={() => setMaking((m) => ({ open: true, key: m.key + 1 }))}
-              style={{ flex: 1 }}
-            />
-          </View>
-        )}
-        {!light && !teamsView && (
-          <View style={[styles.dock, { bottom: insets.bottom + space.md }]} pointerEvents="box-none">
-            <PressableScale
-              onPress={() => router.push('/find')}
-              feel="glass"
-              glowRadius={27}
-              style={styles.findCapsule}
-              accessibilityRole="button"
-              accessibilityLabel="Find a tournament or a player to follow"
-            >
-              <Glass floating pointerEvents="none" radius={27} interactive style={StyleSheet.absoluteFill} />
-              <Icon name="magnify" size={22} color={theme.onDarkSoft} />
-              <Text style={[type.body, { color: theme.onDarkSoft, flex: 1 }]}>Find tournaments and people</Text>
-            </PressableScale>
-            <PressableScale
-              onPress={() => setCreating(true)}
-              feel="glass"
-              glowRadius={27}
-              style={styles.newButton}
-              accessibilityRole="button"
-              accessibilityLabel={`New ${theme.label.toLowerCase()} tournament`}
-            >
-              <Glass tinted pointerEvents="none" radius={27} interactive style={StyleSheet.absoluteFill} />
-              <Icon name="plus" size={28} color={theme.accentInk} />
-            </PressableScale>
-          </View>
-        )}
       </View>
+
+      {findOpened && (
+        <View style={[styles.pane, tab !== 'find' && styles.hidden]}>
+          <FindPane bottom={barRoom} />
+        </View>
+      )}
+
+      <BottomTabBar tabs={HOME_TABS} value={tab} onChange={pickTab} accessibilityLabel="Home" />
 
       <MakeTeamSheet
         key={making.key}
@@ -633,29 +509,26 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
         }}
       />
 
-      {!light && (
-        <Sheet
-          visible={creating}
-          onClose={() => setCreating(false)}
-          title={`New ${theme.label.toLowerCase()} tournament`}
-          subtitle="Name it now. Teams, the schedule and its dates come next."
-          footer={
-            <>
-              <Button label="Cancel" variant="deck" onPress={() => setCreating(false)} style={{ flex: 1 }} />
-              <Button label="Create tournament" onPress={create} busy={action.busy} style={{ flex: 2 }} />
-            </>
-          }
-        >
-          <Text style={[type.label, { color: theme.onDarkSoft }]} nativeID="new-tournament-label">
-            Name
-          </Text>
-          {nameInput}
-          {!!nameError && <Text style={[type.caption, { color: theme.warnInk }]}>{nameError}</Text>}
-          <Text style={[type.label, { color: theme.onDarkSoft }]}>League (optional)</Text>
-          {leagueRow}
-          <ErrorBanner message={action.error?.message} />
-        </Sheet>
-      )}
+      <Sheet
+        visible={creating}
+        onClose={() => setCreating(false)}
+        title={`New ${theme.label.toLowerCase()} tournament`}
+        subtitle="Name it now. Teams, the schedule and its dates come next."
+        footer={
+          <>
+            <Button label="Cancel" variant="deck" onPress={() => setCreating(false)} style={{ flex: 1 }} />
+            <Button label="Create tournament" onPress={create} busy={action.busy} style={{ flex: 2 }} />
+          </>
+        }
+      >
+        <Text style={[type.label, { color: theme.muted }]} nativeID="new-tournament-label">
+          Name
+        </Text>
+        {light ? <View style={[styles.lightField, { borderBottomColor: nameError ? theme.warnInk : theme.fieldBorder }]}>{nameInput}</View> : nameInput}
+        {!!nameError && <Text style={[type.caption, { color: theme.warnInk }]}>{nameError}</Text>}
+        {leagueRow}
+        <ErrorBanner message={action.error?.message} />
+      </Sheet>
 
       <LeaguePickSheet
         key={`league-${pickingLeague.key}`}
@@ -665,42 +538,104 @@ function HomeContent({ sport, onSport }: { sport: Sport; onSport: (s: Sport) => 
         value={leagueChoice}
         onPick={setLeague}
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
-/** Tournaments · Teams (C-22): words with the chosen one underlined in the accent, in both themes, under the sport switch. */
-function HomeTabs({ value, onChange, tournaments, teams }: { value: HomeView; onChange: (v: HomeView) => void; tournaments?: number; teams?: number }) {
+/**
+ * The top row of every tab: the sport switch (left; not on Find, which searches both), then the bell and the profile.
+ * `counts` are Football's and Cricket's, in SPORTS order, once loaded.
+ */
+function TopRow({ sport, onSport, counts }: { sport?: Sport; onSport?: (s: Sport) => void; counts?: number[] | null }) {
+  const styles = useThemedStyles(makeStyles);
+  const theme = useSportTheme();
+  const router = useRouter();
+  const { session } = useSessionState();
+  const light = theme.mode === 'light';
+  return (
+    <View style={styles.top}>
+      {sport && onSport ? (
+        <SegmentedControl
+          accessibilityLabel="Sport"
+          segments={SPORTS.map((s, i) => ({ key: s.key, label: s.label, badge: counts ? counts[i] : undefined }))}
+          value={sport}
+          onChange={onSport}
+          style={styles.sports}
+        />
+      ) : null}
+      <View style={{ flex: 1 }} />
+      <NotificationBell style={light ? styles.iconButton : undefined} />
+      <PressableScale
+        onPress={() => router.push('/profile')}
+        feel={light ? 'press' : 'glass'}
+        glowRadius={22}
+        style={light ? styles.iconButton : styles.glassCircle}
+        accessibilityLabel={`Your profile, signed in as ${session?.user.name ?? 'you'}`}
+      >
+        {!light && <Glass pointerEvents="none" radius={22} interactive style={StyleSheet.absoluteFill} />}
+        <Icon name="account-circle-outline" size={light ? 24 : 22} color={theme.ink} />
+      </PressableScale>
+    </View>
+  );
+}
+
+/** The Find tab: the top row, its title and the Find screen's content, scrolling clear of the bar and the keyboard. */
+function FindPane({ bottom }: { bottom: number }) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
+  const theme = useSportTheme();
+  const insets = useSafeAreaInsets();
+  const light = theme.mode === 'light';
+  const { rootRef, scrollRef, room, onScroll } = useKeyboardRoom<ScrollView>();
+  return (
+    <View ref={rootRef} style={{ flex: 1, paddingBottom: room }}>
+      <ScrollView
+        ref={scrollRef}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingTop: insets.top + (light ? space.md : space.sm),
+          paddingBottom: room ? space.lg : bottom,
+          paddingHorizontal: light ? space.xl : space.lg,
+          gap: space.lg,
+        }}
+      >
+        <TopRow />
+        <Text style={[type.title, light ? styles.lightTitle : styles.glassTitle, { color: theme.ink }]} accessibilityRole="header">
+          Find
+        </Text>
+        <FindContent />
+      </ScrollView>
+    </View>
+  );
+}
+
+/** All · In play · Upcoming · Past: words with their counts, spread across the width, the chosen one underlined. */
+function FilterTabs({ value, onChange, items }: { value: HomeFilter; onChange: (f: HomeFilter) => void; items: { key: HomeFilter; label: string; count: number }[] }) {
   const { type } = useTypography();
   const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
   const light = theme.mode === 'light';
-  const tabs: { key: HomeView; label: string; count?: number }[] = [
-    { key: 'tournaments', label: 'Tournaments', count: tournaments },
-    { key: 'teams', label: 'Teams', count: teams },
-  ];
   return (
-    <View style={[styles.homeTabs, { borderBottomColor: light ? theme.cardDivider : theme.borderOnDark }]} accessibilityRole="tablist">
-      {tabs.map((t) => {
-        const on = t.key === value;
+    <View style={[styles.filters, { borderBottomColor: light ? theme.cardDivider : theme.borderOnDark }]} accessibilityRole="tablist" accessibilityLabel="Show">
+      {items.map((f) => {
+        const on = f.key === value;
         return (
           <PressableScale
-            key={t.key}
-            onPress={() => {
-              if (on) return;
-              haptic.select();
-              onChange(t.key);
-            }}
+            key={f.key}
+            onPress={() => !on && onChange(f.key)}
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
-            accessibilityLabel={t.count != null ? `${t.label}, ${t.count}` : t.label}
-            style={styles.homeTab}
+            accessibilityLabel={`${f.label}, ${f.count}`}
+            style={[styles.filter, { borderBottomColor: on ? theme.accent : 'transparent' }]}
+            hitSlop={{ top: 4, bottom: 4 }}
           >
-            <Text style={[type.bodyStrong, { color: on ? (light ? theme.ink : theme.onDark) : light ? theme.muted : theme.onDarkSoft }]}>
-              {t.label}
-              {t.count != null ? ` · ${t.count}` : ''}
+            <Text style={[on ? type.bodyStrong : type.body, { color: on ? theme.ink : theme.muted }]} numberOfLines={1}>
+              {f.label}
+              <Text style={{ color: on ? theme.deep : theme.muted }}> {f.count}</Text>
             </Text>
-            <View style={[styles.homeTabMark, { backgroundColor: on ? theme.accent : 'transparent' }]} />
           </PressableScale>
         );
       })}
@@ -708,73 +643,33 @@ function HomeTabs({ value, onChange, tournaments, teams }: { value: HomeView; on
   );
 }
 
-/** A row on the light home: icon, what it is, a muted word of context, a chevron. */
-function LinkRow({ icon, title, detail, onPress, label }: { icon: IconName; title: string; detail: string; onPress: () => void; label: string }) {
+/** A folded group (Past, Leagues you run): its name, how many, a chevron; tapped, it opens in place. */
+function Fold({ title, detail, open, onToggle, spaced }: { title: string; detail: string; open: boolean; onToggle: () => void; spaced?: boolean }) {
   const { type } = useTypography();
   const styles = useThemedStyles(makeStyles);
   const theme = useSportTheme();
+  const light = theme.mode === 'light';
   return (
     <PressableScale
-      onPress={onPress}
-      style={[styles.lightLink, { borderBottomColor: theme.cardDivider }]}
+      onPress={() => {
+        haptic.select();
+        onToggle();
+      }}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityState={{ expanded: open }}
+      accessibilityLabel={`${title}, ${detail}`}
+      accessibilityHint={open ? 'Folds them away' : 'Shows them'}
+      style={
+        light
+          ? [styles.lightLink, { borderBottomColor: theme.cardDivider }, spaced && { marginTop: space.sm }]
+          : [styles.glassRow, { backgroundColor: theme.cream }, spaced && { marginTop: space.xs }]
+      }
     >
-      <Icon name={icon} size={22} color={theme.deep} />
-      <Text style={[type.body, { flex: 1, fontSize: 16, color: theme.ink }]}>
-        {title} <Text style={{ color: theme.muted }}>{detail}</Text>
+      <Text style={[light ? type.body : type.bodyStrong, { flex: 1, color: theme.ink }]}>
+        {title}
+        <Text style={[type.body, { color: theme.muted }]}> · {detail}</Text>
       </Text>
-      <Icon name="chevron-right" size={20} color={theme.muted} />
-    </PressableScale>
-  );
-}
-
-/** A count that is also a filter: pressing it shows only those tournaments (see HomeFilter). */
-function Tile({
-  value,
-  label,
-  accent,
-  divided,
-  selected,
-  onPress,
-}: {
-  value: number;
-  label: string;
-  accent?: boolean;
-  divided?: boolean;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const { type } = useTypography();
-  const styles = useThemedStyles(makeStyles);
-  const theme = useSportTheme();
-  const a11y = {
-    accessibilityRole: 'tab' as const,
-    accessibilityState: { selected },
-    accessibilityLabel: `${value} ${label}`,
-    accessibilityHint: selected && label !== 'Tournaments' ? 'Shows all tournaments again' : `Shows ${label === 'Tournaments' ? 'all tournaments' : `only ${label.toLowerCase()}`}`,
-  };
-  if (theme.mode === 'light') {
-    // Light: the chosen one in the accent ink, underlined like the sports tabs above it.
-    return (
-      <PressableScale
-        onPress={onPress}
-        style={[styles.lightTile, divided && { borderLeftWidth: 1, borderColor: theme.cardDivider }]}
-        {...a11y}
-      >
-        <Text style={[type.figure, { color: selected || accent ? theme.deep : theme.ink, fontSize: 34, lineHeight: 40 }]}>{value}</Text>
-        <Text style={[type.caption, { color: selected ? theme.deep : theme.muted }]}>{label}</Text>
-        <View style={[styles.lightTileMark, { backgroundColor: selected ? theme.accent : 'transparent' }]} />
-      </PressableScale>
-    );
-  }
-  // Glass: one of four equal columns in the counts panel; the chosen one sits on a soft tint.
-  return (
-    <PressableScale onPress={onPress} style={[styles.tile, selected && { backgroundColor: theme.tint }]} {...a11y}>
-      <Text style={[type.figure, { color: theme.onDark, fontSize: 26, lineHeight: 32 }]}>{value}</Text>
-      <Text style={[type.caption, { color: selected ? theme.onDark : theme.onDarkSoft }]} numberOfLines={1}>
-        {label}
-      </Text>
+      <Icon name={open ? 'chevron-up' : 'chevron-down'} size={20} color={theme.muted} />
     </PressableScale>
   );
 }
@@ -859,26 +754,25 @@ function TournamentCard({ item, onOpen, onDelete }: { item: TournamentListItem; 
 }
 
 const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
-  // The new-tournament form's league line.
+  // A tab's page; the hidden ones stay built (scroll position, Find's search) but take no room.
+  pane: { flex: 1 },
+  hidden: { display: 'none' },
+  top: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingTop: space.xs },
+  // Wide enough for "Football 12" and "Cricket 8"; only a narrow phone shrinks it (the spacer after it takes the rest).
+  sports: { width: 236, flexShrink: 1 },
+  iconButton: { width: 44, height: 44, borderRadius: 22, borderWidth: 0, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  glassCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginLeft: space.xs },
+  lightTitle: { fontSize: 36, lineHeight: 42, letterSpacing: -0.6 },
+  glassTitle: { fontSize: 34, lineHeight: 41, marginLeft: space.xs },
+  // New tournament / Make a team beside Join a team: each as wide as its words, sharing what's left.
+  actions: { flexDirection: 'row', gap: space.sm + 2 },
+  action: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto', paddingHorizontal: space.md },
+  filters: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1 },
+  filter: { minHeight: 44, justifyContent: 'center', borderBottomWidth: 2, marginBottom: -1 },
+  head: { flexDirection: 'row', alignItems: 'center', marginBottom: space.xs },
+  // The new-tournament sheet's league line.
   leagueRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 52, paddingVertical: space.xs, borderBottomWidth: 1 },
-  // Tournaments · Teams.
-  homeTabs: { flexDirection: 'row', gap: space.xl, borderBottomWidth: 1 },
-  homeTab: { minHeight: 44, justifyContent: 'flex-end', gap: 8 },
-  homeTabMark: { height: 2, borderRadius: 1 },
-  // The glass home.
-  glassTop: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingTop: space.xs },
-  glassChip: { flexDirection: 'row', alignItems: 'center', gap: 7, height: 44, borderRadius: 22, paddingHorizontal: space.md },
-  glassCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  glassTitle: { fontSize: 34, lineHeight: 41, marginTop: space.xs, marginLeft: space.xs },
-  counts: { paddingVertical: space.xs, paddingHorizontal: space.xs },
-  countsRow: { flexDirection: 'row', gap: 2 },
-  joinRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 64, borderRadius: radius.glass, borderCurve: 'continuous', paddingHorizontal: space.lg, paddingVertical: space.sm },
-  dock: { position: 'absolute', left: space.lg, right: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.sm + 2 },
-  findCapsule: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm, height: 54, borderRadius: 27, paddingHorizontal: 18 },
-  newButton: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center' },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  serverText: { fontFamily: fonts.bodySemiBold, fontSize: 14 },
-  tile: { flex: 1, alignItems: 'center', gap: 2, minHeight: 64, justifyContent: 'center', borderRadius: 16, borderCurve: 'continuous', paddingHorizontal: 2 },
+  glassRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56, borderRadius: radius.glass, borderCurve: 'continuous', paddingHorizontal: space.lg, paddingVertical: space.sm },
   input: {
     minHeight: 52,
     borderWidth: 1,
@@ -895,17 +789,8 @@ const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
     gap: space.md,
   },
   // The light home.
-  lightTop: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
-  lightOnline: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 44, alignSelf: 'flex-start' },
-  iconButton: { width: 44, height: 44, borderRadius: 22, borderWidth: 0, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
-  lightTitle: { fontSize: 36, lineHeight: 42, letterSpacing: -0.6 },
-  lightTiles: { flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1 },
-  lightTile: { flex: 1, alignItems: 'center', paddingTop: 14, minHeight: 64 },
-  /** The underline under the chosen count. */
-  lightTileMark: { alignSelf: 'stretch', height: 2, marginTop: 10, marginHorizontal: space.md, borderRadius: 1 },
   lightField: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderBottomWidth: 1, paddingBottom: space.sm },
   lightInput: { flex: 1, minWidth: 0, minHeight: 44, fontFamily: fonts.body, fontSize: 18, paddingHorizontal: 0 },
-  lightCreate: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   lightLink: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 56, borderBottomWidth: 1 },
   lightRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, borderBottomWidth: 1 },
   lightMarker: { width: 10, height: 10, borderRadius: 5 },

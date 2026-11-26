@@ -10,6 +10,7 @@ import GlassMenu from '@/components/GlassMenu';
 import type { IconName } from '@/components/Icon';
 import Sheet from '@/components/Sheet';
 import Stepper from '@/components/Stepper';
+import SwitchRow from '@/components/SwitchRow';
 import DismissalGrid, { orderDismissals } from '@/features/cricket/DismissalGrid';
 import { FROM_LABEL, runSources, type Extra, type RunsFrom } from '@/features/cricket/RunPad';
 import { dismissalCanTakeNonStriker, dismissalTakesFielder } from '@/lib/cricketLabels';
@@ -33,7 +34,7 @@ function dismissalsFor(state: CricketMatchState, extra: Extra) {
   return a.possibleDismissals;
 }
 
-/** "The runs came: Off the bat · Byes · Leg byes", only those the rules allow. Nothing to ask on a wide. */
+/** "The runs came from: Bat · Byes · Leg byes", only those the rules allow. Nothing to ask on a wide. */
 function RunsFromChoice({ rules, extra, value, onChange }: { rules: CricketRules; extra: Extra; value: RunsFrom; onChange: (f: RunsFrom) => void }) {
   const { type } = useTypography();
   const theme = useSportTheme();
@@ -41,7 +42,7 @@ function RunsFromChoice({ rules, extra, value, onChange }: { rules: CricketRules
   if (extra === 'wide' || sources.length < 2) return null;
   return (
     <>
-      <Text style={[type.label, { color: theme.onDarkSoft }]}>The runs came</Text>
+      <Text style={[type.label, { color: theme.onDarkSoft }]}>The runs came from</Text>
       <SegmentedControl
         segments={sources.map((f) => ({ key: f, label: FROM_LABEL[f] }))}
         value={value}
@@ -159,11 +160,12 @@ export function WicketSheet({
   const [from, setFrom] = useState<RunsFrom>(extra === 'wide' ? 'bat' : padFrom);
   // A batter retires while the ball is dead (Law 25.4), so by default nothing is bowled. Some
   // scorers write it onto the ball it happened on; that's their choice.
-  const [retireWhen, setRetireWhen] = useState<'between' | 'ball'>('between');
+  // One switch, "Counts as a ball", off by default (the user's choice, 2026-11-26; it was a two-way question).
+  const [countsBall, setCountsBall] = useState(false);
   const retiring = isRetirement(how);
   // Timed out is always between balls (the server decides; the batter never faced).
   const timedOut = how === 'TimedOut';
-  const betweenBalls = timedOut || (retiring && retireWhen === 'between');
+  const betweenBalls = timedOut || (retiring && !countsBall);
   const costsAWicket = how !== 'RetiredHurt';
   // The wide's or no-ball's own run(s) go on the score too.
   const penalty = extra === 'wide' ? state.rules.widePenaltyRuns : extra === 'noBall' ? state.rules.noBallPenaltyRuns : 0;
@@ -247,25 +249,19 @@ export function WicketSheet({
       ) : null}
 
       {retiring && (
-        <>
-          <Text style={[type.label, { color: theme.onDarkSoft }]}>Does it count as a ball?</Text>
-          <SegmentedControl
-            segments={[
-              { key: 'between', label: 'No, between balls' },
-              { key: 'ball', label: 'Yes, on this ball' },
-            ]}
-            value={retireWhen}
-            onChange={setRetireWhen}
-            accessibilityLabel="Does the retirement count as a ball"
-          />
-          <Text style={[type.caption, { color: theme.onDarkSoft }]}>
-            {retireWhen === 'between'
-              ? 'Nothing is bowled: no ball for the bowler or the batter, and the over carries on.'
+        <SwitchRow
+          onDark
+          label="Counts as a ball"
+          hint={
+            !countsBall
+              ? 'Off: nothing is bowled, no ball for the bowler or the batter, and the over carries on.'
               : extraLabel
-                ? `Recorded on this ${extraLabel.toLowerCase()}, with the runs you chose for it.`
-                : 'Recorded on this ball: it counts for the bowler and the batter, with any runs off it.'}
-          </Text>
-        </>
+                ? `On: recorded on this ${extraLabel.toLowerCase()}, with the runs you chose for it.`
+                : 'On: recorded on this ball, for the bowler and the batter, with any runs off it.'
+          }
+          value={countsBall}
+          onChange={setCountsBall}
+        />
       )}
 
       {timedOut && (

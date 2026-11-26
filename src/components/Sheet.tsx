@@ -109,6 +109,10 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
   // keyboard's height ourselves. The larger of the two readings covers both ways Android reports
   // the window (with or without the navigation bar).
   const [lift, setLift] = useState(0);
+  // Closed with the keyboard up (a tap above the sheet), Android hides the keyboard after the sheet has
+  // gone and its listener with it, so "hidden" never arrived and the next opening started at the old
+  // lift, high on the screen (the user's report, 2026-11-26). A closed sheet forgets the keyboard.
+  if (!mounted && lift !== 0) setLift(0);
   useEffect(() => {
     if (Platform.OS !== 'android' || !mounted) return undefined;
     const show = Keyboard.addListener('keyboardDidShow', (e) =>
@@ -166,6 +170,8 @@ export default function Sheet({ visible, onClose, title, subtitle, children, foo
       const fallback = setTimeout(onShown, 200);
       return () => clearTimeout(fallback);
     }
+    // The keyboard goes with the sheet that asked for it (a tap above, Back, a flick, Cancel).
+    Keyboard.dismiss();
     if (!reduced && !flung.get()) {
       y.set(
         withTiming(measured.current ? travel.get() : offscreen, { duration: 220, easing: EASE_OUT }, (finished) => {

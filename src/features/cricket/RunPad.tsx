@@ -11,7 +11,7 @@ import { radius, space, type Typography } from '@/theme/theme';
 // The scoring keypad, pinned in the thumb zone. A plain tap on a number is a legal ball with that
 // many off the bat — the case that happens most, so it takes one tap. The modifiers above change
 // what the next number means (a wide's extra runs, byes, leg byes) and clear after each ball.
-// On a no-ball a second row asks where the runs came from (off the bat, byes or leg byes), because
+// On a no-ball a second row asks where the runs came from (bat, byes or leg byes), because
 // only the bat's runs are the batter's; every key then says what it records ("nb + 2lb"). 7+ opens
 // the More runs sheet (overthrows). Which extras appear follows the match's rules.
 
@@ -84,8 +84,8 @@ export default function RunPad({ rules, extra, runsFrom, onExtra, onRunsFrom, on
     <View style={{ gap: space.sm }}>
       <View style={styles.row}>{mods.filter((m) => m.show).map((m) => pill(m.key, m.label, m.on, m.toggle, 'switch'))}</View>
       {askFrom && (
-        <View style={styles.fromRow} accessibilityRole="radiogroup" accessibilityLabel="The runs came">
-          <Text style={[styles.fromLabel, { color: light ? theme.muted : theme.onDarkSoft }]}>The runs came</Text>
+        <View style={styles.fromRow} accessibilityRole="radiogroup" accessibilityLabel="The runs came from">
+          <Text style={[styles.fromLabel, { color: light ? theme.muted : theme.onDarkSoft }]}>The runs came from</Text>
           <View style={[styles.row, { flex: 1 }]}>
             {sources.map((f) => pill(f, FROM_LABEL[f], runsFrom === f, () => onRunsFrom(f), 'radio'))}
           </View>
@@ -117,7 +117,8 @@ export default function RunPad({ rules, extra, runsFrom, onExtra, onRunsFrom, on
   );
 }
 
-export const FROM_LABEL: Record<RunsFrom, string> = { bat: 'Off the bat', byes: 'Byes', legByes: 'Leg byes' };
+// Read after "The runs came from" (the user's wording, 2026-11-26).
+export const FROM_LABEL: Record<RunsFrom, string> = { bat: 'Bat', byes: 'Byes', legByes: 'Leg byes' };
 
 /** Where runs may come from in this match: the bat always, byes and leg byes if the rules allow them. */
 export function runSources(rules: CricketRules): RunsFrom[] {
@@ -281,5 +282,5 @@ const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   impossible: { opacity: 0.35 },
   undo: { flex: 1, minHeight: 56, gap: 0 },
   fromRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  fromLabel: { fontFamily: fonts.bodyMedium, fontSize: 12, width: 54, lineHeight: 15 },
+  fromLabel: { fontFamily: fonts.bodyMedium, fontSize: 12, width: 64, lineHeight: 15 },
 });
