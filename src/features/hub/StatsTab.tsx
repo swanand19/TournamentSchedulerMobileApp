@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
 
 import type { CricketBoard, CricketStats, FootballStats, StatBoard } from '@/api/types';
 import Button from '@/components/Button';
 import Chip from '@/components/Chip';
+import Dropdown from '@/components/Dropdown';
 import EmptyState from '@/components/EmptyState';
 import SectionHeader from '@/components/SectionHeader';
 import SegmentedControl from '@/components/SegmentedControl';
@@ -208,6 +209,70 @@ export function FootballStatsPage({ stats, refreshing, onRefresh }: PageProps<Fo
 
 type Category = 'batting' | 'bowling' | 'fielding' | 'mvp';
 
+const CATEGORIES: { key: Category; label: string }[] = [
+  { key: 'batting', label: 'Batting' },
+  { key: 'bowling', label: 'Bowling' },
+  { key: 'fielding', label: 'Fielding' },
+  { key: 'mvp', label: 'MVP' },
+];
+
+/**
+ * The light theme's header (the user's pick B2, 2026-11-27, canvas Stats-L-B2-Open): the categories and the
+ * category's leaderboard in one outlined box, the leaderboard a plain dropdown whose list hangs from the box — so the
+ * boards read as part of their category, not a second row of pills under the first. The dark theme keeps its pills.
+ */
+function LeaderboardBox({
+  category,
+  onCategory,
+  boards,
+  board,
+  onBoard,
+}: {
+  category: Category;
+  onCategory: (c: Category) => void;
+  boards: CricketBoard[];
+  board: CricketBoard | undefined;
+  onBoard: (key: string) => void;
+}) {
+  const { type } = useTypography();
+  const styles = useThemedStyles(makeStyles);
+  const theme = useSportTheme();
+  const box = useRef<View>(null);
+  const [open, setOpen] = useState(false);
+  const caption = `${CATEGORIES.find((c) => c.key === category)?.label ?? ''} leaderboard`;
+  return (
+    <View
+      ref={box}
+      collapsable={false}
+      style={[
+        styles.box,
+        { borderColor: open ? theme.accent : theme.fieldBorder, backgroundColor: theme.page },
+        open && { borderBottomColor: theme.cardDivider, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+      ]}
+    >
+      <SegmentedControl variant="tabs" segments={CATEGORIES} value={category} onChange={onCategory} accessibilityLabel="Leaderboard category" style={styles.boxTabs} />
+      {boards.length > 1 && board ? (
+        <Dropdown
+          caption={caption}
+          options={boards.map((b) => ({ key: b.key, label: b.title }))}
+          value={board.key}
+          onChange={onBoard}
+          attachTo={box}
+          onOpenChange={setOpen}
+        />
+      ) : (
+        // One board (MVP): the same line, nothing to open.
+        <View style={styles.boxOnly}>
+          <Text style={[type.caption, { color: theme.muted }]}>{caption}</Text>
+          <Text style={[type.bodyStrong, { color: theme.ink, fontSize: 17, lineHeight: 22 }]} numberOfLines={1}>
+            {board?.title ?? 'Leaderboards'}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<CricketStats>) {
   const { type } = useTypography();
   const styles = useThemedStyles(makeStyles);
@@ -218,6 +283,10 @@ export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<Cri
   const [boardKey, setBoardKey] = useState('');
   const board = boards.find((b) => b.key === boardKey) ?? boards[0];
   const [pointsOpen, setPointsOpen] = useState({ open: false, key: 0 });
+  const pickCategory = (c: Category) => {
+    setCategory(c);
+    setBoardKey('');
+  };
   const rows = board?.rows.slice(0, 25) ?? [];
   // Batting boards unfold into the player's innings, bowling boards into their spells.
   const unfold: Unfold | null =
@@ -230,22 +299,15 @@ export function CricketStatsPage({ stats, refreshing, onRefresh }: PageProps<Cri
   return (
     <HubPage refreshing={refreshing} onRefresh={onRefresh} stickyIndex={0}>
       <StickyBand>
-        <SectionHeader title={board?.title ?? 'Leaderboards'} />
-        <SegmentedControl
-          segments={[
-            { key: 'batting', label: 'Batting' },
-            { key: 'bowling', label: 'Bowling' },
-            { key: 'fielding', label: 'Fielding' },
-            { key: 'mvp', label: 'MVP' },
-          ]}
-          value={category}
-          onChange={(c) => {
-            setCategory(c);
-            setBoardKey('');
-          }}
-          accessibilityLabel="Leaderboard category"
-        />
-        {boards.length > 1 && board ? <BoardChips boards={boards} value={board.key} onChange={setBoardKey} /> : null}
+        {theme.mode === 'light' ? (
+          <LeaderboardBox category={category} onCategory={pickCategory} boards={boards} board={board} onBoard={setBoardKey} />
+        ) : (
+          <>
+            <SectionHeader title={board?.title ?? 'Leaderboards'} />
+            <SegmentedControl segments={CATEGORIES} value={category} onChange={pickCategory} accessibilityLabel="Leaderboard category" />
+            {boards.length > 1 && board ? <BoardChips boards={boards} value={board.key} onChange={setBoardKey} /> : null}
+          </>
+        )}
         {board?.qualification ? <Text style={[type.caption, { color: theme.onDarkSoft }]}>{board.qualification}</Text> : null}
       </StickyBand>
 
@@ -316,4 +378,8 @@ const makeStyles = ({ figures, fonts }: Typography) => StyleSheet.create({
   /** Glass: a frosted pane, no edge, the design's softer corner. */
   glassTile: { borderRadius: 20, borderCurve: 'continuous', paddingHorizontal: 14 },
   lightLeader: { borderWidth: 0, borderBottomWidth: 1, borderRadius: 0, paddingHorizontal: 0 },
+  /** Light: one outlined box for the categories and the leaderboard (LeaderboardBox). */
+  box: { borderWidth: 1, borderRadius: 18, borderCurve: 'continuous' },
+  boxTabs: { justifyContent: 'space-around', gap: 0, paddingHorizontal: space.sm },
+  boxOnly: { minHeight: 58, justifyContent: 'center', paddingHorizontal: space.lg },
 });

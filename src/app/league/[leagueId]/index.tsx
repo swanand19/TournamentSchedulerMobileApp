@@ -1,13 +1,12 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
 
 import { api } from '@/api/client';
 import type { League, LeagueBoard, LeagueSeason, LeagueStats, LeagueTeams } from '@/api/types';
 import Button from '@/components/Button';
 import { Card } from '@/components/Card';
-import Chip from '@/components/Chip';
+import Dropdown, { type DropdownOption } from '@/components/Dropdown';
 import EmptyState from '@/components/EmptyState';
 import ErrorBanner from '@/components/ErrorBanner';
 import HeaderButton from '@/components/HeaderButton';
@@ -28,8 +27,8 @@ import { lip, radius, space, type Typography } from '@/theme/theme';
 
 // A league's page (canvas "Leagues and seasons", boards League-Seasons, League-Stats, League-Stats-Bowling, League-Teams):
 // its logo, name, who runs it and its totals, then Seasons (being played, still to play, played, each with its winner),
-// Stats (every season or one; Batting · Bowling · Fielding · MVP, each a row of leaderboard chips that scrolls sideways,
-// as a tournament's Stats tab) and Teams (titles, and every team's record across the seasons it played). Anyone signed
+// Stats (Batting · Bowling · Fielding · MVP, then one line: a leaderboard dropdown and a season dropdown)
+// and Teams (titles, and every team's record across the seasons it played). Anyone signed
 // in may look; its organisers get the settings and "Start Season N", pinned on the Seasons tab.
 
 type Tab = 'seasons' | 'stats' | 'teams';
@@ -248,7 +247,8 @@ function SeasonRow({ s, onPress }: { s: LeagueSeason; onPress?: () => void }) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// Stats: every season or one, groups as segments, the group's leaderboards as a sideways row of chips (the user's note)
+// Stats: the groups as segments, then one line — the group's leaderboards in a dropdown (each with its leader) and the
+// season in a small one (the user's pick A, 2026-11-27; before, two sideways rows of chips)
 
 function StatsTab({ league }: { league: League }) {
   const { type } = useTypography();
@@ -266,17 +266,27 @@ function StatsTab({ league }: { league: League }) {
   const group = s?.groups.find((g) => g.key === groupKey) ?? s?.groups[0];
   const board = group ? (group.boards.find((b) => b.key === boardKey[group.key]) ?? group.boards[0]) : undefined;
 
+  // The season: All, or one (newest first). Hidden while the league has a single season.
+  const seasonOptions: DropdownOption<string>[] = [
+    { key: 'all', label: 'All seasons' },
+    ...league.seasons
+      .slice()
+      .sort((a, b) => b.number - a.number)
+      .map((x) => ({ key: String(x.number), label: `Season ${x.number}` })),
+  ];
+  const seasonPicker = league.seasons.length > 1 && (
+    <Dropdown
+      caption="Seasons"
+      options={seasonOptions}
+      value={season == null ? 'all' : String(season)}
+      shown={season == null ? 'All' : `Season ${season}`}
+      onChange={(k) => setSeason(k === 'all' ? null : Number(k))}
+      style={styles.seasonPick}
+    />
+  );
+
   return (
     <View style={{ gap: space.md }}>
-      <GestureScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-        <Chip label="All seasons" selected={season == null} onPress={() => setSeason(null)} />
-        {league.seasons
-          .slice()
-          .sort((a, b) => b.number - a.number)
-          .map((x) => (
-            <Chip key={x.number} label={`Season ${x.number}`} selected={season === x.number} onPress={() => setSeason(x.number)} />
-          ))}
-      </GestureScrollView>
       <ErrorBanner message={stats.error?.message} actionLabel="Try again" onAction={stats.refresh} />
       {!s ? (
         stats.loading ? <Skeleton rows={5} height={56} /> : null
@@ -293,20 +303,23 @@ function StatsTab({ league }: { league: League }) {
               }}
             />
           )}
-          {group && group.boards.length > 1 && (
-            <GestureScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-              {group.boards.map((b) => (
-                <Chip
-                  key={b.key}
-                  label={b.title}
-                  selected={board?.key === b.key}
-                  onPress={() => {
-                    haptic.select();
-                    setBoardKey((k) => ({ ...k, [group.key]: b.key }));
-                  }}
+          {/* One line: the leaderboard (wide; each option shows its leader) and the season (small). A group with one
+              board just shows it. */}
+          {group && (group.boards.length > 1 || seasonPicker) && (
+            <View style={styles.pickers}>
+              {group.boards.length > 1 ? (
+                <Dropdown
+                  caption="Leaderboard"
+                  options={group.boards.map((b) => ({ key: b.key, label: b.title, figure: b.rows[0]?.value, detail: b.rows[0]?.name }))}
+                  value={board?.key ?? group.boards[0].key}
+                  onChange={(k) => setBoardKey((m) => ({ ...m, [group.key]: k }))}
+                  style={{ flex: 1 }}
                 />
-              ))}
-            </GestureScrollView>
+              ) : (
+                <View style={{ flex: 1 }} />
+              )}
+              {seasonPicker}
+            </View>
           )}
           {board && <BoardCard key={`${season ?? 'all'}-${group?.key}-${board.key}`} board={board} basis={s.basis} />}
           {s.notes.map((n) => (
@@ -456,7 +469,9 @@ const makeStyles = ({ fonts }: Typography) => StyleSheet.create({
   seasonSmall: { fontSize: 9, letterSpacing: 0.4, lineHeight: 12 },
   seasonNumber: { fontSize: 18, lineHeight: 21 },
   tag: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: radius.sm, paddingHorizontal: 8, paddingVertical: 2 },
-  chipRow: { gap: space.sm, paddingRight: space.lg },
+  // The Stats tab's one line: the leaderboard (wide) and the season (small).
+  pickers: { flexDirection: 'row', gap: space.sm + 2 },
+  seasonPick: { width: 132 },
   between: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   boardRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56, paddingVertical: space.sm, borderTopWidth: StyleSheet.hairlineWidth },
   rank: { width: 22, textAlign: 'center', fontFamily: fonts.bodySemiBold, fontSize: 14 },

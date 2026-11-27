@@ -35,6 +35,7 @@ import { confirm } from '@/lib/confirm';
 import { relativeDate } from '@/lib/format';
 import { haptic } from '@/lib/haptics';
 import { useThemeMode } from '@/theme/appearance';
+import { useGlassSupport } from '@/theme/glass';
 import { SportThemeProvider, useSportTheme, useThemedStyles, useTypography } from '@/theme/SportTheme';
 import { lip, radius, space, SPORTS, themeFor, type Sport, type Typography } from '@/theme/theme';
 
@@ -552,8 +553,12 @@ function TopRow({ sport, onSport, counts }: { sport?: Sport; onSport?: (s: Sport
   const router = useRouter();
   const { session } = useSessionState();
   const light = theme.mode === 'light';
+  const glass = useGlassSupport();
   return (
-    <View style={styles.top}>
+    // As tall as the sport switch even on Find, which has none: the bell and profile are centred in the row, so a
+    // shorter row put them a few points higher there. Light pills 48; glass 44 + its 4 + 4 track, + a 1 + 1 edge
+    // except iOS 26's own glass, which draws none. Plus the row's own top padding, which a minimum height counts.
+    <View style={[styles.top, { minHeight: (light ? 48 : glass === 'native' ? 52 : 54) + space.xs }]}>
       {sport && onSport ? (
         <SegmentedControl
           accessibilityLabel="Sport"
